@@ -1,5 +1,11 @@
 {
   "version": 2,
+  "env": {
+    "TURSO_DATABASE_URL": "libsql://batticaloa-library-jayanthanx97.aws-ap-south-1.turso.io",
+    "TURSO_AUTH_TOKEN": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NzgxNDk5ODUsImlkIjoiMDE5ZTAxZDUtMmYwMS03NWU1LWIyYTktMzA2Yzk1NGNlMmVjIiwicmlkIjoiZWY1MTg2ZGItYTg0Ni00MDg5LWFkNDctN2M3NzYxZjIwZmIwIn0.Doijx-ZD9SGT-hB4ZhksCYRAmZqjHmXKI-n2gOfrf1058fsE0iR_bIek64MpjU4PRCi_prmqu8IEn8geuB91Dw",
+    "JWT_SECRET": "4770c07d82c75bee14deb391083a7cb62ab28b4fe811667be9aee6d73b96d323",
+    "ALLOWED_ORIGINS": "https://batticloa-library-management-system.vercel.app"
+  },
   "builds": [
     {
       "src": "server/index.js",
