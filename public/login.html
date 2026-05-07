@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Member Login — Batticaloa Public Library</title>
+<link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body data-page="login">
+<div id="site-header"></div>
+
+<section class="page-hero" style="padding-bottom:2rem;">
+  <div class="container">
+    <p class="breadcrumbs"><a href="/">Home</a> / Login</p>
+    <h1>Member Login</h1>
+    <p>Access your dashboard, loans, reservations and digital resources.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="form-card">
+      <div style="text-align:center;margin-bottom:1.5rem;">
+        <img src="/images/logo.svg" alt="" style="width:52px;margin:0 auto 0.75rem;" aria-hidden="true" />
+        <h2 style="margin-bottom:0.25rem;">Welcome Back</h2>
+        <p class="card-meta">Sign in to your library account</p>
+      </div>
+      <div id="msg"></div>
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="login-email">Email Address</label>
+          <input type="email" id="login-email" name="email" autocomplete="email" required placeholder="your@email.com" />
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <div class="input-wrap">
+            <input type="password" id="login-password" name="password" autocomplete="current-password" required placeholder="Enter your password" />
+            <button type="button" class="toggle-pw" aria-label="Toggle password visibility" data-target="login-password">👁</button>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit" id="login-btn" style="margin-top:0.5rem;">Sign In</button>
+      </form>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem;flex-wrap:wrap;gap:0.5rem;">
+        <p class="card-meta">Not yet a member? <a href="/register">Join the library →</a></p>
+        <a href="/contact" class="card-meta" style="font-size:0.83rem;">Forgot password?</a>
+      </div>
+
+      <!-- DEF-018: demo credentials block; removed at runtime in production via /api/env -->
+      <details id="demo-creds" class="mt-4" style="background:var(--bg-subtle);padding:1.1rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
+        <summary style="cursor:pointer;font-weight:600;font-size:0.88rem;color:var(--text-soft);">Demo Credentials (Development)</summary>
+        <div style="font-size:0.83rem;color:var(--text-soft);margin-top:0.75rem;display:grid;gap:0.5rem;">
+          <div style="padding:0.5rem;background:#fff;border-radius:6px;border:1px solid var(--border);">
+            <strong style="color:var(--primary);">Admin</strong><br/>
+            admin@batticaloalibrary.lk / admin123
+          </div>
+          <div style="padding:0.5rem;background:#fff;border-radius:6px;border:1px solid var(--border);">
+            <strong style="color:var(--primary);">Librarian</strong><br/>
+            librarian@batticaloalibrary.lk / library123
+          </div>
+          <div style="padding:0.5rem;background:#fff;border-radius:6px;border:1px solid var(--border);">
+            <strong style="color:var(--primary);">Event Coordinator</strong><br/>
+            events@batticaloalibrary.lk / events123
+          </div>
+          <div style="padding:0.5rem;background:#fff;border-radius:6px;border:1px solid var(--border);">
+            <strong style="color:var(--primary);">Member</strong><br/>
+            priya@example.com / member123
+          </div>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+<script src="/js/app.js"></script>
+<script>
+// DEF-018: hide demo credentials block in production environments
+fetch('/api/env').then(r => r.json()).then(({ production }) => {
+  if (production) {
+    const el = document.getElementById('demo-creds');
+    if (el) el.remove();
+  }
+}).catch(() => {});
+</script>
+<script>
+// Password visibility toggle
+document.querySelectorAll('.toggle-pw').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.target);
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    btn.textContent = isHidden ? '🙈' : '👁';
+    btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+  });
+});
+
+document.getElementById('login-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const loginBtn = document.getElementById('login-btn');
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Signing in…';
+
+  const fd = new FormData(e.target);
+  try {
+    const res = await api.post('/api/auth/login', { email: fd.get('email'), password: fd.get('password') });
+    const name = res.user.full_name || res.user.name || 'Member';
+    showAlert('#msg', `Welcome back, ${name}! Redirecting…`, 'success');
+    setTimeout(() => {
+      const next = new URLSearchParams(location.search).get('next');
+      if (next && next.startsWith('/')) location.href = next;
+      else if (['admin','librarian','event_coordinator'].includes(res.user.role)) location.href = '/admin';
+      else location.href = '/dashboard';
+    }, 900);
+  } catch (err) {
+    showAlert('#msg', err.message, 'danger');
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Sign In';
+  }
+});
+</script>
+</body>
+</html>

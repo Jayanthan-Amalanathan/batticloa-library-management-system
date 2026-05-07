@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" width="600" height="350">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#5d3b8a"/>
+      <stop offset="100%" stop-color="#3a2456"/>
+    </linearGradient>
+    <pattern id="pat" width="40" height="40" patternUnits="userSpaceOnUse">
+      <circle cx="20" cy="20" r="1.5" fill="#fff" opacity="0.15"/>
+    </pattern>
+  </defs>
+  <rect width="600" height="350" fill="url(#bg)"/>
+  <rect width="600" height="350" fill="url(#pat)"/>
+  <circle cx="500" cy="80" r="100" fill="#fff" opacity="0.1"/>
+  <circle cx="100" cy="280" r="120" fill="#fff" opacity="0.08"/>
+  <text x="300" y="180" text-anchor="middle" font-size="80" opacity="0.4">✍</text>
+  <text x="300" y="240" text-anchor="middle" fill="#fff" font-family="Georgia,serif" font-size="34" font-weight="700">Author Meet</text>
+  <text x="300" y="270" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="14" opacity="0.85" letter-spacing="3">BATTICALOA PUBLIC LIBRARY</text>
+</svg>

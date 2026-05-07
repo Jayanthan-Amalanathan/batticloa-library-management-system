@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Join the Library — Batticaloa Public Library</title>
+<meta name="description" content="Register for a free or low-cost Batticaloa Public Library membership. Access books, digital resources, events and the Maker Space." />
+<link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body data-page="register">
+<div id="site-header"></div>
+
+<section class="page-hero" style="padding-bottom:2rem;">
+  <div class="container">
+    <p class="breadcrumbs"><a href="/">Home</a> / Join</p>
+    <h1>Join the Library</h1>
+    <p>Become a member to access borrowing privileges, digital resources, events, and the Maker Space.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <!-- Membership quick info -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem;">
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;text-align:center;">
+        <div style="font-size:1.6rem;margin-bottom:0.4rem;">🎓</div>
+        <strong style="font-size:0.9rem;color:var(--primary);">Students</strong>
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-top:0.2rem;">FREE</p>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;text-align:center;">
+        <div style="font-size:1.6rem;margin-bottom:0.4rem;">👤</div>
+        <strong style="font-size:0.9rem;color:var(--primary);">Adults</strong>
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-top:0.2rem;">LKR 500/year</p>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;text-align:center;">
+        <div style="font-size:1.6rem;margin-bottom:0.4rem;">🔬</div>
+        <strong style="font-size:0.9rem;color:var(--primary);">Researchers</strong>
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-top:0.2rem;">LKR 1,500/year</p>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;text-align:center;">
+        <div style="font-size:1.6rem;margin-bottom:0.4rem;">👴</div>
+        <strong style="font-size:0.9rem;color:var(--primary);">Seniors & Children</strong>
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-top:0.2rem;">FREE lifetime</p>
+      </div>
+    </div>
+
+    <div class="form-card wide">
+      <h2 style="margin-bottom:0.25rem;">Membership Application</h2>
+      <p class="card-meta mb-3">Fields marked * are required. Approval takes 1–2 business days.</p>
+      <div id="msg"></div>
+      <form id="reg-form" novalidate>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="full_name">Full Name *</label>
+            <input type="text" id="full_name" name="full_name" required autocomplete="name" placeholder="As on your NIC / Passport" />
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" name="email" required autocomplete="email" placeholder="your@email.com" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="+94 7X XXX XXXX" />
+          </div>
+          <div class="form-group">
+            <label for="nic">NIC / Passport Number</label>
+            <input type="text" id="nic" name="nic" placeholder="e.g. 987654321V" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date_of_birth">Date of Birth</label>
+            <input type="date" id="date_of_birth" name="date_of_birth" />
+          </div>
+          <div class="form-group">
+            <label for="member_category">Membership Category *</label>
+            <select id="member_category" name="member_category" required>
+              <option value="">Select category…</option>
+              <option>Students</option>
+              <option>Public Members</option>
+              <option>Researchers</option>
+              <option>Children</option>
+              <option>Senior Citizens</option>
+              <option>Institutional Members</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="address">Address</label>
+          <textarea id="address" name="address" rows="2" placeholder="Street, Town, District"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="password">Password *</label>
+            <div class="input-wrap">
+              <input type="password" id="password" name="password" minlength="6" required placeholder="Min. 6 characters" autocomplete="new-password" />
+              <button type="button" class="toggle-pw" aria-label="Toggle password visibility" data-target="password">👁</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="password2">Confirm Password *</label>
+            <div class="input-wrap">
+              <input type="password" id="password2" name="password2" minlength="6" required placeholder="Repeat password" autocomplete="new-password" />
+              <button type="button" class="toggle-pw" aria-label="Toggle confirm password visibility" data-target="password2">👁</button>
+            </div>
+          </div>
+        </div>
+        <p class="card-meta mb-3" style="font-size:0.82rem;background:var(--bg-subtle);padding:0.75rem;border-radius:var(--radius-sm);">
+          By submitting, you agree to our Terms of Service and Library Code of Conduct. We comply with Sri Lankan data protection regulations.
+        </p>
+        <button class="btn btn-primary btn-block btn-lg" type="submit" id="reg-btn">Submit Application</button>
+      </form>
+      <p class="mt-3 text-center card-meta">Already a member? <a href="/login">Sign in →</a></p>
+    </div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+<script src="/js/app.js"></script>
+<script>
+// Password visibility toggles
+document.querySelectorAll('.toggle-pw').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.target);
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    btn.textContent = isHidden ? '🙈' : '👁';
+    btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+  });
+});
+
+// Password strength visual feedback
+document.getElementById('password').addEventListener('input', e => {
+  const pw = e.target.value;
+  e.target.style.borderColor = pw.length === 0 ? '' : pw.length < 6 ? 'var(--warning)' : 'var(--success)';
+});
+
+document.getElementById('reg-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const fd   = new FormData(e.target);
+  const data = Object.fromEntries(fd);
+  const btn  = document.getElementById('reg-btn');
+
+  if (data.password !== data.password2) {
+    showAlert('#msg', 'Passwords do not match. Please re-enter.', 'danger');
+    document.getElementById('password2').focus();
+    return;
+  }
+  if (data.password.length < 6) {
+    showAlert('#msg', 'Password must be at least 6 characters.', 'danger');
+    return;
+  }
+
+  delete data.password2;
+  btn.disabled = true;
+  btn.textContent = 'Submitting application…';
+
+  try {
+    const res = await api.post('/api/auth/register', data);
+    showAlert('#msg', `${res.message} Your membership ID is <strong>${res.membership_id}</strong>. You will receive an email when approved.`, 'success');
+    e.target.reset();
+    e.target.style.display = 'none';
+  } catch (err) {
+    showAlert('#msg', err.message, 'danger');
+    btn.disabled = false;
+    btn.textContent = 'Submit Application';
+  }
+});
+</script>
+</body>
+</html>

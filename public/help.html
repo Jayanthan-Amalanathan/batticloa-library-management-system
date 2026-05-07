@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Help & Support — Batticaloa Public Library</title>
+<meta name="description" content="Help centre, FAQs, tutorials and direct support for Batticaloa Public Library members." />
+<link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
+<link rel="stylesheet" href="/css/style.css" />
+<style>
+  details.faq-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    margin-bottom: 0.75rem;
+    transition: box-shadow var(--transition);
+  }
+  details.faq-item[open] { box-shadow: var(--shadow-sm); }
+  details.faq-item summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--primary-dark);
+    padding: 1rem 1.1rem;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.96rem;
+  }
+  details.faq-item summary::-webkit-details-marker { display: none; }
+  details.faq-item summary::after {
+    content: '+';
+    font-size: 1.3rem;
+    color: var(--primary-light);
+    line-height: 1;
+    flex-shrink: 0;
+    transition: transform var(--transition);
+  }
+  details.faq-item[open] summary::after { content: '−'; }
+  details.faq-item .faq-body {
+    padding: 0 1.1rem 1.1rem;
+    color: var(--text-soft);
+    font-size: 0.93rem;
+    line-height: 1.7;
+    border-top: 1px solid var(--border);
+    padding-top: 0.85rem;
+  }
+</style>
+</head>
+<body data-page="help">
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div class="container">
+    <p class="breadcrumbs"><a href="/" data-i18n="common.home">Home</a> / <span data-i18n="nav.help">Help</span></p>
+    <h1 data-i18n="help.hero.title">Help & Support</h1>
+    <p data-i18n="help.hero.desc">Tutorials, FAQs, and direct support to help you get the most from your library.</p>
+  </div>
+</section>
+
+<!-- Quick links -->
+<section style="padding-bottom:0;">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;">
+      <a href="/catalog" class="service-card" style="text-decoration:none;">
+        <div class="service-icon" aria-hidden="true">🔍</div>
+        <h3 data-i18n="help.links.catalog">Search Catalog</h3>
+      </a>
+      <a href="/register" class="service-card" style="text-decoration:none;">
+        <div class="service-icon" aria-hidden="true">📝</div>
+        <h3 data-i18n="help.links.join">Join Library</h3>
+      </a>
+      <a href="/login" class="service-card" style="text-decoration:none;">
+        <div class="service-icon" aria-hidden="true">🔑</div>
+        <h3 data-i18n="help.links.login">Member Login</h3>
+      </a>
+      <a href="/contact" class="service-card" style="text-decoration:none;">
+        <div class="service-icon" aria-hidden="true">💬</div>
+        <h3 data-i18n="help.links.ask">Ask a Librarian</h3>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section>
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow" data-i18n="help.faq.eyebrow">FAQ</span>
+      <h2 data-i18n="help.faq.title">Frequently Asked Questions</h2>
+    </div>
+    <div style="max-width:780px;margin:0 auto;">
+      <details class="faq-item">
+        <summary>How do I become a library member?</summary>
+        <div class="faq-body">
+          Visit the <a href="/register">membership registration page</a> to apply online. You'll need a valid government ID and proof of address. Approval typically takes 1–2 business days, and you'll receive a confirmation email when your membership is active.
+        </div>
+      </details>
+      <details class="faq-item">
+        <summary>How many books can I borrow at one time?</summary>
+        <div class="faq-body">
+          Loan limits depend on your membership category:<br/>
+          <strong>Students:</strong> 3 items &nbsp;·&nbsp; <strong>Public Adults:</strong> 5 items &nbsp;·&nbsp; <strong>Researchers:</strong> 10 items &nbsp;·&nbsp; <strong>Children:</strong> 2 items
+        </div>
+      </details>
+      <details class="faq-item">
+        <summary>What is the loan period and can I renew?</summary>
+        <div class="faq-body">
+          Standard loan is 14 days for general lending and 21 days for fiction. Renewals can be done online via your <a href="/dashboard">member dashboard</a> or in-person, up to two times — provided no holds are queued on the item.
+        </div>
+      </details>
+      <details class="faq-item">
+        <summary>What are the late return fines?</summary>
+        <div class="faq-body">
+          LKR 10 per day per item. Fines accrue automatically and can be paid at the circulation desk. Borrowing privileges are suspended at LKR 500 outstanding. Fines are waived for senior citizens and persons with disabilities.
+        </div>
+      </details>
+      <details class="faq-item">
+        <summary>How do I use the Koha OPAC / catalog search?</summary>
+        <div class="faq-body">
+          Our integrated <strong>Koha OPAC</strong> searches across Batticaloa Public Library, <strong>Eastern University Library</strong> and partner libraries in one query. Enter keywords, or choose Author / Title / ISBN / Subject / Series / Call Number from the dropdown for precise results. Use quotes for exact phrases, e.g. <code>"one hundred years"</code>. <a href="/catalog">Try it now →</a>
+        </div>
+      </details>
+      <details class="faq-item">
+        <summary>Can I access digital resources from home?</summary>
+        <div class="faq-body">
+          Yes! Active members can log in to access e-books, audiobooks, online databases, and digitized newspapers from anywhere with an internet connection. <a href="/login">Member login →</a>
+        </div>
+      </details>
+      <details class="faq-item">
+        <summary>How do I reserve a book that's currently on loan?</summary>
+        <div class="faq-body">
+          Search for the title in the <a href="/catalog">catalog</a>, then click <strong>Reserve</strong> on its listing. You'll be added to the hold queue and notified by email or SMS when the item is available for pickup.
+        </div>
+      </details>
+      <details class="faq-item">
+        <summary>Do you offer Wi-Fi and computer access?</summary>
+        <div class="faq-body">
+          Yes. Free high-speed Wi-Fi is available throughout all branches for members. We also have 20+ public-access computers at the main branch — booking recommended via the front desk or your member dashboard.
+        </div>
+      </details>
+      <details class="faq-item">
+        <summary>How do I volunteer or donate books?</summary>
+        <div class="faq-body">
+          We welcome volunteers for storytime assistance, digitization projects, and event support. Book donations and financial contributions are also gratefully received — tax-deductible receipts provided. <a href="/contact">Contact us →</a> to get started.
+        </div>
+      </details>
+      <details class="faq-item">
+        <summary>What is the Eastern University catalog integration?</summary>
+        <div class="faq-body">
+          Since 2018, our library system has been integrated with the <strong>Eastern University Library at Vantharumoolai</strong> via the Koha ILS. This means a single OPAC search covers both catalogs. Items from Eastern University can be requested via inter-library loan for researcher-grade members.
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- Resources & Guides -->
+<section style="background:var(--bg-subtle);">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow" data-i18n="help.resources.eyebrow">Resources</span>
+      <h2 data-i18n="help.resources.title">Tutorials & Guides</h2>
+    </div>
+    <div class="grid grid-3">
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">📺</div>
+        <h3>Video Tutorials</h3>
+        <p>Step-by-step videos on using the catalog, accessing digital resources, and online services.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">📥</div>
+        <h3>Download Centre</h3>
+        <p>Membership forms, policy documents, library brochures and curated reading lists.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">♿</div>
+        <h3>Accessibility Support</h3>
+        <p>Large-print books, screen-reader friendly resources and in-person assistance for members with disabilities.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">🤝</div>
+        <h3>Volunteer Opportunities</h3>
+        <p>Join our community helping with programs, digitization projects and outreach events.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">💝</div>
+        <h3>Donate</h3>
+        <p>Support the library with book or financial donations. All contributions are tax-deductible.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">💬</div>
+        <h3 data-i18n="help.links.ask">Ask a Librarian</h3>
+        <p>Direct help from our reference librarians by phone, email or in person at any branch.</p>
+        <p class="mt-2"><a href="/contact" class="btn btn-sm btn-primary" data-i18n="nav.contact">Contact Us</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+<script src="/js/app.js"></script>
+</body>
+</html>

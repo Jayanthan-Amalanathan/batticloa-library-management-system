@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Catalog Search — Batticaloa Public Library</title>
+<meta name="description" content="Search the Batticaloa Public Library catalog or the integrated Koha OPAC across Eastern University and partner libraries." />
+<link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
+<link rel="stylesheet" href="/css/style.css" />
+<style>
+.tab-bar { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:1.5rem; }
+.tab-btn {
+  padding:0.65rem 1.4rem; font-size:0.9rem; font-weight:600; border:none; background:none;
+  cursor:pointer; color:var(--text-soft); border-bottom:3px solid transparent;
+  margin-bottom:-2px; transition:color .2s, border-color .2s;
+}
+.tab-btn.active { color:var(--primary); border-bottom-color:var(--primary); }
+.tab-btn:hover:not(.active) { color:var(--text); }
+.tab-pane { display:none; }
+.tab-pane.active { display:block; }
+.koha-badge {
+  display:inline-flex; align-items:center; gap:0.3rem; font-size:0.72rem;
+  padding:0.2rem 0.55rem; border-radius:99px; background:var(--primary-light,#e8f4f8);
+  color:var(--primary); font-weight:600; letter-spacing:.02em;
+}
+.card-source { font-size:0.72rem; color:var(--text-muted); margin-bottom:0.3rem; }
+</style>
+</head>
+<body data-page="catalog">
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div class="container">
+    <p class="breadcrumbs"><a href="/" data-i18n="common.home">Home</a> / <span data-i18n="nav.catalog">Catalog</span></p>
+    <h1 data-i18n="catalog.hero.title">Search the Catalog</h1>
+    <p data-i18n="catalog.hero.desc">Browse our local digital catalog or search the integrated Koha OPAC across multiple libraries.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+
+    <!-- Search bar (shared) -->
+    <div class="filter-bar" role="search" aria-label="Search catalog">
+      <input type="text" id="q" data-i18n-placeholder="catalog.placeholder" placeholder="Search title, author, ISBN, description…" aria-label="Search query" />
+      <select id="search-idx" aria-label="Search field (Koha)">
+        <option value="kw">Keyword</option>
+        <option value="ti">Title</option>
+        <option value="au">Author</option>
+        <option value="su">Subject</option>
+        <option value="nb">ISBN</option>
+        <option value="se">Series</option>
+        <option value="callnum">Call Number</option>
+      </select>
+      <select id="category" aria-label="Category (local)">
+        <option value="">All categories</option>
+        <option>Fiction</option><option>History</option><option>Science</option>
+        <option>Biography</option><option>Self-Help</option><option>Computer Science</option>
+        <option>Memoir</option><option>Science Fiction</option>
+      </select>
+      <select id="collection" aria-label="Collection type (local)">
+        <option value="">All collections</option>
+        <option value="lending">Lending</option>
+        <option value="reference">Reference</option>
+        <option value="special">Special Collection</option>
+        <option value="periodicals">Periodicals</option>
+      </select>
+      <select id="branch" aria-label="Branch (local)">
+        <option value="">All branches</option>
+        <option>Main</option>
+        <option>Eastern University</option>
+        <option>Children's Branch</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.88rem;color:var(--text-soft);white-space:nowrap;">
+        <input type="checkbox" id="available-only" style="width:auto;" /> <span data-i18n="catalog.available">Available only</span>
+      </label>
+      <button class="btn btn-primary" id="search-btn" aria-label="Search catalog" data-i18n="catalog.search">Search</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar" role="tablist">
+      <button class="tab-btn active" role="tab" aria-selected="true"  data-tab="local"  id="tab-local">Local Catalog</button>
+      <button class="tab-btn"        role="tab" aria-selected="false" data-tab="koha"   id="tab-koha">
+        Koha OPAC — Eastern University
+        <span id="koha-status-dot" title="Checking…" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warning);margin-left:6px;vertical-align:middle;"></span>
+      </button>
+    </div>
+
+    <!-- LOCAL TAB -->
+    <div class="tab-pane active" id="pane-local">
+      <div class="flex-between mb-3">
+        <div id="result-count" class="card-meta" aria-live="polite" data-i18n="catalog.loading">Loading…</div>
+        <div id="sort-wrap" style="display:flex;gap:0.5rem;align-items:center;">
+          <label for="sort" style="font-size:0.85rem;color:var(--text-muted);" data-i18n="catalog.sort">Sort:</label>
+          <select id="sort" style="width:auto;padding:0.4rem 2rem 0.4rem 0.7rem;" aria-label="Sort results">
+            <option value="newest" data-i18n="catalog.sort.newest">Newest First</option>
+            <option value="title" data-i18n="catalog.sort.title">Title A–Z</option>
+            <option value="author" data-i18n="catalog.sort.author">Author A–Z</option>
+          </select>
+        </div>
+      </div>
+      <div id="results" class="grid grid-4" role="list" aria-label="Local search results"></div>
+      <div class="text-center mt-4 hidden" id="load-more-wrap">
+        <button class="btn btn-outline" id="load-more">Load more results</button>
+      </div>
+    </div>
+
+    <!-- KOHA TAB -->
+    <div class="tab-pane" id="pane-koha">
+      <div style="background:var(--bg-subtle);border-radius:var(--radius-sm);padding:0.85rem 1.1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;">
+        <div>
+          <strong style="font-size:0.9rem;">Eastern University Library — Live Catalog</strong><br>
+          <small style="color:var(--text-soft);">Results fetched in real-time from Koha OPAC at Eastern University, Vantharumoolai. Click any title to view full record.</small>
+        </div>
+        <a id="opac-fulllink" href="https://www.opac.lib.esn.ac.lk/cgi-bin/koha/opac-search.pl" target="_blank" rel="noopener" class="btn btn-sm btn-outline" style="margin-left:auto;">
+          Open Full OPAC ↗
+        </a>
+      </div>
+      <div class="flex-between mb-3">
+        <div id="koha-count" class="card-meta" aria-live="polite">Enter a search term to browse the Koha catalog.</div>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <button class="btn btn-sm btn-ghost" id="koha-prev" disabled>← Prev</button>
+          <span id="koha-page-info" style="font-size:0.85rem;color:var(--text-muted);"></span>
+          <button class="btn btn-sm btn-ghost" id="koha-next" disabled>Next →</button>
+        </div>
+      </div>
+      <div id="koha-results" class="grid grid-4" role="list" aria-label="Koha OPAC search results"></div>
+    </div>
+
+  </div>
+</section>
+
+<div id="site-footer"></div>
+<script src="/js/app.js"></script>
+<script>
+// ---- state ----
+let localOffset = 0;
+const PAGE = 24;
+let lastLocalQuery = {};
+
+let kohaPage  = 1;
+const KOHA_COUNT = 20;
+let kohaTotal = 0;
+let kohaLastQ  = '';
+let kohaLastIdx = 'kw';
+
+// ---- tab switching ----
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected','true');
+    document.getElementById('pane-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'koha' && !kohaLastQ && document.getElementById('q').value.trim()) {
+      searchKoha(true);
+    }
+  });
+});
+
+// ---- shared query ----
+function buildLocalQuery() {
+  return {
+    q:          document.getElementById('q').value.trim(),
+    category:   document.getElementById('category').value,
+    collection: document.getElementById('collection').value,
+    branch:     document.getElementById('branch').value,
+    available:  document.getElementById('available-only').checked ? 'true' : '',
+  };
+}
+
+// ---- LOCAL CATALOG SEARCH ----
+async function searchLocal(reset = true) {
+  if (reset) { localOffset = 0; lastLocalQuery = buildLocalQuery(); }
+
+  const btn = document.getElementById('search-btn');
+  btn.disabled = true; btn.textContent = 'Searching…';
+
+  try {
+    const params = new URLSearchParams({ ...lastLocalQuery, limit: PAGE, offset: localOffset });
+    Object.keys(lastLocalQuery).forEach(k => { if (!lastLocalQuery[k]) params.delete(k); });
+
+    const res = await fetch(`/api/books?${params}`).then(r => r.json());
+    const cont = document.getElementById('results');
+
+    if (!res.books?.length && reset) {
+      cont.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="empty-state-icon">📚</div>
+          <h3>No books found in local catalog</h3>
+          <p>Try different keywords or switch to the <strong>Koha OPAC</strong> tab to search Eastern University's collection.</p>
+        </div>`;
+      document.getElementById('result-count').textContent = '0 results';
+      document.getElementById('load-more-wrap').classList.add('hidden');
+      return;
+    }
+
+    const html = (res.books || []).map(b => renderLocalCard(b)).join('');
+    if (reset) cont.innerHTML = html;
+    else cont.insertAdjacentHTML('beforeend', html);
+
+    const shown = Math.min(localOffset + res.books.length, res.total);
+    document.getElementById('result-count').textContent = `Showing ${shown.toLocaleString()} of ${(res.total || 0).toLocaleString()} titles`;
+    document.getElementById('load-more-wrap').classList.toggle('hidden', localOffset + res.books.length >= res.total);
+    localOffset += res.books.length;
+
+    attachLocalButtons(cont);
+  } catch (e) {
+    document.getElementById('results').innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">⚠️</div><h3>Error loading catalog</h3><p>${escapeHtml(e.message)}</p></div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = i18n.t('catalog.search');
+  }
+}
+
+function renderLocalCard(b) {
+  return `
+    <div class="card" role="listitem">
+      <div class="card-img"><img src="${escapeHtml(b.cover_image || '/images/book-default.svg')}" alt="${escapeHtml(b.title)}" loading="lazy" /></div>
+      <div class="card-body">
+        <h3 class="card-title">${escapeHtml(b.title)}</h3>
+        <p class="card-meta">${escapeHtml(b.author)}${b.publication_year ? ' · ' + b.publication_year : ''}</p>
+        <p class="card-desc">${escapeHtml((b.description || '').slice(0, 110))}${(b.description||'').length > 110 ? '…' : ''}</p>
+        <div class="card-foot">
+          <span class="badge ${b.available_copies > 0 ? 'success' : 'danger'}">
+            ${b.available_copies > 0 ? b.available_copies + ' available' : 'On Loan'}
+          </span>
+          <span class="badge">${escapeHtml(b.collection_type || '')}</span>
+        </div>
+        <div class="card-foot" style="margin-top:0.5rem;">
+          <small class="card-meta">${escapeHtml(b.branch || 'Main')}${b.call_number ? ' · ' + escapeHtml(b.call_number) : ''}</small>
+          ${b.available_copies > 0
+            ? `<button class="btn btn-sm btn-accent" data-reserve="${b.id}" aria-label="Reserve ${escapeHtml(b.title)}">Reserve</button>`
+            : `<button class="btn btn-sm btn-ghost" data-koha-title="${encodeURIComponent(b.title)}" aria-label="Search on OPAC">OPAC ↗</button>`
+          }
+        </div>
+      </div>
+    </div>`;
+}
+
+function attachLocalButtons(cont) {
+  cont.querySelectorAll('[data-reserve]').forEach(btn => btn.addEventListener('click', async e => {
+    const id = e.currentTarget.dataset.reserve;
+    const origText = e.currentTarget.textContent;
+    e.currentTarget.disabled = true; e.currentTarget.textContent = 'Reserving…';
+    try {
+      await api.post('/api/reservations', { book_id: parseInt(id) });
+      e.currentTarget.textContent = 'Reserved ✓';
+      e.currentTarget.classList.replace('btn-accent', 'btn-ghost');
+    } catch (err) {
+      if (err.message.includes('Authentication')) location.href = '/login?next=/catalog';
+      else { e.currentTarget.textContent = origText; e.currentTarget.disabled = false; alert(err.message); }
+    }
+  }));
+  cont.querySelectorAll('[data-koha-title]').forEach(btn => btn.addEventListener('click', e => {
+    const title = decodeURIComponent(e.currentTarget.dataset.kohaTitle);
+    window.open(buildKohaUrl(title, 'ti'), '_blank', 'noopener');
+  }));
+}
+
+// ---- KOHA SEARCH ----
+async function searchKoha(reset = true) {
+  const q   = document.getElementById('q').value.trim();
+  const idx = document.getElementById('search-idx').value;
+  if (!q) {
+    document.getElementById('koha-count').textContent = 'Enter a search term to browse the Koha catalog.';
+    document.getElementById('koha-results').innerHTML = '';
+    return;
+  }
+
+  if (reset) { kohaPage = 1; kohaLastQ = q; kohaLastIdx = idx; }
+
+  const countEl = document.getElementById('koha-count');
+  const cont    = document.getElementById('koha-results');
+  countEl.textContent = 'Loading from Koha OPAC…';
+  cont.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon" style="animation:spin 1s linear infinite">⏳</div><p>Fetching live records from Eastern University Library…</p></div>';
+  document.getElementById('koha-prev').disabled = true;
+  document.getElementById('koha-next').disabled = true;
+
+  // Update OPAC full link
+  document.getElementById('opac-fulllink').href = buildKohaUrl(q, idx);
+
+  try {
+    const params = new URLSearchParams({ q, idx, page: kohaPage, count: KOHA_COUNT });
+    const res = await fetch(`/api/koha/search?${params}`).then(r => r.json());
+
+    if (res.error) throw new Error(res.error);
+    kohaTotal = res.total || 0;
+
+    if (!res.books?.length) {
+      cont.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="empty-state-icon">🔍</div>
+          <h3>No results in Koha OPAC</h3>
+          <p>Try different keywords or search on the <a href="${buildKohaUrl(q,idx)}" target="_blank" rel="noopener">full OPAC ↗</a></p>
+        </div>`;
+      countEl.textContent = '0 results from Koha OPAC';
+      return;
+    }
+
+    cont.innerHTML = res.books.map(b => renderKohaCard(b)).join('');
+
+    const start = (kohaPage - 1) * KOHA_COUNT + 1;
+    const end   = Math.min(kohaPage * KOHA_COUNT, kohaTotal);
+    countEl.textContent = `Showing ${start}–${end} of ${kohaTotal.toLocaleString()} results from Koha OPAC`;
+    document.getElementById('koha-page-info').textContent = `Page ${kohaPage}`;
+    document.getElementById('koha-prev').disabled = kohaPage <= 1;
+    document.getElementById('koha-next').disabled = end >= kohaTotal;
+
+  } catch (e) {
+    cont.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">⚠️</div><h3>Could not reach Koha OPAC</h3><p>${escapeHtml(e.message)}</p><p style="margin-top:0.8rem;"><a href="${buildKohaUrl(q,idx)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline">Open OPAC directly ↗</a></p></div>`;
+    countEl.textContent = 'Koha OPAC unreachable';
+  }
+}
+
+function renderKohaCard(b) {
+  const year  = b.publication_year ? ` · ${b.publication_year}` : '';
+  const isbn  = b.isbn ? `<small class="card-meta">ISBN: ${escapeHtml(b.isbn)}</small>` : '';
+  const call  = b.call_number ? `<small class="card-meta"> · ${escapeHtml(b.call_number)}</small>` : '';
+  const desc  = b.description ? `<p class="card-desc">${escapeHtml(b.description.slice(0,120))}${b.description.length>120?'…':''}</p>` : '';
+
+  return `
+    <div class="card" role="listitem">
+      <div class="card-img"><img src="/images/book-default.svg" alt="${escapeHtml(b.title)}" loading="lazy" /></div>
+      <div class="card-body">
+        <p class="card-source"><span class="koha-badge">🔗 Eastern University</span></p>
+        <h3 class="card-title">${escapeHtml(b.title)}</h3>
+        <p class="card-meta">${escapeHtml(b.author || 'Unknown')}${year}</p>
+        ${desc}
+        <div class="card-foot">${isbn}${call}</div>
+        <div class="card-foot" style="margin-top:0.5rem;">
+          <span class="badge">${escapeHtml(b.language || 'English')}</span>
+          <a href="${escapeHtml(b.opac_url)}" target="_blank" rel="noopener" class="btn btn-sm btn-accent">
+            View Record ↗
+          </a>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ---- pagination ----
+document.getElementById('koha-prev').addEventListener('click', () => { kohaPage--; searchKoha(false); });
+document.getElementById('koha-next').addEventListener('click', () => { kohaPage++; searchKoha(false); });
+
+// ---- trigger search ----
+function runSearch() {
+  searchLocal(true);
+  // If on Koha tab, also refresh Koha
+  if (document.getElementById('tab-koha').classList.contains('active')) searchKoha(true);
+}
+
+document.getElementById('search-btn').addEventListener('click', runSearch);
+document.getElementById('load-more').addEventListener('click', () => searchLocal(false));
+document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
+
+// ---- OPAC status check ----
+(async () => {
+  const dot = document.getElementById('koha-status-dot');
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8000);
+    await fetch('https://www.opac.lib.esn.ac.lk/cgi-bin/koha/opac-search.pl', { method:'HEAD', mode:'no-cors', signal:ctrl.signal });
+    clearTimeout(t);
+    dot.style.background = 'var(--success, #2e7d32)';
+    dot.title = 'Koha OPAC Online';
+  } catch {
+    dot.style.background = 'var(--warning, #f59e0b)';
+    dot.title = 'Status Unknown';
+  }
+})();
+
+// ---- Pre-fill from URL ----
+const urlParams = new URLSearchParams(location.search);
+if (urlParams.get('q'))          document.getElementById('q').value          = urlParams.get('q');
+if (urlParams.get('collection')) document.getElementById('collection').value = urlParams.get('collection');
+
+// ---- initial load ----
+searchLocal(true);
+</script>
+</body>
+</html>

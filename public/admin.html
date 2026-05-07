@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Staff Portal — Batticaloa Public Library</title>
+<link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<div class="admin-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img src="/images/logo.svg" alt="" style="width:40px;" />
+      <div><strong>Staff Portal</strong><br/><small style="color:#8da4ac;">Batticaloa Library</small></div>
+    </div>
+    <nav>
+      <a href="#dashboard" class="nav-link active" data-tab="dashboard">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <a href="#books" class="nav-link" data-tab="books">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Catalog
+      </a>
+      <a href="#circulation" class="nav-link" data-tab="circulation">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        Circulation
+      </a>
+      <a href="#members" class="nav-link" data-tab="members">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Members
+      </a>
+      <a href="#events" class="nav-link" data-tab="events">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Events
+      </a>
+      <a href="#announcements" class="nav-link" data-tab="announcements">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"/></svg>
+        Announcements
+      </a>
+      <a href="#messages" class="nav-link" data-tab="messages">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Messages
+      </a>
+      <a href="#chat-logs" class="nav-link" data-tab="chat-logs">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        AI Chat Logs
+      </a>
+      <a href="#reports" class="nav-link" data-tab="reports">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Reports
+      </a>
+    </nav>
+    <div class="sidebar-foot">
+      <div id="user-info"></div>
+      <a href="#" id="logout-btn" style="color:#d4a017;">Logout →</a>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <div>
+        <h2 id="page-title" style="font-size:1.4rem;margin:0;color:var(--primary-dark);">Dashboard</h2>
+        <small class="card-meta">Library Management System</small>
+      </div>
+      <div class="flex">
+        <a href="/" class="btn btn-sm btn-ghost">← View Public Site</a>
+      </div>
+    </header>
+
+    <div class="admin-content">
+
+      <!-- DASHBOARD -->
+      <div class="tab-pane" id="tab-dashboard">
+        <div class="kpi-grid" id="kpi-grid"></div>
+        <div class="grid grid-3">
+          <div class="section-card">
+            <h3 class="mb-2">Most Borrowed Books</h3>
+            <div id="popular-books"></div>
+          </div>
+          <div class="section-card">
+            <h3 class="mb-2">Quick Actions</h3>
+            <a href="#books" class="btn btn-block btn-ghost mb-2" data-tab-link="books">+ Add New Book</a>
+            <a href="#events" class="btn btn-block btn-ghost mb-2" data-tab-link="events">+ Create Event</a>
+            <a href="#announcements" class="btn btn-block btn-ghost mb-2" data-tab-link="announcements">+ Post Announcement</a>
+            <a href="#members" class="btn btn-block btn-ghost" data-tab-link="members">Approve Pending Members</a>
+          </div>
+          <div class="section-card">
+            <h3 class="mb-2">System Status</h3>
+            <p style="margin-bottom:0.5rem;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="color:var(--success);vertical-align:-1px;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
+              Koha API: <span class="badge success">Connected</span>
+            </p>
+            <p style="margin-bottom:0.5rem;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="color:var(--success);vertical-align:-1px;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
+              Database: <span class="badge success">Healthy</span>
+            </p>
+            <p style="margin-bottom:0.5rem;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="color:var(--success);vertical-align:-1px;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
+              AI Chat: <span class="badge success">Active</span>
+            </p>
+            <p style="margin-bottom:0.5rem;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="color:var(--success);vertical-align:-1px;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
+              Email Gateway: <span class="badge success">Active</span>
+            </p>
+            <p>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="color:var(--success);vertical-align:-1px;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
+              Backup: <span class="badge success">Last: today</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOOKS -->
+      <div class="tab-pane hidden" id="tab-books">
+        <div class="section-card">
+          <div class="flex-between mb-3">
+            <h3>Catalog Management</h3>
+            <button class="btn btn-primary" id="add-book-btn">+ Add Book</button>
+          </div>
+          <div id="book-form-container"></div>
+          <input type="text" id="book-search" placeholder="Search title, author, ISBN..." class="mb-3" />
+          <div class="table-wrap">
+            <table class="data-table" id="books-table">
+              <thead><tr><th>Title</th><th>Author</th><th>ISBN</th><th>Category</th><th>Avail</th><th>Branch</th><th>Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CIRCULATION -->
+      <div class="tab-pane hidden" id="tab-circulation">
+        <div class="section-card">
+          <h3 class="mb-2">Issue a Book</h3>
+          <form id="issue-form" class="form-row">
+            <div class="form-group"><label>Member ID (numeric)</label><input type="number" name="user_id" required /></div>
+            <div class="form-group"><label>Book ID (numeric)</label><input type="number" name="book_id" required /></div>
+            <div class="form-group"><label>Loan period (days)</label><input type="number" name="days" value="14" /></div>
+            <div class="form-group" style="display:flex;align-items:flex-end;"><button class="btn btn-primary btn-block" type="submit">Issue Book</button></div>
+          </form>
+          <div id="issue-msg"></div>
+        </div>
+
+        <div class="section-card">
+          <h3 class="mb-2">All Loans</h3>
+          <div class="table-wrap">
+            <table class="data-table" id="loans-table">
+              <thead><tr><th>Loan #</th><th>Member</th><th>Book</th><th>Borrowed</th><th>Due</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEMBERS -->
+      <div class="tab-pane hidden" id="tab-members">
+        <div class="section-card">
+          <div class="flex-between mb-3">
+            <h3>Membership Management</h3>
+            <input type="text" id="member-search" placeholder="Search…" style="max-width:240px;" />
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="members-table">
+              <thead><tr><th>ID</th><th>Member ID</th><th>Name</th><th>Email</th><th>Category</th><th>Status</th><th>Role</th><th>Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- EVENTS -->
+      <div class="tab-pane hidden" id="tab-events">
+        <div class="section-card">
+          <h3 class="mb-2">Create Event</h3>
+          <form id="event-form">
+            <div class="form-row">
+              <div class="form-group"><label>Title *</label><input type="text" name="title" required /></div>
+              <div class="form-group"><label>Date & Time *</label><input type="datetime-local" name="event_date" required /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Location</label><input type="text" name="location" placeholder="Main Auditorium" /></div>
+              <div class="form-group">
+                <label>Category</label>
+                <select name="category">
+                  <option value="workshop">Workshop</option>
+                  <option value="children">Children</option>
+                  <option value="training">Training</option>
+                  <option value="author">Author Meet</option>
+                  <option value="exhibition">Exhibition</option>
+                  <option value="general">General</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Capacity</label><input type="number" name="capacity" value="50" /></div>
+              <div class="form-group"><label>Image URL</label><input type="text" name="image" placeholder="/images/event-default.svg" /></div>
+            </div>
+            <div class="form-group"><label>Description</label><textarea name="description"></textarea></div>
+            <button class="btn btn-primary" type="submit">Create Event</button>
+            <div id="event-msg" class="mt-2"></div>
+          </form>
+        </div>
+        <div class="section-card">
+          <h3 class="mb-2">All Events</h3>
+          <div class="table-wrap">
+            <table class="data-table" id="events-table">
+              <thead><tr><th>Title</th><th>Date</th><th>Category</th><th>Capacity</th><th>Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANNOUNCEMENTS -->
+      <div class="tab-pane hidden" id="tab-announcements">
+        <div class="section-card">
+          <h3 class="mb-2">Post Announcement</h3>
+          <form id="ann-form">
+            <div class="form-row">
+              <div class="form-group"><label>Title *</label><input type="text" name="title" required /></div>
+              <div class="form-group">
+                <label>Category</label>
+                <select name="category">
+                  <option value="general">General</option>
+                  <option value="services">Services</option>
+                  <option value="membership">Membership</option>
+                  <option value="notice">Notice</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group"><label>Body *</label><textarea name="body" required></textarea></div>
+            <div class="form-row">
+              <div class="form-group" style="display:flex;align-items:center;gap:0.5rem;"><input type="checkbox" name="featured" style="width:auto;" /> <label>Featured</label></div>
+              <div class="form-group" style="display:flex;align-items:center;gap:0.5rem;"><input type="checkbox" name="emergency" style="width:auto;" /> <label>Emergency / Urgent</label></div>
+            </div>
+            <button class="btn btn-primary" type="submit">Publish</button>
+            <div id="ann-msg" class="mt-2"></div>
+          </form>
+        </div>
+        <div class="section-card">
+          <h3 class="mb-2">All Announcements</h3>
+          <div class="table-wrap">
+            <table class="data-table" id="ann-table">
+              <thead><tr><th>Title</th><th>Category</th><th>Flags</th><th>Published</th><th>Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MESSAGES -->
+      <div class="tab-pane hidden" id="tab-messages">
+        <div class="section-card">
+          <h3 class="mb-2">Contact Messages</h3>
+          <div class="table-wrap">
+            <table class="data-table" id="msg-table">
+              <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Department</th><th>Subject</th><th>Message</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="tab-pane hidden" id="tab-reports">
+        <div class="section-card">
+          <h3 class="mb-3">Library Analytics</h3>
+          <div class="kpi-grid" id="report-kpis"></div>
+          <h4 class="mt-4 mb-2">Collection Performance</h4>
+          <div id="report-popular"></div>
+          <h4 class="mt-4 mb-2">Available Reports</h4>
+          <div class="grid grid-3">
+            <button class="btn btn-ghost" onclick="window.print()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Print Current View
+            </button>
+            <button class="btn btn-ghost" onclick="exportData('users')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export Members CSV
+            </button>
+            <button class="btn btn-ghost" onclick="exportData('books')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export Catalog CSV
+            </button>
+            <button class="btn btn-ghost" onclick="exportData('loans')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export Loans CSV
+            </button>
+            <button class="btn btn-ghost" onclick="exportData('events')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export Events CSV
+            </button>
+            <button class="btn btn-ghost" onclick="exportData('announcements')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export Announcements CSV
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI CHAT LOGS -->
+      <div class="tab-pane hidden" id="tab-chat-logs">
+        <div class="section-card">
+          <div class="flex-between mb-3">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:6px;color:var(--primary)"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              AI Library Assistant — Chat Logs
+            </h3>
+            <div class="flex gap-sm">
+              <span class="badge" id="chat-total-badge">—</span>
+              <button class="btn btn-sm btn-ghost" id="refresh-chats-btn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+          <div class="grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;">
+            <!-- Sessions list -->
+            <div>
+              <h4 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin-bottom:0.75rem;">Conversations</h4>
+              <div id="chat-sessions-list" style="display:flex;flex-direction:column;gap:0.5rem;max-height:60vh;overflow-y:auto;"></div>
+            </div>
+            <!-- Transcript viewer -->
+            <div>
+              <h4 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin-bottom:0.75rem;">Transcript</h4>
+              <div id="chat-transcript" style="background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;min-height:200px;max-height:60vh;overflow-y:auto;">
+                <p style="color:var(--text-muted);font-size:0.9rem;text-align:center;padding-top:3rem;">Select a conversation to view the transcript.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/admin.js"></script>
+</body>
+</html>

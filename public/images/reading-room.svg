@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <rect width="800" height="500" fill="#fce8a3"/>
+  <!-- Floor -->
+  <rect x="0" y="380" width="800" height="120" fill="#a3651a"/>
+  <!-- Back wall shelves -->
+  <rect x="50" y="80" width="700" height="300" fill="#5d3a0e"/>
+  <g fill="#d4a017">
+    <rect x="60" y="100" width="680" height="6"/>
+    <rect x="60" y="170" width="680" height="6"/>
+    <rect x="60" y="240" width="680" height="6"/>
+    <rect x="60" y="310" width="680" height="6"/>
+  </g>
+  <!-- Books -->
+  <g>
+    <rect x="70" y="106" width="14" height="64" fill="#0e4d5c"/>
+    <rect x="86" y="110" width="12" height="60" fill="#c0392b"/>
+    <rect x="100" y="106" width="14" height="64" fill="#d4a017"/>
+    <rect x="116" y="108" width="14" height="62" fill="#2d8659"/>
+    <rect x="132" y="106" width="12" height="64" fill="#7a4cad"/>
+    <rect x="146" y="110" width="14" height="60" fill="#1a7387"/>
+    <rect x="162" y="106" width="14" height="64" fill="#c0392b"/>
+    <rect x="178" y="108" width="12" height="62" fill="#d4a017"/>
+  </g>
+  <g transform="translate(200 0)">
+    <rect x="70" y="106" width="14" height="64" fill="#5d3b8a"/>
+    <rect x="86" y="110" width="12" height="60" fill="#a3651a"/>
+    <rect x="100" y="106" width="14" height="64" fill="#0e4d5c"/>
+    <rect x="116" y="108" width="14" height="62" fill="#d4a017"/>
+    <rect x="132" y="106" width="12" height="64" fill="#c0392b"/>
+    <rect x="146" y="110" width="14" height="60" fill="#2d8659"/>
+    <rect x="162" y="106" width="14" height="64" fill="#1a7387"/>
+    <rect x="178" y="108" width="12" height="62" fill="#7a4cad"/>
+  </g>
+  <g transform="translate(400 0)">
+    <rect x="70" y="106" width="14" height="64" fill="#c0392b"/>
+    <rect x="86" y="110" width="12" height="60" fill="#0e4d5c"/>
+    <rect x="100" y="106" width="14" height="64" fill="#d4a017"/>
+    <rect x="116" y="108" width="14" height="62" fill="#5d3b8a"/>
+    <rect x="132" y="106" width="12" height="64" fill="#a3651a"/>
+    <rect x="146" y="110" width="14" height="60" fill="#2d8659"/>
+    <rect x="162" y="106" width="14" height="64" fill="#1a7387"/>
+    <rect x="178" y="108" width="12" height="62" fill="#c0392b"/>
+  </g>
+  <g transform="translate(0 70)">
+    <rect x="70" y="106" width="14" height="64" fill="#2d8659"/>
+    <rect x="86" y="110" width="12" height="60" fill="#7a4cad"/>
+    <rect x="100" y="106" width="14" height="64" fill="#a3651a"/>
+    <rect x="116" y="108" width="14" height="62" fill="#0e4d5c"/>
+    <rect x="132" y="106" width="12" height="64" fill="#c0392b"/>
+    <rect x="146" y="110" width="14" height="60" fill="#d4a017"/>
+    <rect x="162" y="106" width="14" height="64" fill="#5d3b8a"/>
+    <rect x="178" y="108" width="12" height="62" fill="#1a7387"/>
+  </g>
+  <g transform="translate(200 70)">
+    <rect x="70" y="106" width="14" height="64" fill="#0e4d5c"/>
+    <rect x="86" y="110" width="12" height="60" fill="#d4a017"/>
+    <rect x="100" y="106" width="14" height="64" fill="#c0392b"/>
+    <rect x="116" y="108" width="14" height="62" fill="#2d8659"/>
+    <rect x="132" y="106" width="12" height="64" fill="#7a4cad"/>
+    <rect x="146" y="110" width="14" height="60" fill="#a3651a"/>
+    <rect x="162" y="106" width="14" height="64" fill="#1a7387"/>
+    <rect x="178" y="108" width="12" height="62" fill="#5d3b8a"/>
+  </g>
+  <g transform="translate(400 70)">
+    <rect x="70" y="106" width="14" height="64" fill="#d4a017"/>
+    <rect x="86" y="110" width="12" height="60" fill="#5d3b8a"/>
+    <rect x="100" y="106" width="14" height="64" fill="#2d8659"/>
+    <rect x="116" y="108" width="14" height="62" fill="#c0392b"/>
+    <rect x="132" y="106" width="12" height="64" fill="#0e4d5c"/>
+    <rect x="146" y="110" width="14" height="60" fill="#a3651a"/>
+    <rect x="162" y="106" width="14" height="64" fill="#7a4cad"/>
+    <rect x="178" y="108" width="12" height="62" fill="#1a7387"/>
+  </g>
+  <!-- Reading table -->
+  <rect x="280" y="370" width="240" height="14" fill="#5d3a0e"/>
+  <rect x="295" y="384" width="8" height="40" fill="#3a261b"/>
+  <rect x="497" y="384" width="8" height="40" fill="#3a261b"/>
+  <!-- Lamp -->
+  <rect x="395" y="335" width="10" height="35" fill="#3a261b"/>
+  <ellipse cx="400" cy="330" rx="22" ry="14" fill="#d4a017"/>
+  <circle cx="400" cy="350" r="40" fill="#fce8a3" opacity="0.5"/>
+</svg>

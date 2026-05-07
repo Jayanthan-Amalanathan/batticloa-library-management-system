@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 560" preserveAspectRatio="xMidYMid slice">
+  <!-- Sky gradient -->
+  <defs>
+    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#062f3a"/>
+      <stop offset="100%" stop-color="#0e4d5c"/>
+    </linearGradient>
+    <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a3d4f"/>
+      <stop offset="100%" stop-color="#051f28"/>
+    </linearGradient>
+    <linearGradient id="buildingGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a5c70"/>
+      <stop offset="100%" stop-color="#0e4d5c"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="70%" cy="25%" r="30%">
+      <stop offset="0%" stop-color="#d4a017" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#d4a017" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background sky -->
+  <rect width="1440" height="560" fill="url(#skyGrad)"/>
+  <rect width="1440" height="560" fill="url(#sunGlow)"/>
+
+  <!-- Stars -->
+  <g fill="#ffffff" opacity="0.3">
+    <circle cx="100" cy="40" r="1.5"/>
+    <circle cx="240" cy="80" r="1"/>
+    <circle cx="380" cy="30" r="1.5"/>
+    <circle cx="520" cy="60" r="1"/>
+    <circle cx="660" cy="25" r="1"/>
+    <circle cx="1000" cy="50" r="1.5"/>
+    <circle cx="1140" cy="35" r="1"/>
+    <circle cx="1300" cy="70" r="1.5"/>
+    <circle cx="1400" cy="20" r="1"/>
+    <circle cx="850" cy="45" r="1"/>
+  </g>
+
+  <!-- Palm trees left -->
+  <g opacity="0.6">
+    <rect x="60" y="220" width="8" height="200" rx="4" fill="#1a3040"/>
+    <ellipse cx="64" cy="210" rx="45" ry="20" fill="#1a4530" transform="rotate(-20 64 210)"/>
+    <ellipse cx="64" cy="210" rx="40" ry="18" fill="#1a4530" transform="rotate(15 64 210)"/>
+    <ellipse cx="64" cy="210" rx="42" ry="19" fill="#1a4530" transform="rotate(-5 64 210)"/>
+  </g>
+  <g opacity="0.5">
+    <rect x="120" y="260" width="6" height="160" rx="3" fill="#1a3040"/>
+    <ellipse cx="123" cy="252" rx="35" ry="16" fill="#1a4530" transform="rotate(-15 123 252)"/>
+    <ellipse cx="123" cy="252" rx="32" ry="15" fill="#1a4530" transform="rotate(20 123 252)"/>
+  </g>
+
+  <!-- Palm trees right -->
+  <g opacity="0.6">
+    <rect x="1372" y="200" width="8" height="220" rx="4" fill="#1a3040"/>
+    <ellipse cx="1376" cy="190" rx="45" ry="20" fill="#1a4530" transform="rotate(20 1376 190)"/>
+    <ellipse cx="1376" cy="190" rx="40" ry="18" fill="#1a4530" transform="rotate(-15 1376 190)"/>
+    <ellipse cx="1376" cy="190" rx="42" ry="19" fill="#1a4530" transform="rotate(5 1376 190)"/>
+  </g>
+
+  <!-- Library building (main) -->
+  <!-- Foundation -->
+  <rect x="420" y="310" width="600" height="200" fill="#0e4d5c"/>
+  <!-- Main structure -->
+  <rect x="440" y="260" width="560" height="260" fill="url(#buildingGrad)"/>
+  <!-- Columns -->
+  <rect x="470" y="270" width="18" height="250" fill="#1a6678" rx="3"/>
+  <rect x="520" y="270" width="18" height="250" fill="#1a6678" rx="3"/>
+  <rect x="570" y="270" width="18" height="250" fill="#1a6678" rx="3"/>
+  <rect x="850" y="270" width="18" height="250" fill="#1a6678" rx="3"/>
+  <rect x="900" y="270" width="18" height="250" fill="#1a6678" rx="3"/>
+  <rect x="950" y="270" width="18" height="250" fill="#1a6678" rx="3"/>
+  <!-- Entablature -->
+  <rect x="440" y="255" width="560" height="20" fill="#1a7387"/>
+  <!-- Pediment / roof -->
+  <polygon points="440,255 720,170 1000,255" fill="#1a6678"/>
+  <polygon points="460,255 720,183 980,255" fill="#155968"/>
+  <!-- Triangular window in pediment -->
+  <polygon points="680,215 720,190 760,215" fill="rgba(212,160,23,0.3)" stroke="#d4a017" stroke-width="1.5"/>
+  <!-- Dome (central feature) -->
+  <ellipse cx="720" cy="170" rx="50" ry="30" fill="#1a5c70"/>
+  <ellipse cx="720" cy="155" rx="40" ry="25" fill="#1a6678"/>
+  <rect x="715" y="130" width="10" height="30" fill="#1a5c70"/>
+  <circle cx="720" cy="125" r="8" fill="#d4a017"/>
+
+  <!-- Library windows -->
+  <rect x="490" y="300" width="55" height="80" rx="2" fill="rgba(212,160,23,0.15)" stroke="#d4a017" stroke-width="1"/>
+  <rect x="560" y="300" width="55" height="80" rx="2" fill="rgba(212,160,23,0.15)" stroke="#d4a017" stroke-width="1"/>
+  <rect x="800" y="300" width="55" height="80" rx="2" fill="rgba(212,160,23,0.15)" stroke="#d4a017" stroke-width="1"/>
+  <rect x="870" y="300" width="55" height="80" rx="2" fill="rgba(212,160,23,0.15)" stroke="#d4a017" stroke-width="1"/>
+  <!-- Arched windows centre -->
+  <rect x="665" y="295" width="110" height="100" rx="55" fill="rgba(212,160,23,0.12)" stroke="#d4a017" stroke-width="1.5"/>
+  <!-- Door -->
+  <rect x="695" y="390" width="50" height="80" rx="4" fill="#062f3a" stroke="#d4a017" stroke-width="1.5"/>
+
+  <!-- Sign on building -->
+  <rect x="530" y="240" width="380" height="18" rx="3" fill="rgba(212,160,23,0.2)"/>
+
+  <!-- Lagoon / water (Batticaloa lagoon) -->
+  <rect x="0" y="420" width="1440" height="140" fill="url(#waterGrad)" opacity="0.8"/>
+  <!-- Water ripples -->
+  <path d="M0 430 Q180 420 360 430 Q540 440 720 430 Q900 420 1080 430 Q1260 440 1440 430" fill="none" stroke="#1a6678" stroke-width="1.5" opacity="0.4"/>
+  <path d="M0 450 Q180 440 360 450 Q540 460 720 450 Q900 440 1080 450 Q1260 460 1440 450" fill="none" stroke="#1a6678" stroke-width="1" opacity="0.3"/>
+  <!-- Boat silhouette (traditional Batticaloa fishing boat) -->
+  <path d="M200 435 Q230 425 260 435 L270 445 L190 445 Z" fill="#051f28" opacity="0.7"/>
+  <line x1="225" y1="435" x2="225" y2="410" stroke="#051f28" stroke-width="2" opacity="0.7"/>
+  <path d="M225 410 Q245 415 230 425" fill="rgba(26,64,80,0.6)"/>
+
+  <!-- Light reflection on water -->
+  <path d="M700 425 Q720 440 740 425 Q730 450 720 455 Q710 450 700 425Z" fill="rgba(212,160,23,0.08)"/>
+
+  <!-- Ground / path -->
+  <rect x="420" y="460" width="600" height="20" fill="#0a3d4f" opacity="0.8"/>
+  <path d="M660 460 L720 470 L780 460" fill="#0d4557" opacity="0.6"/>
+
+  <!-- Moonlight glow -->
+  <circle cx="1020" cy="80" r="40" fill="#d4a017" opacity="0.08"/>
+  <circle cx="1020" cy="80" r="28" fill="#d4a017" opacity="0.06"/>
+  <circle cx="1020" cy="80" r="16" fill="#d4a017" opacity="0.12"/>
+
+  <!-- Books floating (decorative) -->
+  <g opacity="0.15" fill="#ffffff">
+    <rect x="160" y="180" width="20" height="28" rx="2"/>
+    <rect x="167" y="176" width="20" height="28" rx="2"/>
+    <rect x="1240" y="200" width="18" height="25" rx="2"/>
+    <rect x="1246" y="196" width="18" height="25" rx="2"/>
+  </g>
+</svg>

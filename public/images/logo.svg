@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="lg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#0e4d5c"/>
+      <stop offset="100%" stop-color="#1a7387"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="56" fill="url(#lg)"/>
+  <circle cx="60" cy="60" r="56" fill="none" stroke="#d4a017" stroke-width="3"/>
+  <!-- Open book -->
+  <g transform="translate(60 60)">
+    <path d="M-30 -10 Q-30 -20 -20 -20 L-2 -16 L-2 18 L-20 14 Q-30 14 -30 4 Z" fill="#fff" opacity="0.95"/>
+    <path d="M30 -10 Q30 -20 20 -20 L2 -16 L2 18 L20 14 Q30 14 30 4 Z" fill="#fff" opacity="0.95"/>
+    <line x1="-2" y1="-16" x2="-2" y2="18" stroke="#0e4d5c" stroke-width="1.2"/>
+    <line x1="2" y1="-16" x2="2" y2="18" stroke="#0e4d5c" stroke-width="1.2"/>
+    <!-- Page lines -->
+    <line x1="-22" y1="-10" x2="-6" y2="-7" stroke="#0e4d5c" stroke-width="0.8"/>
+    <line x1="-22" y1="-4" x2="-6" y2="-1" stroke="#0e4d5c" stroke-width="0.8"/>
+    <line x1="-22" y1="2" x2="-6" y2="5" stroke="#0e4d5c" stroke-width="0.8"/>
+    <line x1="22" y1="-10" x2="6" y2="-7" stroke="#0e4d5c" stroke-width="0.8"/>
+    <line x1="22" y1="-4" x2="6" y2="-1" stroke="#0e4d5c" stroke-width="0.8"/>
+    <line x1="22" y1="2" x2="6" y2="5" stroke="#0e4d5c" stroke-width="0.8"/>
+  </g>
+  <!-- Star (heritage) -->
+  <polygon points="60,18 62,24 68,24 63,28 65,34 60,30 55,34 57,28 52,24 58,24" fill="#d4a017"/>
+</svg>

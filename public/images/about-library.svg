@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="sky2" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#fce8a3"/>
+      <stop offset="100%" stop-color="#f5d76e"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#sky2)"/>
+  <!-- Sun -->
+  <circle cx="650" cy="150" r="60" fill="#fff" opacity="0.7"/>
+  <!-- Library building -->
+  <rect x="100" y="250" width="600" height="280" fill="#0e4d5c"/>
+  <!-- Roof -->
+  <polygon points="80,250 720,250 660,170 140,170" fill="#062f3a"/>
+  <polygon points="380,140 420,140 400,100" fill="#d4a017"/>
+  <!-- Columns -->
+  <rect x="150" y="280" width="20" height="220" fill="#fafaf7"/>
+  <rect x="230" y="280" width="20" height="220" fill="#fafaf7"/>
+  <rect x="310" y="280" width="20" height="220" fill="#fafaf7"/>
+  <rect x="470" y="280" width="20" height="220" fill="#fafaf7"/>
+  <rect x="550" y="280" width="20" height="220" fill="#fafaf7"/>
+  <rect x="630" y="280" width="20" height="220" fill="#fafaf7"/>
+  <!-- Door -->
+  <rect x="370" y="350" width="60" height="180" fill="#d4a017"/>
+  <rect x="375" y="355" width="50" height="170" fill="#a3651a"/>
+  <!-- Stairs -->
+  <rect x="60" y="530" width="680" height="12" fill="#fafaf7"/>
+  <rect x="80" y="542" width="640" height="12" fill="#e3e8ee"/>
+  <rect x="100" y="554" width="600" height="12" fill="#cfdbe0"/>
+  <!-- Windows -->
+  <rect x="180" y="320" width="40" height="60" fill="#1a7387" stroke="#fff" stroke-width="2"/>
+  <rect x="260" y="320" width="40" height="60" fill="#1a7387" stroke="#fff" stroke-width="2"/>
+  <rect x="500" y="320" width="40" height="60" fill="#1a7387" stroke="#fff" stroke-width="2"/>
+  <rect x="580" y="320" width="40" height="60" fill="#1a7387" stroke="#fff" stroke-width="2"/>
+  <!-- Trees -->
+  <circle cx="50" cy="490" r="40" fill="#2d8659"/>
+  <rect x="46" y="490" width="8" height="40" fill="#5d3a0e"/>
+  <circle cx="750" cy="490" r="40" fill="#2d8659"/>
+  <rect x="746" y="490" width="8" height="40" fill="#5d3a0e"/>
+  <!-- Sign -->
+  <rect x="320" y="200" width="160" height="36" fill="#fafaf7" stroke="#d4a017" stroke-width="2"/>
+  <text x="400" y="225" text-anchor="middle" fill="#062f3a" font-family="Georgia,serif" font-size="14" font-weight="700">PUBLIC LIBRARY</text>
+</svg>
