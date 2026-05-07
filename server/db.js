@@ -2,8 +2,14 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-const dataDir = path.join(__dirname, '..', 'data');
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+// On Vercel (serverless), only /tmp is writable. Fall back to it when the
+// project-local data directory cannot be created (read-only filesystem).
+let dataDir = path.join(__dirname, '..', 'data');
+try {
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+} catch {
+  dataDir = '/tmp';
+}
 
 const db = new Database(path.join(dataDir, 'library.db'));
 db.pragma('journal_mode = WAL');

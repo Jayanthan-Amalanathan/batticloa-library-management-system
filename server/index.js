@@ -1048,6 +1048,7 @@ app.get('/admin', (req, res) => {
   }
   res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
 });
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'login.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'register.html')));
 app.get('/catalog', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'catalog.html')));
@@ -1065,8 +1066,13 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`\n📚 Batticaloa Public Library running on http://localhost:${PORT}`);
-  console.log(`   Admin panel: http://localhost:${PORT}/admin`);
-  console.log(`   Login:       http://localhost:${PORT}/login\n`);
-});
+// Export for Vercel serverless; also start the server when run directly.
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\n📚 Batticaloa Public Library running on http://localhost:${PORT}`);
+    console.log(`   Admin panel: http://localhost:${PORT}/admin`);
+    console.log(`   Login:       http://localhost:${PORT}/login\n`);
+  });
+}
+
+module.exports = app;
