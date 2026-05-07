@@ -149,10 +149,15 @@ CREATE TABLE IF NOT EXISTS audit_log (
 
 CREATE TABLE IF NOT EXISTS chat_sessions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  session_id TEXT NOT NULL,
+  session_id TEXT NOT NULL UNIQUE,
   user_id INTEGER,
   visitor_ip TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS revoked_tokens (
+  token TEXT PRIMARY KEY,
+  expires_at DATETIME NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS chat_messages (

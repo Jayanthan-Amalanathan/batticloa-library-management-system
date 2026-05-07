@@ -2,34 +2,48 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('./db');
 
+// ISSUE-04: refuse to start with the public fallback secret in production
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
+if (JWT_SECRET === 'dev_secret' && process.env.NODE_ENV === 'production') {
+  console.error('FATAL: JWT_SECRET env var is not set. Refusing to start in production with the default secret.');
+  process.exit(1);
+}
+if (JWT_SECRET === 'dev_secret') {
+  console.warn('WARNING: JWT_SECRET is not set — using insecure fallback. Set JWT_SECRET in your environment.');
+}
 
-// DEF-009: in-memory token blocklist for revoked JWTs.
-// Entries are auto-pruned when the token would have expired anyway.
-const revokedTokens = new Map(); // token → expiry timestamp (ms)
-
+// DEF-009 / ISSUE-02: DB-backed token revocation so it survives serverless cold starts.
+// Falls back gracefully if the table doesn't exist yet (shouldn't happen after db.js runs).
 function revokeToken(token) {
   try {
     const decoded = jwt.decode(token);
     if (decoded?.exp) {
-      revokedTokens.set(token, decoded.exp * 1000);
+      db.prepare(
+        'INSERT OR IGNORE INTO revoked_tokens (token, expires_at) VALUES (?, ?)'
+      ).run(token, new Date(decoded.exp * 1000).toISOString());
     }
   } catch { /* ignore malformed tokens */ }
 }
 
 function isTokenRevoked(token) {
-  if (!revokedTokens.has(token)) return false;
-  const exp = revokedTokens.get(token);
-  if (Date.now() > exp) { revokedTokens.delete(token); return false; }
-  return true;
+  try {
+    const row = db.prepare('SELECT expires_at FROM revoked_tokens WHERE token = ?').get(token);
+    if (!row) return false;
+    if (new Date(row.expires_at) <= new Date()) {
+      db.prepare('DELETE FROM revoked_tokens WHERE token = ?').run(token);
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-// Prune expired revocations every hour
+// Prune expired revocations every hour to keep the table small
 setInterval(() => {
-  const now = Date.now();
-  for (const [t, exp] of revokedTokens) {
-    if (now > exp) revokedTokens.delete(t);
-  }
+  try {
+    db.prepare("DELETE FROM revoked_tokens WHERE expires_at <= datetime('now')").run();
+  } catch { /* best-effort */ }
 }, 60 * 60 * 1000);
 
 function hashPassword(plain) {

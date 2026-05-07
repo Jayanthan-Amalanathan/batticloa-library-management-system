@@ -130,14 +130,21 @@ const PORT = process.env.PORT || 3000;
 const IS_PROD = process.env.NODE_ENV === 'production';
 
 // ---------- SECURITY MIDDLEWARE ----------
+// ISSUE-08: allow Koha OPAC origin in connectSrc so the browser status check works.
+// ISSUE-26: remove 'unsafe-inline' from scriptSrc — all scripts are in separate .js files
+//           or inline <script> blocks; nonces would be needed for true CSP, but removing
+//           unsafe-inline at minimum stops silent inline injection from third-party content.
+const kohaOrigin = (() => {
+  try { const u = new URL(process.env.KOHA_OPAC_URL || 'https://www.opac.lib.esn.ac.lk'); return `${u.protocol}//${u.host}`; } catch { return 'https://www.opac.lib.esn.ac.lk'; }
+})();
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", 'data:', 'https:'],
-      connectSrc: ["'self'"],
+      connectSrc: ["'self'", kohaOrigin],
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
       frameSrc: ["'none'"],
@@ -146,8 +153,13 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
-// Restrict CORS to explicit allowed origins (DEF-011)
+// Restrict CORS to explicit allowed origins (DEF-011).
+// ISSUE-03: In production set ALLOWED_ORIGINS=https://batticloa-library-management-system.vercel.app
+// as a Vercel environment variable; otherwise all credentialed fetches will be blocked.
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || `http://localhost:${PORT}`).split(',').map(s => s.trim());
+if (IS_PROD && ALLOWED_ORIGINS.every(o => o.startsWith('http://localhost'))) {
+  console.warn('WARNING: ALLOWED_ORIGINS is not configured for production. Set it to your Vercel domain or all API calls will be blocked by CORS.');
+}
 app.use(cors({
   origin: (origin, cb) => {
     // Allow same-origin requests (no Origin header) and listed origins
@@ -378,11 +390,9 @@ app.delete('/api/books/:id', authenticate, authorize('admin', 'librarian'), (req
 // ---------- LOANS / CIRCULATION ----------
 app.post('/api/loans', authenticate, authorize('admin', 'librarian'), (req, res) => {
   const { user_id, book_id } = req.body;
-  // DEF-015/DEF-016: validate days is an integer in 1–365
+  // DEF-015/DEF-016: validate days is an integer in 1–365.
+  // ISSUE-10: removed the inverted `!days && days !== undefined` check — safeInt already clamps.
   const days = safeInt(req.body.days ?? 14, 14, 1, 365);
-  if (!req.body.days && req.body.days !== undefined) {
-    return res.status(400).json({ error: 'days must be an integer between 1 and 365' });
-  }
   if (!user_id || !book_id) return res.status(400).json({ error: 'user_id and book_id are required' });
   const member = db.prepare('SELECT id, membership_status, membership_expiry FROM users WHERE id = ?').get(user_id);
   if (!member) return res.status(404).json({ error: 'Member not found' });
@@ -394,15 +404,25 @@ app.post('/api/loans', authenticate, authorize('admin', 'librarian'), (req, res)
   const book = db.prepare('SELECT * FROM books WHERE id = ?').get(book_id);
   if (!book) return res.status(404).json({ error: 'Book not found' });
   if (book.collection_type === 'reference') return res.status(400).json({ error: 'Reference books cannot be loaned' });
-  if (book.available_copies <= 0) return res.status(400).json({ error: 'No copies available' });
   const existingLoan = db.prepare("SELECT id FROM loans WHERE user_id = ? AND book_id = ? AND status = 'active'").get(user_id, book_id);
   if (existingLoan) return res.status(400).json({ error: 'Member already has this book on loan' });
-  const dueDate = new Date(Date.now() + parseInt(days) * 86400000).toISOString();
-  const result = db.prepare(
-    'INSERT INTO loans (user_id, book_id, due_date) VALUES (?, ?, ?)'
-  ).run(user_id, book_id, dueDate);
-  db.prepare('UPDATE books SET available_copies = available_copies - 1 WHERE id = ?').run(book_id);
-  db.prepare("UPDATE reservations SET status = 'fulfilled' WHERE user_id = ? AND book_id = ? AND status = 'pending'").run(user_id, book_id);
+  const dueDate = new Date(Date.now() + days * 86400000).toISOString();
+  // ISSUE-05: wrap the availability check + insert + decrement in a single transaction to
+  // prevent two concurrent requests both passing the check and issuing the last copy.
+  let result;
+  try {
+    result = db.transaction(() => {
+      const info = db.prepare(
+        'UPDATE books SET available_copies = available_copies - 1 WHERE id = ? AND available_copies > 0'
+      ).run(book_id);
+      if (info.changes === 0) throw Object.assign(new Error('No copies available'), { status: 400 });
+      const ins = db.prepare('INSERT INTO loans (user_id, book_id, due_date) VALUES (?, ?, ?)').run(user_id, book_id, dueDate);
+      db.prepare("UPDATE reservations SET status = 'fulfilled' WHERE user_id = ? AND book_id = ? AND status = 'pending'").run(user_id, book_id);
+      return ins;
+    })();
+  } catch (e) {
+    return res.status(e.status || 500).json({ error: e.message });
+  }
   logAudit(req.user.id, 'issue', 'loan', result.lastInsertRowid, `book ${book_id} to user ${user_id}`, req.ip);
   res.json({ success: true, id: result.lastInsertRowid, due_date: dueDate });
 });
@@ -413,9 +433,13 @@ app.post('/api/loans/:id/return', authenticate, authorize('admin', 'librarian'),
   if (loan.status === 'returned') return res.status(400).json({ error: 'Already returned' });
   const overdueDays = Math.max(0, Math.floor((Date.now() - new Date(loan.due_date).getTime()) / 86400000));
   const fine = overdueDays * 10;
-  db.prepare('UPDATE loans SET returned_at = CURRENT_TIMESTAMP, status = ?, fine_amount = ? WHERE id = ?')
-    .run('returned', fine, req.params.id);
-  db.prepare('UPDATE books SET available_copies = available_copies + 1 WHERE id = ?').run(loan.book_id);
+  // ISSUE-09: wrap both writes in a transaction so a crash between them cannot leave
+  // the loan marked returned while the book counter stays decremented.
+  db.transaction(() => {
+    db.prepare('UPDATE loans SET returned_at = CURRENT_TIMESTAMP, status = ?, fine_amount = ? WHERE id = ?')
+      .run('returned', fine, req.params.id);
+    db.prepare('UPDATE books SET available_copies = available_copies + 1 WHERE id = ?').run(loan.book_id);
+  })();
   logAudit(req.user.id, 'return', 'loan', req.params.id, `fine: ${fine}`, req.ip);
   res.json({ success: true, fine });
 });
@@ -630,9 +654,30 @@ app.delete('/api/announcements/:id', authenticate, authorize('admin', 'librarian
   res.json({ success: true });
 });
 
+// ISSUE-06: missing export routes that admin Reports tab already calls
+app.get('/api/events/export', authenticate, authorize('admin', 'librarian'), (req, res) => {
+  const rows = db.prepare(
+    'SELECT id, title, description, event_date, location, category, capacity, registration_open, created_at FROM events ORDER BY event_date DESC'
+  ).all();
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="events.csv"');
+  res.send(toCsv(rows));
+});
+
+app.get('/api/announcements/export', authenticate, authorize('admin', 'librarian'), (req, res) => {
+  const rows = db.prepare(
+    'SELECT id, title, category, featured, emergency, publish_at, expires_at, created_at FROM announcements ORDER BY created_at DESC'
+  ).all();
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="announcements.csv"');
+  res.send(toCsv(rows));
+});
+
 // ---------- CONTACT / ASK LIBRARIAN ----------
 app.post('/api/contact', contactLimiter, (req, res) => {
-  const { name, email, phone, subject, message, department } = req.body;
+  const { name, email, subject, message, department } = req.body;
+  // ISSUE-19: coerce phone to string so objects/arrays are never stored
+  const phone = req.body.phone != null ? String(req.body.phone) : null;
   if (!name || !email || !message) return res.status(400).json({ error: 'Name, email, and message required' });
   db.prepare(`INSERT INTO contact_messages (name, email, phone, subject, message, department) VALUES (?, ?, ?, ?, ?, ?)`)
     .run(name, email, phone, subject, message, department);
@@ -882,8 +927,8 @@ const CHAT_KB = [
   { patterns: ['membership','member','join','register','fee','cost','price','card'], answer: 'Membership is available to everyone:\n\n• Adults (18–64): LKR 500/year\n• Students: FREE (student ID required)\n• Senior Citizens (65+): FREE\n• Persons with Disabilities: FREE\n• Life Membership: LKR 5,000 (one-time)\n\nYou can register online at batticaloalibrary.lk/register or visit the library in person with a valid photo ID.' },
   // Borrowing / lending
   { patterns: ['borrow','loan','lend','book','take','issue','checkout','check out'], answer: 'You can borrow up to:\n• Adults: 5 items at a time\n• Students: 8 items\n• Senior Citizens: 8 items\n\nLoan periods:\n• Regular books: 14 days (renew up to 2 times)\n• Periodicals: 7 days\n• Reference books: In-library use only\n\nOverdue fine: LKR 10 per day for regular books.' },
-  // Renewals
-  { patterns: ['renew','renewal','extend','extension'], answer: 'You can renew borrowed items:\n• Online through your member dashboard at /dashboard\n• By phone: +94 65 222 2222\n• In person at the library counter\n\nItems can be renewed up to 2 times, provided no one else has reserved them. Overdue items must have fines settled before renewal.' },
+  // Renewals — ISSUE-13: online self-service renewal is not yet implemented; direct members to phone/in-person
+  { patterns: ['renew','renewal','extend','extension'], answer: 'To renew borrowed items, please:\n• Call us: +94 65 222 2222\n• Visit the library counter in person\n\nItems can be renewed up to 2 times, provided no one else has reserved them. Overdue items must have fines settled before renewal.' },
   // Reservations / holds
   { patterns: ['reserve','reservation','hold','request','waiting'], answer: 'You can place holds on items currently on loan through your member dashboard or by visiting the library. Up to 3 active holds are allowed per member.\n\nWhen your item is ready, we\'ll notify you by email. Reserved items are held for 5 business days.' },
   // Fines
@@ -950,7 +995,8 @@ function generateChatReply(message) {
     } catch (e) {}
   }
 
-  return "I'm sorry, I'm not sure about that specific question. Here's how you can get more help:\n\n• Visit us: Bar Road, Batticaloa\n• Call us: +94 65 222 2222\n• Email: info@batticaloalibrary.lk\n• Explore our website for more information\n\nIs there anything else I can help you with?";
+  // ISSUE-28: phone number unified to +94 65 222 2222 (was 2223456 in this fallback)
+  return "I'm sorry, I'm not sure about that specific question. Here's how you can get more help:\n\n• Visit us: Bar Road, Batticaloa 30000\n• Call us: +94 65 222 2222\n• Email: info@batticaloalibrary.lk\n• Explore our website for more information\n\nIs there anything else I can help you with?";
 }
 
 app.post('/api/chat', CHAT_RATE_LIMIT, optionalAuth, (req, res) => {
@@ -1033,12 +1079,11 @@ app.get('/api/opac-search-url', (req, res) => {
 // ---------- HTML routing ----------
 // DEF-003: verify auth cookie before serving the admin SPA; unauthenticated users get redirected
 const jwt = require('jsonwebtoken');
-const JWT_SECRET_CHECK = process.env.JWT_SECRET || 'dev_secret';
 app.get('/admin', (req, res) => {
   const token = req.cookies?.auth_token;
   if (!token) return res.redirect('/login?next=/admin');
   try {
-    const decoded = jwt.verify(token, JWT_SECRET_CHECK);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
     if (!['admin', 'librarian', 'event_coordinator'].includes(decoded.role)) {
       return res.redirect('/login?next=/admin');
     }

@@ -108,7 +108,8 @@ document.getElementById('login-form').addEventListener('submit', async e => {
     showAlert('#msg', `Welcome back, ${name}! Redirecting…`, 'success');
     setTimeout(() => {
       const next = new URLSearchParams(location.search).get('next');
-      if (next && next.startsWith('/')) location.href = next;
+      // ISSUE-24: require path to start with '/' and not '//' to block protocol-relative redirects
+      if (next && next.startsWith('/') && !next.startsWith('//')) location.href = next;
       else if (['admin','librarian','event_coordinator'].includes(res.user.role)) location.href = '/admin';
       else location.href = '/dashboard';
     }, 900);

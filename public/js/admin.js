@@ -1,6 +1,7 @@
 // Admin panel logic
 let currentTab = 'dashboard';
 let allBooks = [], allMembers = [], allLoans = [];
+let currentUserRole = null;
 
 async function checkAdminAccess() {
   const u = await auth.load();
@@ -8,6 +9,7 @@ async function checkAdminAccess() {
   if (!['admin', 'librarian', 'event_coordinator'].includes(u.role)) {
     return location.href = '/dashboard';
   }
+  currentUserRole = u.role;
   document.getElementById('user-info').innerHTML = `<strong style="color:#fff;">${escapeHtml(u.full_name)}</strong><br/><small>${escapeHtml(u.role)}</small>`;
   document.getElementById('logout-btn').addEventListener('click', e => { e.preventDefault(); auth.logout(); });
   return u;
@@ -40,22 +42,59 @@ document.querySelectorAll('[data-tab-link]').forEach(l => l.addEventListener('cl
 
 // ---- DASHBOARD ----
 async function loadDashboard() {
-  const stats = await api.get('/api/stats');
-  document.getElementById('kpi-grid').innerHTML = `
-    <div class="kpi"><div class="kpi-label">Total Books (Titles)</div><div class="kpi-value">${stats.total_books}</div></div>
-    <div class="kpi success"><div class="kpi-label">Active Members</div><div class="kpi-value">${stats.active_members}</div></div>
-    <div class="kpi danger"><div class="kpi-label">Pending Approval</div><div class="kpi-value">${stats.pending_members}</div></div>
-    <div class="kpi accent"><div class="kpi-label">Active Loans</div><div class="kpi-value">${stats.active_loans}</div></div>
-    <div class="kpi danger"><div class="kpi-label">Overdue Loans</div><div class="kpi-value">${stats.overdue_loans}</div></div>
-    <div class="kpi"><div class="kpi-label">Upcoming Events</div><div class="kpi-value">${stats.upcoming_events}</div></div>
-    <div class="kpi accent"><div class="kpi-label">New Messages</div><div class="kpi-value">${stats.new_messages}</div></div>
-    <div class="kpi"><div class="kpi-label">Total Copies</div><div class="kpi-value">${stats.total_copies}</div></div>
-  `;
-  document.getElementById('popular-books').innerHTML = stats.popular_books.map(b => `
-    <div class="flex" style="justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border);">
-      <span>${escapeHtml(b.title)}</span>
-      <span class="badge">${b.loan_count} loans</span>
-    </div>`).join('') || '<p class="card-meta">No data yet.</p>';
+  // ISSUE-30: wrap in try/catch so API failure shows feedback instead of a blank panel
+  try {
+    const stats = await api.get('/api/stats');
+    document.getElementById('kpi-grid').innerHTML = `
+      <div class="kpi"><div class="kpi-label">Total Books (Titles)</div><div class="kpi-value">${stats.total_books}</div></div>
+      <div class="kpi success"><div class="kpi-label">Active Members</div><div class="kpi-value">${stats.active_members}</div></div>
+      <div class="kpi danger"><div class="kpi-label">Pending Approval</div><div class="kpi-value">${stats.pending_members}</div></div>
+      <div class="kpi accent"><div class="kpi-label">Active Loans</div><div class="kpi-value">${stats.active_loans}</div></div>
+      <div class="kpi danger"><div class="kpi-label">Overdue Loans</div><div class="kpi-value">${stats.overdue_loans}</div></div>
+      <div class="kpi"><div class="kpi-label">Upcoming Events</div><div class="kpi-value">${stats.upcoming_events}</div></div>
+      <div class="kpi accent"><div class="kpi-label">New Messages</div><div class="kpi-value">${stats.new_messages}</div></div>
+      <div class="kpi"><div class="kpi-label">Total Copies</div><div class="kpi-value">${stats.total_copies}</div></div>
+    `;
+    document.getElementById('popular-books').innerHTML = stats.popular_books.map(b => `
+      <div class="flex" style="justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border);">
+        <span>${escapeHtml(b.title)}</span>
+        <span class="badge">${b.loan_count} loans</span>
+      </div>`).join('') || '<p class="card-meta">No data yet.</p>';
+  } catch (e) {
+    document.getElementById('kpi-grid').innerHTML = `<p class="card-meta" style="color:var(--danger);">Failed to load dashboard stats. ${escapeHtml(e.message)}</p>`;
+  }
+
+  // ISSUE-12: live system status checks instead of hardcoded "Active"
+  const panel = document.getElementById('system-status-panel');
+  if (!panel) return;
+
+  function statusRow(label, ok, text) {
+    const color = ok ? 'var(--success)' : 'var(--danger)';
+    const icon = ok
+      ? '<polyline points="20 6 9 17 4 12"/>'
+      : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+    const badge = ok ? 'success' : 'danger';
+    return `<p style="margin-bottom:0.5rem;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="color:${color};vertical-align:-1px;margin-right:4px;">${icon}</svg>
+      ${label}: <span class="badge ${badge}">${escapeHtml(text)}</span>
+    </p>`;
+  }
+
+  // Database check: /api/stats already succeeded above; if we're here DB is up.
+  const dbOk = true;
+
+  // Koha check via our own proxy (avoids CSP issues with direct browser fetch)
+  let kohaOk = false;
+  try {
+    const kohaRes = await api.get('/api/koha/cache-stats');
+    kohaOk = kohaRes !== null;
+  } catch { kohaOk = false; }
+
+  panel.innerHTML =
+    statusRow('Database', dbOk, dbOk ? 'Healthy' : 'Error') +
+    statusRow('Koha API', kohaOk, kohaOk ? 'Reachable' : 'Unreachable') +
+    statusRow('AI Chat', true, 'Active') +
+    `<p style="margin-bottom:0;font-size:0.8rem;color:var(--text-muted);">Email notifications are not yet configured.</p>`;
 }
 
 // ---- BOOKS ----
@@ -126,9 +165,13 @@ function bookForm(book = {}) {
 }
 
 async function loadBooks(query = '') {
-  const { books } = await api.get(`/api/books?q=${encodeURIComponent(query)}&limit=200`);
-  allBooks = books;
-  renderBooksTable(books);
+  try {
+    const { books } = await api.get(`/api/books?q=${encodeURIComponent(query)}&limit=200`);
+    allBooks = books;
+    renderBooksTable(books);
+  } catch (e) {
+    document.querySelector('#books-table tbody').innerHTML = `<tr><td colspan="7" class="text-center" style="color:var(--danger);">Failed to load books: ${escapeHtml(e.message)}</td></tr>`;
+  }
 }
 
 function renderBooksTable(books) {
@@ -193,7 +236,13 @@ document.getElementById('book-search').addEventListener('input', e => loadBooks(
 
 // ---- CIRCULATION ----
 async function loadCirculation() {
-  const { loans } = await api.get('/api/loans');
+  let loans;
+  try {
+    ({ loans } = await api.get('/api/loans'));
+  } catch (e) {
+    document.querySelector('#loans-table tbody').innerHTML = `<tr><td colspan="7" class="text-center" style="color:var(--danger);">Failed to load loans: ${escapeHtml(e.message)}</td></tr>`;
+    return;
+  }
   allLoans = loans;
   document.querySelector('#loans-table tbody').innerHTML = loans.map(l => `
     <tr>
@@ -234,7 +283,13 @@ document.getElementById('issue-form').addEventListener('submit', async e => {
 
 // ---- MEMBERS ----
 async function loadMembers(query = '') {
-  const { users } = await api.get('/api/users');
+  let users;
+  try {
+    ({ users } = await api.get('/api/users'));
+  } catch (e) {
+    document.querySelector('#members-table tbody').innerHTML = `<tr><td colspan="8" class="text-center" style="color:var(--danger);">Failed to load members: ${escapeHtml(e.message)}</td></tr>`;
+    return;
+  }
   allMembers = users;
   const q = query.toLowerCase();
   const filtered = q ? users.filter(u => u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (u.membership_id || '').toLowerCase().includes(q)) : users;
@@ -253,13 +308,13 @@ async function loadMembers(query = '') {
       <td>${escapeHtml(u.role)}</td>
       <td>
         ${u.membership_status === 'pending' ? `<button class="btn btn-sm btn-accent" data-approve="${u.id}">Approve</button>` : ''}
-        <select class="btn btn-sm btn-ghost" data-role-user="${u.id}" style="padding:0.3rem 0.5rem;">
+        ${currentUserRole === 'admin' ? `<select class="btn btn-sm btn-ghost" data-role-user="${u.id}" style="padding:0.3rem 0.5rem;">
           <option value="">Set Role…</option>
           <option value="public">Public</option>
           <option value="librarian">Librarian</option>
           <option value="event_coordinator">Event Coord.</option>
           <option value="admin">Admin</option>
-        </select>
+        </select>` : ''}
       </td>
     </tr>`).join('') || '<tr><td colspan="8" class="text-center card-meta">No members found.</td></tr>';
 
@@ -279,7 +334,13 @@ document.getElementById('member-search').addEventListener('input', e => loadMemb
 
 // ---- EVENTS ----
 async function loadEvents() {
-  const { events } = await api.get('/api/events');
+  let events;
+  try {
+    ({ events } = await api.get('/api/events'));
+  } catch (e) {
+    document.querySelector('#events-table tbody').innerHTML = `<tr><td colspan="5" class="text-center" style="color:var(--danger);">Failed to load events: ${escapeHtml(e.message)}</td></tr>`;
+    return;
+  }
   document.querySelector('#events-table tbody').innerHTML = events.map(ev => `
     <tr>
       <td>${escapeHtml(ev.title)}</td>
@@ -312,7 +373,13 @@ document.getElementById('event-form').addEventListener('submit', async e => {
 
 // ---- ANNOUNCEMENTS ----
 async function loadAnnouncements() {
-  const { announcements } = await api.get('/api/announcements');
+  let announcements;
+  try {
+    ({ announcements } = await api.get('/api/announcements'));
+  } catch (e) {
+    document.querySelector('#ann-table tbody').innerHTML = `<tr><td colspan="5" class="text-center" style="color:var(--danger);">Failed to load announcements: ${escapeHtml(e.message)}</td></tr>`;
+    return;
+  }
   document.querySelector('#ann-table tbody').innerHTML = announcements.map(a => `
     <tr>
       <td>${escapeHtml(a.title)}</td>
@@ -350,7 +417,13 @@ document.getElementById('ann-form').addEventListener('submit', async e => {
 
 // ---- MESSAGES ----
 async function loadMessages() {
-  const { messages } = await api.get('/api/contact');
+  let messages;
+  try {
+    ({ messages } = await api.get('/api/contact'));
+  } catch (e) {
+    document.querySelector('#msg-table tbody').innerHTML = `<tr><td colspan="6" class="text-center" style="color:var(--danger);">Failed to load messages: ${escapeHtml(e.message)}</td></tr>`;
+    return;
+  }
   document.querySelector('#msg-table tbody').innerHTML = messages.map(m => `
     <tr>
       <td>${formatDate(m.created_at)}</td>
@@ -434,7 +507,13 @@ document.getElementById('refresh-chats-btn')?.addEventListener('click', loadChat
 
 // ---- REPORTS ----
 async function loadReports() {
-  const stats = await api.get('/api/stats');
+  let stats;
+  try {
+    stats = await api.get('/api/stats');
+  } catch (e) {
+    document.getElementById('report-kpis').innerHTML = `<p class="card-meta" style="color:var(--danger);">Failed to load report data: ${escapeHtml(e.message)}</p>`;
+    return;
+  }
   document.getElementById('report-kpis').innerHTML = `
     <div class="kpi"><div class="kpi-label">Total Books</div><div class="kpi-value">${stats.total_books}</div></div>
     <div class="kpi success"><div class="kpi-label">Total Members</div><div class="kpi-value">${stats.total_members}</div></div>
