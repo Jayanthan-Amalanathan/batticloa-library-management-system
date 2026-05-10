@@ -4,8 +4,10 @@ const path = require('path');
 // In production use TURSO_DATABASE_URL + TURSO_AUTH_TOKEN env vars (Turso cloud).
 // In development fall back to a local SQLite file via the file: protocol.
 let client;
+let isRemote = false;
 
 if (process.env.TURSO_DATABASE_URL) {
+  isRemote = true;
   client = createClient({
     url: process.env.TURSO_DATABASE_URL,
     authToken: process.env.TURSO_AUTH_TOKEN || undefined,
@@ -69,6 +71,9 @@ function transaction(fn) {
 }
 
 async function pragma(stmt) {
+  // Turso remote connections reject PRAGMA statements — skip them silently.
+  // WAL and foreign_keys are handled at the Turso server level automatically.
+  if (isRemote) return;
   await client.execute(`PRAGMA ${stmt}`);
 }
 
@@ -99,6 +104,7 @@ async function initSchema() {
     `CREATE TABLE IF NOT EXISTS books (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       isbn TEXT,
+      dlp_source_key TEXT,
       title TEXT NOT NULL,
       author TEXT NOT NULL,
       publisher TEXT,
@@ -221,11 +227,134 @@ async function initSchema() {
     )`,
     `CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id)`,
     `CREATE INDEX IF NOT EXISTS idx_chat_sessions_session ON chat_sessions(session_id)`,
+    `CREATE TABLE IF NOT EXISTS dlp_sync_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      completed_at DATETIME,
+      status TEXT DEFAULT 'running',
+      source TEXT DEFAULT 'dlp_koha',
+      books_added INTEGER DEFAULT 0,
+      books_updated INTEGER DEFAULT 0,
+      books_skipped INTEGER DEFAULT 0,
+      total_fetched INTEGER DEFAULT 0,
+      error_message TEXT,
+      triggered_by TEXT DEFAULT 'cron'
+    )`,
+    `CREATE TABLE IF NOT EXISTS dlp_books (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      koha_biblio_id INTEGER UNIQUE NOT NULL,
+      koha_item_id INTEGER,
+      isbn TEXT,
+      title TEXT NOT NULL,
+      author TEXT,
+      publisher TEXT,
+      publication_year INTEGER,
+      category TEXT,
+      collection_type TEXT DEFAULT 'lending',
+      language TEXT DEFAULT 'en',
+      call_number TEXT,
+      description TEXT,
+      branch TEXT,
+      location TEXT,
+      collection_code TEXT,
+      item_type TEXT,
+      total_copies INTEGER DEFAULT 1,
+      available_copies INTEGER DEFAULT 1,
+      not_for_loan INTEGER DEFAULT 0,
+      last_checkout_date TEXT,
+      checkouts_count INTEGER DEFAULT 0,
+      last_synced_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_dlp_books_biblio ON dlp_books(koha_biblio_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_dlp_books_isbn ON dlp_books(isbn)`,
   ];
 
   for (const stmt of tables) {
     await client.execute(stmt);
   }
+
+  // Idempotent column migrations — run before any indexes that depend on them
+  const migrations = [
+    `ALTER TABLE books ADD COLUMN dlp_source_key TEXT`,
+  ];
+  for (const stmt of migrations) {
+    try { await client.execute(stmt); } catch { /* column already exists — ignore */ }
+  }
+
+  // Indexes that depend on migrated columns — run after migrations
+  const postMigrationIndexes = [
+    `CREATE INDEX IF NOT EXISTS idx_books_dlp_source ON books(dlp_source_key)`,
+    // B-tree indexes to speed up LIKE searches on local books
+    `CREATE INDEX IF NOT EXISTS idx_books_title    ON books(title)`,
+    `CREATE INDEX IF NOT EXISTS idx_books_author   ON books(author)`,
+    `CREATE INDEX IF NOT EXISTS idx_books_category ON books(category)`,
+    `CREATE INDEX IF NOT EXISTS idx_books_branch   ON books(branch)`,
+    // B-tree indexes for dlp_books — covers the 80k-row search path
+    `CREATE INDEX IF NOT EXISTS idx_dlp_title      ON dlp_books(title)`,
+    `CREATE INDEX IF NOT EXISTS idx_dlp_author     ON dlp_books(author)`,
+    `CREATE INDEX IF NOT EXISTS idx_dlp_category   ON dlp_books(category)`,
+    `CREATE INDEX IF NOT EXISTS idx_dlp_branch     ON dlp_books(branch)`,
+    `CREATE INDEX IF NOT EXISTS idx_dlp_language   ON dlp_books(language)`,
+    `CREATE INDEX IF NOT EXISTS idx_dlp_available  ON dlp_books(available_copies)`,
+  ];
+  for (const stmt of postMigrationIndexes) {
+    await client.execute(stmt);
+  }
+
+  // FTS5 virtual tables for fast full-text search — gracefully skipped if the
+  // libsql build or Turso remote doesn't expose the fts5 extension.
+  const ftsStatements = [
+    `CREATE VIRTUAL TABLE IF NOT EXISTS books_fts USING fts5(
+      title, author, isbn, description, category,
+      content='books', content_rowid='id',
+      tokenize='unicode61 remove_diacritics 1'
+    )`,
+    `CREATE VIRTUAL TABLE IF NOT EXISTS dlp_books_fts USING fts5(
+      title, author, isbn, description, category,
+      content='dlp_books', content_rowid='id',
+      tokenize='unicode61 remove_diacritics 1'
+    )`,
+    // Keep books_fts in sync
+    `CREATE TRIGGER IF NOT EXISTS books_fts_insert AFTER INSERT ON books BEGIN
+       INSERT INTO books_fts(rowid, title, author, isbn, description, category)
+       VALUES (new.id, new.title, new.author, new.isbn, new.description, new.category);
+     END`,
+    `CREATE TRIGGER IF NOT EXISTS books_fts_delete AFTER DELETE ON books BEGIN
+       INSERT INTO books_fts(books_fts, rowid, title, author, isbn, description, category)
+       VALUES ('delete', old.id, old.title, old.author, old.isbn, old.description, old.category);
+     END`,
+    `CREATE TRIGGER IF NOT EXISTS books_fts_update AFTER UPDATE ON books BEGIN
+       INSERT INTO books_fts(books_fts, rowid, title, author, isbn, description, category)
+       VALUES ('delete', old.id, old.title, old.author, old.isbn, old.description, old.category);
+       INSERT INTO books_fts(rowid, title, author, isbn, description, category)
+       VALUES (new.id, new.title, new.author, new.isbn, new.description, new.category);
+     END`,
+    // Keep dlp_books_fts in sync
+    `CREATE TRIGGER IF NOT EXISTS dlp_books_fts_insert AFTER INSERT ON dlp_books BEGIN
+       INSERT INTO dlp_books_fts(rowid, title, author, isbn, description, category)
+       VALUES (new.id, new.title, new.author, new.isbn, new.description, new.category);
+     END`,
+    `CREATE TRIGGER IF NOT EXISTS dlp_books_fts_delete AFTER DELETE ON dlp_books BEGIN
+       INSERT INTO dlp_books_fts(dlp_books_fts, rowid, title, author, isbn, description, category)
+       VALUES ('delete', old.id, old.title, old.author, old.isbn, old.description, old.category);
+     END`,
+    `CREATE TRIGGER IF NOT EXISTS dlp_books_fts_update AFTER UPDATE ON dlp_books BEGIN
+       INSERT INTO dlp_books_fts(dlp_books_fts, rowid, title, author, isbn, description, category)
+       VALUES ('delete', old.id, old.title, old.author, old.isbn, old.description, old.category);
+       INSERT INTO dlp_books_fts(rowid, title, author, isbn, description, category)
+       VALUES (new.id, new.title, new.author, new.isbn, new.description, new.category);
+     END`,
+  ];
+  for (const stmt of ftsStatements) {
+    try { await client.execute(stmt); } catch { /* FTS5 not available — fall back to LIKE search */ }
+  }
+
+  // Repair any sync log rows left in 'running' state from a previous crashed process
+  await client.execute(
+    `UPDATE dlp_sync_log SET status = 'failed', error_message = 'Process terminated unexpectedly',
+     completed_at = datetime('now') WHERE status = 'running'`
+  );
 }
 
 module.exports = { prepare, exec, transaction, pragma, initSchema };

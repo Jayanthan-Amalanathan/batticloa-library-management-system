@@ -5,6 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Join the Library — Batticaloa Public Library</title>
 <meta name="description" content="Register for a free or low-cost Batticaloa Public Library membership. Access books, digital resources, events and the Maker Space." />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://batticloa-library-management-system.vercel.app/register" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://batticloa-library-management-system.vercel.app/register" />
+<meta property="og:title" content="Join the Library — Batticaloa Public Library" />
+<meta property="og:description" content="Register for a free or low-cost Batticaloa Public Library membership. Access books, digital resources, events and the Maker Space." />
+<meta property="og:image" content="https://batticloa-library-management-system.vercel.app/images/hero-library.svg" />
+<meta property="og:site_name" content="Batticaloa Public Library" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Join the Library — Batticaloa Public Library" />
+<meta name="twitter:description" content="Register for a free or low-cost Batticaloa Public Library membership. Access books, digital resources, events and the Maker Space." />
+<meta name="twitter:image" content="https://batticloa-library-management-system.vercel.app/images/hero-library.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;800&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;800&display=swap" media="print" onload="this.media='all'" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;800&display=swap" /></noscript>
 <link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
 <link rel="stylesheet" href="/css/style.css" />
 </head>
@@ -119,56 +136,7 @@
 </section>
 
 <div id="site-footer"></div>
-<script src="/js/app.js"></script>
-<script>
-// Password visibility toggles
-document.querySelectorAll('.toggle-pw').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const input = document.getElementById(btn.dataset.target);
-    const isHidden = input.type === 'password';
-    input.type = isHidden ? 'text' : 'password';
-    btn.textContent = isHidden ? '🙈' : '👁';
-    btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
-  });
-});
-
-// Password strength visual feedback — threshold matches server minimum of 8
-document.getElementById('password').addEventListener('input', e => {
-  const pw = e.target.value;
-  e.target.style.borderColor = pw.length === 0 ? '' : pw.length < 8 ? 'var(--warning)' : 'var(--success)';
-});
-
-document.getElementById('reg-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const fd   = new FormData(e.target);
-  const data = Object.fromEntries(fd);
-  const btn  = document.getElementById('reg-btn');
-
-  if (data.password !== data.password2) {
-    showAlert('#msg', 'Passwords do not match. Please re-enter.', 'danger');
-    document.getElementById('password2').focus();
-    return;
-  }
-  if (data.password.length < 8) {
-    showAlert('#msg', 'Password must be at least 8 characters.', 'danger');
-    return;
-  }
-
-  delete data.password2;
-  btn.disabled = true;
-  btn.textContent = 'Submitting application…';
-
-  try {
-    const res = await api.post('/api/auth/register', data);
-    showAlert('#msg', `${res.message} Your membership ID is <strong>${res.membership_id}</strong>. Please contact the library or check back to confirm approval.`, 'success');
-    e.target.reset();
-    e.target.style.display = 'none';
-  } catch (err) {
-    showAlert('#msg', err.message, 'danger');
-    btn.disabled = false;
-    btn.textContent = 'Submit Application';
-  }
-});
-</script>
+<script src="/js/app.js" defer></script>
+<script src="/js/register.js" defer></script>
 </body>
 </html>

@@ -12,6 +12,9 @@ const {
   authenticate, authorize, optionalAuth, logAudit,
   isTokenRevoked, revokeToken
 } = require('./auth');
+const {
+  runSync, scheduleMonthlySyncCron, getLastSync, getSyncHistory, getDlpStats
+} = require('./dlpSync');
 
 const _kohaRaw = process.env.KOHA_OPAC_URL || 'https://www.opac.lib.esn.ac.lk';
 const KOHA_BASE = (() => {
@@ -125,10 +128,11 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      stylesSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", 'data:', 'https:'],
       connectSrc: ["'self'", kohaOrigin],
-      fontSrc: ["'self'"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
       frameSrc: ["'none'"],
     },
@@ -155,6 +159,7 @@ app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '..', 'public')));
+app.get('/favicon.ico', (_req, res) => res.status(204).end());
 
 // ---------- AUTH ----------
 app.post('/api/auth/register', authLimiter, async (req, res) => {
@@ -262,10 +267,155 @@ app.get('/api/books', async (req, res) => {
 
 app.get('/api/books/new-arrivals', async (req, res) => {
   try {
-    const books = await prepare('SELECT * FROM books ORDER BY added_at DESC LIMIT 8').all();
+    // Prefer curated books with real cover images over DLP-synced placeholders
+    const books = await prepare(
+      `SELECT * FROM books
+       WHERE cover_image IS NOT NULL AND cover_image != '/images/book-default.svg'
+       ORDER BY added_at DESC LIMIT 8`
+    ).all();
+    // Fall back to most-recent if not enough curated books
+    if (books.length < 8) {
+      const ids = books.map(b => b.id);
+      const placeholders = ids.length ? ids.map(() => '?').join(',') : '0';
+      const extra = await prepare(
+        `SELECT * FROM books WHERE id NOT IN (${placeholders}) ORDER BY added_at DESC LIMIT ?`
+      ).all(...ids, 8 - books.length);
+      books.push(...extra);
+    }
     res.json({ books });
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch new arrivals' });
+  }
+});
+
+// ---------- PUBLIC CATALOG SEARCH (DLP + Local, optimized for 80k rows) ----------
+// Probes once at startup whether FTS5 is available and caches the result.
+let _ftsAvailable = null;
+async function ftsAvailable() {
+  if (_ftsAvailable !== null) return _ftsAvailable;
+  try {
+    await prepare("SELECT rowid FROM dlp_books_fts LIMIT 1").get();
+    _ftsAvailable = true;
+  } catch {
+    _ftsAvailable = false;
+  }
+  return _ftsAvailable;
+}
+
+// Escape a user query so it is safe to pass into an FTS5 MATCH expression.
+// We convert it to a prefix phrase: each token becomes token* so partial words match.
+function buildFtsQuery(q) {
+  return q.trim()
+    .replace(/["'*^(){}[\]\\]/g, ' ') // strip FTS special chars
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(t => `"${t}"*`)
+    .join(' ');
+}
+
+app.get('/api/catalog/search', async (req, res) => {
+  try {
+    const q          = (req.query.q || '').trim();
+    const source     = req.query.source || 'all';   // 'all' | 'local' | 'dlp'
+    const category   = (req.query.category || '').trim();
+    const branch     = (req.query.branch   || '').trim();
+    const language   = (req.query.language || '').trim();
+    const available  = req.query.available === 'true';
+    const collection = (req.query.collection || '').trim();
+    const limit      = safeInt(req.query.limit,  30, 1, 100);
+    const offset     = safeInt(req.query.offset,  0, 0, 1e9);
+    const useFts     = await ftsAvailable();
+
+    const results = [];
+
+    // ---- Helper: build a filter clause shared by both tables ----
+    function buildFilters(prefix, params, tableName) {
+      const conditions = [];
+      if (category)   { conditions.push(`${prefix}category = ?`);         params.push(category); }
+      if (branch)     { conditions.push(`${prefix}branch = ?`);           params.push(branch); }
+      if (language)   { conditions.push(`${prefix}language = ?`);         params.push(language); }
+      if (available)  { conditions.push(`${prefix}available_copies > 0`); }
+      if (collection) { conditions.push(`${prefix}collection_type = ?`);  params.push(collection); }
+      return conditions.length ? ' AND ' + conditions.join(' AND ') : '';
+    }
+
+    // ---- Search LOCAL books table ----
+    if (source === 'all' || source === 'local') {
+      const params = [];
+      let sql;
+      if (q) {
+        if (useFts) {
+          const ftsQ = buildFtsQuery(q);
+          sql = `SELECT b.*, 'local' AS source_type, bfts.rank AS _rank
+                 FROM books_fts bfts
+                 JOIN books b ON b.id = bfts.rowid
+                 WHERE books_fts MATCH ?`;
+          params.push(ftsQ);
+        } else {
+          sql = `SELECT *, 'local' AS source_type, 0 AS _rank FROM books WHERE 1=1
+                 AND (title LIKE ? OR author LIKE ? OR isbn LIKE ? OR description LIKE ?)`;
+          const like = `%${q}%`;
+          params.push(like, like, like, like);
+        }
+      } else {
+        sql = `SELECT *, 'local' AS source_type, 0 AS _rank FROM books WHERE 1=1`;
+      }
+      sql += buildFilters('b.', params, 'books');
+      // For non-FTS branch the table alias differs, patch it
+      if (!q || !useFts) sql = sql.replace(/b\./g, '');
+
+      const countSql = sql.replace(/SELECT .* FROM/, 'SELECT COUNT(*) AS c FROM').replace(/ORDER BY.*$/, '');
+      try {
+        const countRow = await prepare(countSql).get(...params);
+        const localTotal = countRow?.c ?? 0;
+        const rows = await prepare(sql + ` ORDER BY ${useFts && q ? '_rank' : 'added_at DESC'} LIMIT ? OFFSET ?`).all(...params, limit, offset);
+        results.push({ source: 'local', total: localTotal, books: rows });
+      } catch (e) {
+        results.push({ source: 'local', total: 0, books: [], error: e.message });
+      }
+    }
+
+    // ---- Search DLP books table (the big 80k table) ----
+    if (source === 'all' || source === 'dlp') {
+      const params = [];
+      let sql;
+      if (q) {
+        if (useFts) {
+          const ftsQ = buildFtsQuery(q);
+          sql = `SELECT d.*, 'dlp' AS source_type, dfts.rank AS _rank
+                 FROM dlp_books_fts dfts
+                 JOIN dlp_books d ON d.id = dfts.rowid
+                 WHERE dlp_books_fts MATCH ?`;
+          params.push(ftsQ);
+          sql += buildFilters('d.', params, 'dlp_books');
+        } else {
+          sql = `SELECT *, 'dlp' AS source_type, 0 AS _rank FROM dlp_books WHERE 1=1
+                 AND (title LIKE ? OR author LIKE ? OR isbn LIKE ?)`;
+          const like = `%${q}%`;
+          params.push(like, like, like);
+          sql += buildFilters('', params, 'dlp_books');
+        }
+      } else {
+        sql = `SELECT *, 'dlp' AS source_type, 0 AS _rank FROM dlp_books WHERE 1=1`;
+        sql += buildFilters('', params, 'dlp_books');
+      }
+
+      const countSql = sql.replace(/SELECT .* FROM/, 'SELECT COUNT(*) AS c FROM').replace(/ORDER BY.*$/, '');
+      try {
+        const countRow = await prepare(countSql).get(...params);
+        const dlpTotal = countRow?.c ?? 0;
+        const orderBy  = useFts && q ? '_rank' : 'title ASC';
+        const rows = await prepare(sql + ` ORDER BY ${orderBy} LIMIT ? OFFSET ?`).all(...params, limit, offset);
+        results.push({ source: 'dlp', total: dlpTotal, books: rows });
+      } catch (e) {
+        results.push({ source: 'dlp', total: 0, books: [], error: e.message });
+      }
+    }
+
+    res.json({ results, fts: useFts });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Catalog search failed' });
   }
 });
 
@@ -1122,6 +1272,95 @@ app.get('/api/opac-search-url', (req, res) => {
   res.json({ url });
 });
 
+// ---------- DLP SYNC ----------
+// Keep an in-memory log of the current running sync so the admin panel can
+// stream progress messages via polling.
+let dlpSyncProgress = [];
+let dlpSyncBusy     = false;
+
+app.get('/api/dlp-sync/stats', authenticate, authorize('admin', 'librarian'), async (req, res) => {
+  try {
+    const stats = await getDlpStats();
+    res.json(stats);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch DLP stats' });
+  }
+});
+
+app.get('/api/dlp-sync/history', authenticate, authorize('admin', 'librarian'), async (req, res) => {
+  try {
+    const history = await getSyncHistory(20);
+    res.json({ history });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch sync history' });
+  }
+});
+
+app.get('/api/dlp-sync/progress', authenticate, authorize('admin', 'librarian'), (req, res) => {
+  res.json({ running: dlpSyncBusy, messages: dlpSyncProgress });
+});
+
+app.post('/api/dlp-sync/trigger', authenticate, authorize('admin'), async (req, res) => {
+  if (dlpSyncBusy) {
+    return res.status(409).json({ error: 'A sync is already in progress.' });
+  }
+  dlpSyncProgress = ['Manual sync triggered by admin…'];
+  dlpSyncBusy     = true;
+
+  await logAudit(req.user.id, 'dlp_sync_trigger', 'dlp_sync', null, 'manual', req.ip);
+
+  // Run async in background; client polls /api/dlp-sync/progress
+  runSync({
+    triggeredBy: 'manual',
+    onProgress: msg => {
+      dlpSyncProgress.push(msg);
+      if (dlpSyncProgress.length > 200) dlpSyncProgress.shift();
+    },
+  }).then(result => {
+    dlpSyncBusy = false;
+    dlpSyncProgress.push(
+      result.error
+        ? `Sync failed: ${result.error}`
+        : `Sync complete — Added: ${result.added}, Updated: ${result.updated}, Skipped: ${result.skipped}, Total: ${result.total}`
+    );
+  }).catch(err => {
+    dlpSyncBusy = false;
+    dlpSyncProgress.push(`Sync error: ${err.message}`);
+  });
+
+  res.json({ started: true, message: 'DLP sync started. Poll /api/dlp-sync/progress for updates.' });
+});
+
+app.get('/api/dlp-sync/books', authenticate, authorize('admin', 'librarian'), async (req, res) => {
+  try {
+    const limit  = Math.min(parseInt(req.query.limit  || '50'),  200);
+    const offset = Math.max(parseInt(req.query.offset || '0'),   0);
+    const q      = (req.query.q || '').trim();
+    const branch = (req.query.branch || '').trim();
+
+    let sql  = 'SELECT * FROM dlp_books WHERE 1=1';
+    const args = [];
+    if (q) {
+      sql += ' AND (title LIKE ? OR author LIKE ? OR isbn LIKE ?)';
+      args.push(`%${q}%`, `%${q}%`, `%${q}%`);
+    }
+    if (branch) {
+      sql += ' AND branch = ?';
+      args.push(branch);
+    }
+    const countSql = sql.replace('SELECT *', 'SELECT COUNT(*) AS c');
+    const total = await prepare(countSql).get(...args);
+
+    sql += ' ORDER BY title ASC LIMIT ? OFFSET ?';
+    args.push(limit, offset);
+    const books = await prepare(sql).all(...args);
+
+    res.json({ books, total: total?.c || 0 });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch DLP books' });
+  }
+});
+
 // ---------- HTML routing ----------
 const jwt = require('jsonwebtoken');
 app.get('/admin', async (req, res) => {
@@ -1157,11 +1396,13 @@ app.use((err, req, res, next) => {
 // Bootstrap schema then start / export
 async function bootstrap() {
   await initSchema();
+  scheduleMonthlySyncCron(); // fires on the 1st of each month at 02:xx
   if (require.main === module) {
     app.listen(PORT, () => {
       console.log(`\n📚 Batticaloa Public Library running on http://localhost:${PORT}`);
       console.log(`   Admin panel: http://localhost:${PORT}/admin`);
       console.log(`   Login:       http://localhost:${PORT}/login\n`);
+      console.log(`   DLP sync:    scheduled monthly (1st of month, 02:00)`);
     });
   }
 }

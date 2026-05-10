@@ -25,7 +25,8 @@ function switchTab(tab) {
   document.getElementById('page-title').textContent = {
     dashboard: 'Dashboard', books: 'Catalog Management', circulation: 'Circulation',
     members: 'Members', events: 'Events', announcements: 'Announcements',
-    messages: 'Messages', 'chat-logs': 'AI Chat Logs', reports: 'Reports'
+    messages: 'Messages', 'chat-logs': 'AI Chat Logs', reports: 'Reports',
+    'dlp-sync': 'DLP Catalog Sync',
   }[tab] || tab;
   currentTab = tab;
   loaders[tab]?.();
@@ -538,6 +539,159 @@ function exportData(type) {
   a.remove();
 }
 
+// ---- DLP SYNC ----
+let dlpPollInterval = null;
+let dlpBooksOffset  = 0;
+const DLP_PAGE      = 30;
+
+async function loadDlpSync() {
+  await Promise.all([loadDlpStats(), loadDlpHistory()]);
+  loadDlpBooks();
+
+  // Show nav link only for admins
+  if (currentUserRole !== 'admin') {
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+  }
+}
+
+async function loadDlpStats() {
+  try {
+    const d = await api.get('/api/dlp-sync/stats');
+    document.getElementById('dlp-kpi-grid').innerHTML = `
+      <div class="kpi accent"><div class="kpi-label">DLP Books in Local DB</div><div class="kpi-value">${d.total_dlp_books.toLocaleString()}</div></div>
+      <div class="kpi ${d.sync_running ? 'danger' : 'success'}"><div class="kpi-label">Sync Status</div><div class="kpi-value">${d.sync_running ? 'Running…' : 'Idle'}</div></div>
+      <div class="kpi"><div class="kpi-label">Last Sync</div><div class="kpi-value" style="font-size:0.9rem;">${d.last_sync ? new Date(d.last_sync.started_at).toLocaleDateString() : 'Never'}</div></div>
+      <div class="kpi ${d.last_sync?.status === 'success' ? 'success' : d.last_sync?.status === 'failed' ? 'danger' : ''}"><div class="kpi-label">Last Result</div><div class="kpi-value">${d.last_sync?.status || '—'}</div></div>
+    `;
+    const branchDiv = document.getElementById('dlp-branch-breakdown');
+    if (d.by_branch && d.by_branch.length) {
+      branchDiv.innerHTML = d.by_branch.map(b =>
+        `<div class="flex" style="justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--border);">
+          <span>${escapeHtml(b.branch || 'Unknown')}</span>
+          <span class="badge">${b.count.toLocaleString()}</span>
+        </div>`
+      ).join('');
+    } else {
+      branchDiv.innerHTML = '<p class="card-meta">No data yet. Run a sync first.</p>';
+    }
+  } catch (e) {
+    document.getElementById('dlp-kpi-grid').innerHTML =
+      `<p class="card-meta" style="color:var(--danger);">Failed to load DLP stats: ${escapeHtml(e.message)}</p>`;
+  }
+}
+
+async function loadDlpHistory() {
+  try {
+    const { history } = await api.get('/api/dlp-sync/history');
+    const tbody = document.querySelector('#dlp-history-table tbody');
+    if (!history || !history.length) {
+      tbody.innerHTML = '<tr><td colspan="9" class="text-center">No sync runs yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = history.map(r => `
+      <tr>
+        <td>${r.id}</td>
+        <td>${r.started_at ? new Date(r.started_at).toLocaleString() : '—'}</td>
+        <td>${r.completed_at ? new Date(r.completed_at).toLocaleString() : '—'}</td>
+        <td><span class="badge ${r.status === 'success' ? 'success' : r.status === 'failed' ? 'danger' : ''}">${escapeHtml(r.status)}</span></td>
+        <td>${escapeHtml(r.triggered_by || '—')}</td>
+        <td>${r.books_added ?? '—'}</td>
+        <td>${r.books_updated ?? '—'}</td>
+        <td>${r.total_fetched ?? '—'}</td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.error_message ? escapeHtml(r.error_message) : '—'}</td>
+      </tr>`).join('');
+  } catch (e) {
+    document.querySelector('#dlp-history-table tbody').innerHTML =
+      `<tr><td colspan="9" style="color:var(--danger);">Failed: ${escapeHtml(e.message)}</td></tr>`;
+  }
+}
+
+async function loadDlpBooks(offset = 0) {
+  dlpBooksOffset = offset;
+  const q      = (document.getElementById('dlp-book-search')?.value || '').trim();
+  const tbody  = document.querySelector('#dlp-books-table tbody');
+  const paging = document.getElementById('dlp-books-pagination');
+  try {
+    const params = new URLSearchParams({ limit: DLP_PAGE, offset, q });
+    const { books, total } = await api.get('/api/dlp-sync/books?' + params);
+    if (!books.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center">No books found.</td></tr>';
+      paging.textContent = '';
+      return;
+    }
+    tbody.innerHTML = books.map(b => `
+      <tr>
+        <td>${escapeHtml(b.title)}</td>
+        <td>${escapeHtml(b.author || '—')}</td>
+        <td>${escapeHtml(b.branch || '—')}</td>
+        <td>${b.available_copies > 0 ? `<span class="badge success">${b.available_copies}</span>` : '<span class="badge danger">0</span>'}</td>
+      </tr>`).join('');
+    const page  = Math.floor(offset / DLP_PAGE) + 1;
+    const pages = Math.ceil(total / DLP_PAGE);
+    paging.innerHTML =
+      `${(offset + 1).toLocaleString()}–${Math.min(offset + DLP_PAGE, total).toLocaleString()} of ${total.toLocaleString()} &nbsp;` +
+      (offset > 0 ? `<button class="btn btn-sm btn-ghost" id="dlp-prev">← Prev</button> ` : '') +
+      (offset + DLP_PAGE < total ? `<button class="btn btn-sm btn-ghost" id="dlp-next">Next →</button>` : '');
+    document.getElementById('dlp-prev')?.addEventListener('click', () => loadDlpBooks(offset - DLP_PAGE));
+    document.getElementById('dlp-next')?.addEventListener('click', () => loadDlpBooks(offset + DLP_PAGE));
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="4" style="color:var(--danger);">Error: ${escapeHtml(e.message)}</td></tr>`;
+  }
+}
+
+function startDlpProgressPolling() {
+  const box   = document.getElementById('dlp-progress-box');
+  const badge = document.getElementById('dlp-sync-badge');
+  const btn   = document.getElementById('dlp-trigger-btn');
+  box.style.display = 'block';
+  box.textContent = '';
+
+  if (dlpPollInterval) clearInterval(dlpPollInterval);
+  dlpPollInterval = setInterval(async () => {
+    try {
+      const { running, messages } = await api.get('/api/dlp-sync/progress');
+      box.innerHTML = messages.map(m => escapeHtml(m)).join('<br>');
+      box.scrollTop = box.scrollHeight;
+      if (!running) {
+        clearInterval(dlpPollInterval);
+        dlpPollInterval = null;
+        badge.textContent = 'Done';
+        badge.className   = 'badge success';
+        btn.disabled = false;
+        btn.textContent = 'Run Sync Now';
+        loadDlpStats();
+        loadDlpHistory();
+      }
+    } catch {}
+  }, 2500);
+}
+
+document.getElementById('dlp-trigger-btn')?.addEventListener('click', async () => {
+  if (!confirm('This will pull ~80,000 items from the DLP Koha API. It may take several minutes. Continue?')) return;
+  const btn   = document.getElementById('dlp-trigger-btn');
+  const badge = document.getElementById('dlp-sync-badge');
+  btn.disabled = true;
+  btn.textContent = 'Syncing…';
+  badge.textContent = 'Running';
+  badge.className   = 'badge accent';
+  try {
+    await api.post('/api/dlp-sync/trigger', {});
+    startDlpProgressPolling();
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Run Sync Now';
+    badge.textContent = 'Error';
+    badge.className   = 'badge danger';
+    alert('Failed to start sync: ' + e.message);
+  }
+});
+
+let dlpSearchDebounce;
+document.getElementById('dlp-book-search')?.addEventListener('input', () => {
+  clearTimeout(dlpSearchDebounce);
+  dlpSearchDebounce = setTimeout(() => loadDlpBooks(0), 400);
+});
+
 // Tab loader map
 const loaders = {
   dashboard: loadDashboard,
@@ -549,11 +703,16 @@ const loaders = {
   messages: loadMessages,
   'chat-logs': loadChatLogs,
   reports: loadReports,
+  'dlp-sync': loadDlpSync,
 };
 
 // Boot
 (async () => {
   const u = await checkAdminAccess();
   if (!u) return;
+  // Hide DLP sync nav link for non-admins
+  if (u.role !== 'admin') {
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+  }
   loadDashboard();
 })();

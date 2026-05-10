@@ -4,6 +4,14 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Member Login — Batticaloa Public Library</title>
+<meta name="description" content="Sign in to your Batticaloa Public Library member account to access loans, reservations and digital resources." />
+<meta name="robots" content="noindex, follow" />
+<link rel="canonical" href="https://batticloa-library-management-system.vercel.app/login" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;800&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;800&display=swap" media="print" onload="this.media='all'" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;800&display=swap" /></noscript>
 <link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
 <link rel="stylesheet" href="/css/style.css" />
 </head>
@@ -46,79 +54,12 @@
         <a href="/contact" class="card-meta" style="font-size:0.83rem;">Forgot password?</a>
       </div>
 
-      <!-- DEF-018: demo credentials block; removed at runtime in production via /api/env -->
-      <details id="demo-creds" class="mt-4" style="background:var(--bg-subtle);padding:1.1rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
-        <summary style="cursor:pointer;font-weight:600;font-size:0.88rem;color:var(--text-soft);">Demo Credentials (Development)</summary>
-        <div style="font-size:0.83rem;color:var(--text-soft);margin-top:0.75rem;display:grid;gap:0.5rem;">
-          <div style="padding:0.5rem;background:#fff;border-radius:6px;border:1px solid var(--border);">
-            <strong style="color:var(--primary);">Admin</strong><br/>
-            admin@batticaloalibrary.lk / admin123
-          </div>
-          <div style="padding:0.5rem;background:#fff;border-radius:6px;border:1px solid var(--border);">
-            <strong style="color:var(--primary);">Librarian</strong><br/>
-            librarian@batticaloalibrary.lk / library123
-          </div>
-          <div style="padding:0.5rem;background:#fff;border-radius:6px;border:1px solid var(--border);">
-            <strong style="color:var(--primary);">Event Coordinator</strong><br/>
-            events@batticaloalibrary.lk / events123
-          </div>
-          <div style="padding:0.5rem;background:#fff;border-radius:6px;border:1px solid var(--border);">
-            <strong style="color:var(--primary);">Member</strong><br/>
-            priya@example.com / member123
-          </div>
-        </div>
-      </details>
     </div>
   </div>
 </section>
 
 <div id="site-footer"></div>
-<script src="/js/app.js"></script>
-<script>
-// DEF-018: hide demo credentials block in production environments
-fetch('/api/env').then(r => r.json()).then(({ production }) => {
-  if (production) {
-    const el = document.getElementById('demo-creds');
-    if (el) el.remove();
-  }
-}).catch(() => {});
-</script>
-<script>
-// Password visibility toggle
-document.querySelectorAll('.toggle-pw').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const input = document.getElementById(btn.dataset.target);
-    const isHidden = input.type === 'password';
-    input.type = isHidden ? 'text' : 'password';
-    btn.textContent = isHidden ? '🙈' : '👁';
-    btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
-  });
-});
-
-document.getElementById('login-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const loginBtn = document.getElementById('login-btn');
-  loginBtn.disabled = true;
-  loginBtn.textContent = 'Signing in…';
-
-  const fd = new FormData(e.target);
-  try {
-    const res = await api.post('/api/auth/login', { email: fd.get('email'), password: fd.get('password') });
-    const name = res.user.full_name || res.user.name || 'Member';
-    showAlert('#msg', `Welcome back, ${name}! Redirecting…`, 'success');
-    setTimeout(() => {
-      const next = new URLSearchParams(location.search).get('next');
-      // ISSUE-24: require path to start with '/' and not '//' to block protocol-relative redirects
-      if (next && next.startsWith('/') && !next.startsWith('//')) location.href = next;
-      else if (['admin','librarian','event_coordinator'].includes(res.user.role)) location.href = '/admin';
-      else location.href = '/dashboard';
-    }, 900);
-  } catch (err) {
-    showAlert('#msg', err.message, 'danger');
-    loginBtn.disabled = false;
-    loginBtn.textContent = 'Sign In';
-  }
-});
-</script>
+<script src="/js/app.js" defer></script>
+<script src="/js/login.js" defer></script>
 </body>
 </html>
