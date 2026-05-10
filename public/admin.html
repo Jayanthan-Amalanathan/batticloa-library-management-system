@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;800&display=swap" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;800&display=swap" media="print" onload="this.media='all'" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;800&display=swap" />
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;800&display=swap" /></noscript>
 <link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
 <link rel="stylesheet" href="/css/style.css" />
@@ -18,7 +18,7 @@
 <div class="admin-shell">
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <img src="/images/logo.svg" alt="" style="width:40px;" />
+      <img src="/images/logo.svg" alt="" style="width:40px;" width="40" height="40" />
       <div><strong>Staff Portal</strong><br/><small style="color:#8da4ac;">Batticaloa Library</small></div>
     </div>
     <nav>
@@ -266,27 +266,27 @@
           <div id="report-popular"></div>
           <h4 class="mt-4 mb-2">Available Reports</h4>
           <div class="grid grid-3">
-            <button class="btn btn-ghost" onclick="window.print()">
+            <button class="btn btn-ghost" id="btn-print">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
               Print Current View
             </button>
-            <button class="btn btn-ghost" onclick="exportData('users')">
+            <button class="btn btn-ghost" data-export="users">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Export Members CSV
             </button>
-            <button class="btn btn-ghost" onclick="exportData('books')">
+            <button class="btn btn-ghost" data-export="books">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Export Catalog CSV
             </button>
-            <button class="btn btn-ghost" onclick="exportData('loans')">
+            <button class="btn btn-ghost" data-export="loans">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Export Loans CSV
             </button>
-            <button class="btn btn-ghost" onclick="exportData('events')">
+            <button class="btn btn-ghost" data-export="events">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Export Events CSV
             </button>
-            <button class="btn btn-ghost" onclick="exportData('announcements')">
+            <button class="btn btn-ghost" data-export="announcements">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Export Announcements CSV
             </button>
