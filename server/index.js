@@ -134,7 +134,7 @@ app.use(helmet({
       connectSrc: ["'self'", kohaOrigin],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
-      frameSrc: ["'none'"],
+      frameSrc: ["https://www.google.com"],
     },
   },
   crossOriginEmbedderPolicy: false,
