@@ -24,18 +24,38 @@
 <section class="page-hero" style="padding-bottom:2rem;">
   <div class="container">
     <p class="breadcrumbs"><a href="/">Home</a> / Login</p>
-    <h1>Member Login</h1>
-    <p>Sign in to access your loans, reservations and digital resources via the Koha library system.</p>
+    <h1>Sign In</h1>
+    <p>Library members use the Koha portal. Staff and administrators sign in below.</p>
   </div>
 </section>
 
 <section>
   <div class="container">
+    <!-- Member Portal Card -->
+    <div class="form-card" style="margin-bottom:1.5rem;">
+      <div style="text-align:center;margin-bottom:1.25rem;">
+        <div style="font-size:2rem;margin-bottom:0.5rem;">📚</div>
+        <h2 style="margin-bottom:0.25rem;">Library Members</h2>
+        <p class="card-meta">Access your loans, reservations and account via the Koha member portal</p>
+      </div>
+      <a href="https://batticaloa.dlp.gov.lk/cgi-bin/koha/opac-user.pl"
+         class="btn btn-primary btn-block"
+         style="display:block;text-align:center;text-decoration:none;"
+         target="_blank" rel="noopener noreferrer">
+        Go to Member Portal →
+      </a>
+      <p class="card-meta" style="text-align:center;margin-top:1rem;">
+        Sign in with your <strong>Koha Library ID</strong> and password.<br/>
+        Not yet a member? <a href="/register">Register here →</a>
+      </p>
+    </div>
+
+    <!-- Staff / Admin Card -->
     <div class="form-card">
       <div style="text-align:center;margin-bottom:1.5rem;">
-        <img src="/images/logo.svg" alt="" style="width:52px;margin:0 auto 0.75rem;" aria-hidden="true" width="52" height="52" />
-        <h2 style="margin-bottom:0.25rem;">Welcome Back</h2>
-        <p class="card-meta">Sign in to your library account · Members are redirected to the Koha portal</p>
+        <div style="font-size:2rem;margin-bottom:0.5rem;">🔐</div>
+        <h2 style="margin-bottom:0.25rem;">Staff &amp; Admin</h2>
+        <p class="card-meta">Library staff and administrators sign in here</p>
       </div>
       <div id="msg"></div>
       <form id="login-form" novalidate>
@@ -52,11 +72,9 @@
         </div>
         <button class="btn btn-primary btn-block" type="submit" id="login-btn" style="margin-top:0.5rem;">Sign In</button>
       </form>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem;flex-wrap:wrap;gap:0.5rem;">
-        <p class="card-meta">Not yet a member? <a href="/register">Join the library →</a></p>
-        <a href="/contact" class="card-meta" style="font-size:0.83rem;">Forgot password?</a>
+      <div style="text-align:center;margin-top:1rem;">
+        <a href="/contact" class="card-meta" style="font-size:0.83rem;">Need help accessing your account?</a>
       </div>
-
     </div>
   </div>
 </section>
