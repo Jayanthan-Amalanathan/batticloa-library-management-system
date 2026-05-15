@@ -3,12 +3,8 @@ const bcrypt = require('bcryptjs');
 const { prepare } = require('./db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
-if (JWT_SECRET === 'dev_secret' && process.env.NODE_ENV === 'production') {
-  console.error('FATAL: JWT_SECRET env var is not set. Refusing to start in production with the default secret.');
-  process.exit(1);
-}
 if (JWT_SECRET === 'dev_secret') {
-  console.warn('WARNING: JWT_SECRET is not set — using insecure fallback. Set JWT_SECRET in your environment.');
+  console.warn('WARNING: JWT_SECRET is not set — using insecure fallback. Set JWT_SECRET in your Vercel environment variables.');
 }
 
 async function revokeToken(token) {
