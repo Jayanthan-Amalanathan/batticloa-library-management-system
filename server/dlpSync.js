@@ -3,8 +3,11 @@
 const { prepare } = require('./db');
 
 const DLP_BASE          = process.env.DLP_API_URL      || 'https://batticaloa.dlp.gov.lk/api/v1';
-const DLP_CLIENT_ID     = process.env.DLP_CLIENT_ID    || '429e1a44-5eff-4b48-ad06-306a310e731c';
-const DLP_CLIENT_SECRET = process.env.DLP_CLIENT_SECRET || '0b889fef-d0d4-4a7d-99f4-83381a7cfd9f';
+const DLP_CLIENT_ID     = process.env.DLP_CLIENT_ID;
+const DLP_CLIENT_SECRET = process.env.DLP_CLIENT_SECRET;
+if (!DLP_CLIENT_ID || !DLP_CLIENT_SECRET) {
+  console.error('[DLP Sync] WARNING: DLP_CLIENT_ID or DLP_CLIENT_SECRET not set — sync will fail until configured.');
+}
 
 const PAGE_SIZE      = 100;
 const FETCH_TIMEOUT  = 30_000;

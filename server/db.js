@@ -14,7 +14,7 @@ if (process.env.TURSO_DATABASE_URL) {
   });
 } else {
   const fs = require('fs');
-  let dataDir = path.join(__dirname, '..', 'data');
+  let dataDir = process.env.BPL_DATA_DIR || path.join(__dirname, '..', 'data');
   try {
     if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
   } catch {
@@ -268,6 +268,15 @@ async function initSchema() {
     )`,
     `CREATE INDEX IF NOT EXISTS idx_dlp_books_biblio ON dlp_books(koha_biblio_id)`,
     `CREATE INDEX IF NOT EXISTS idx_dlp_books_isbn ON dlp_books(isbn)`,
+    `CREATE TABLE IF NOT EXISTS reader_profiles (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id TEXT NOT NULL UNIQUE,
+      preferred_genres TEXT,
+      preferred_authors TEXT,
+      preferred_languages TEXT,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_reader_profiles_session ON reader_profiles(session_id)`,
   ];
 
   for (const stmt of tables) {
@@ -277,6 +286,7 @@ async function initSchema() {
   // Idempotent column migrations — run before any indexes that depend on them
   const migrations = [
     `ALTER TABLE books ADD COLUMN dlp_source_key TEXT`,
+    `ALTER TABLE books ADD COLUMN is_deleted INTEGER DEFAULT 0`,
   ];
   for (const stmt of migrations) {
     try { await client.execute(stmt); } catch { /* column already exists — ignore */ }

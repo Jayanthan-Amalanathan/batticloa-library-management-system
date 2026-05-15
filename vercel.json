@@ -1,13 +1,8 @@
 {
   "version": 2,
   "env": {
-    "TURSO_DATABASE_URL": "libsql://batticaloa-library-jayanthanx97.aws-ap-south-1.turso.io",
-    "TURSO_AUTH_TOKEN": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NzgxNDk5ODUsImlkIjoiMDE5ZTAxZDUtMmYwMS03NWU1LWIyYTktMzA2Yzk1NGNlMmVjIiwicmlkIjoiZWY1MTg2ZGItYTg0Ni00MDg5LWFkNDctN2M3NzYxZjIwZmIwIn0.Doijx-ZD9SGT-hB4ZhksCYRAmZqjHmXKI-n2gOfrf1058fsE0iR_bIek64MpjU4PRCi_prmqu8IEn8geuB91Dw",
-    "JWT_SECRET": "4770c07d82c75bee14deb391083a7cb62ab28b4fe811667be9aee6d73b96d323",
     "ALLOWED_ORIGINS": "https://batticloa-library-management-system.vercel.app",
-    "DLP_API_URL": "https://batticaloa.dlp.gov.lk/api/v1",
-    "DLP_CLIENT_ID": "429e1a44-5eff-4b48-ad06-306a310e731c",
-    "DLP_CLIENT_SECRET": "0b889fef-d0d4-4a7d-99f4-83381a7cfd9f"
+    "DLP_API_URL": "https://batticaloa.dlp.gov.lk/api/v1"
   },
   "headers": [
     {

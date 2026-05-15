@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 800 180" width="800" height="180">
+  <!-- Seal (left): embed the existing logo.svg via image reference -->
+  <image href="/images/logo.svg" x="0" y="0" width="180" height="180" preserveAspectRatio="xMidYMid meet"/>
+
+  <!-- Tamil text -->
+  <text x="200" y="58" font-family="'Noto Sans Tamil', 'Tamil MN', serif" font-size="44" font-weight="700" fill="#111111" letter-spacing="1">மட்டக்களப்பு பொது நூலகம்</text>
+
+  <!-- Sinhala text -->
+  <text x="200" y="112" font-family="'Noto Sans Sinhala', 'Iskoola Pota', serif" font-size="40" font-weight="700" fill="#111111" letter-spacing="1">මඩකලපුව මහජන පුස්තකාලය</text>
+
+  <!-- English text -->
+  <text x="200" y="158" font-family="'Georgia', 'Times New Roman', serif" font-size="36" font-weight="700" fill="#111111" letter-spacing="3">BATTICALOA PUBLIC LIBRARY</text>
+</svg>

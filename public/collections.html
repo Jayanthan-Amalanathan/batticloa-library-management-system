@@ -19,13 +19,15 @@
 <meta name="twitter:image" content="https://batticloa-library-management-system.vercel.app/images/hero-library.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;800&display=swap" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;800&display=swap" />
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;800&display=swap" /></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" fetchpriority="high" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" /></noscript>
 <link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
 <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body data-page="collections">
+<a class="skip-link" href="#main-content">Skip to main content</a>
 <div id="site-header"></div>
 <main id="main-content">
 
@@ -177,5 +179,46 @@
 </main>
 <div id="site-footer"></div>
 <script src="/js/app.js" defer></script>
+
+<!-- AI Chat Widget -->
+<button class="chat-fab" id="chat-fab" aria-label="Open library assistant chat" title="Chat with Library Assistant">
+  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</button>
+
+<div class="chat-window" id="chat-window" role="dialog" aria-label="Library AI Assistant" aria-modal="true">
+  <div class="chat-head">
+    <div class="chat-head-icon">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </div>
+    <div class="chat-head-text">
+      <strong>Library Assistant</strong>
+      <small>Batticaloa Public Library · Koha System</small>
+    </div>
+    <div class="chat-head-actions">
+      <button class="chat-minimize-btn" id="chat-minimize-btn" aria-label="Minimize chat" title="Minimise">
+        <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <button class="chat-close-btn" id="chat-close-btn" aria-label="Close chat" title="Close and restart">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
+  <div class="chat-suggestions" id="chat-suggestions">
+    <button class="chat-suggestion">Library hours &amp; location</button>
+    <button class="chat-suggestion">Recommend a Tamil book</button>
+    <button class="chat-suggestion" lang="ta">புத்தக பரிந்துரை</button>
+    <button class="chat-suggestion">Membership registration</button>
+  </div>
+  <div class="chat-footer">
+    <input type="text" id="chat-input" placeholder="Ask about books or the library…" aria-label="Chat message" autocomplete="off" />
+    <button class="chat-send-btn" id="chat-send-btn" aria-label="Send message">
+      <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+<script src="/js/home.js" defer></script>
+<script src="/js/chat.js" defer></script>
 </body>
 </html>

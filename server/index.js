@@ -1,3 +1,15 @@
+// Structured JSON logger — writes to stdout, compatible with Vercel log drain
+const log = {
+  _write(level, msg, meta = {}) {
+    const entry = { ts: new Date().toISOString(), level, msg, ...meta };
+    (level === 'error' ? process.stderr : process.stdout).write(JSON.stringify(entry) + '\n');
+  },
+  info:  (msg, meta) => log._write('info',  msg, meta),
+  warn:  (msg, meta) => log._write('warn',  msg, meta),
+  error: (msg, meta) => log._write('error', msg, meta),
+  debug: (msg, meta) => process.env.LOG_LEVEL === 'debug' && log._write('debug', msg, meta),
+};
+
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
@@ -15,6 +27,7 @@ const {
 const {
   runSync, scheduleMonthlySyncCron, getLastSync, getSyncHistory, getDlpStats
 } = require('./dlpSync');
+const crypto = require('crypto');
 
 const _kohaRaw = process.env.KOHA_OPAC_URL || 'https://www.opac.lib.esn.ac.lk';
 const KOHA_BASE = (() => {
@@ -24,7 +37,17 @@ const KOHA_SEARCH = `${KOHA_BASE}/cgi-bin/koha/opac-search.pl`;
 const KOHA_UNAPI  = `${KOHA_BASE}/cgi-bin/koha/unapi`;
 const xmlParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
 
+const KOHA_ALLOWED_HOST = (() => {
+  try { return new URL(process.env.KOHA_OPAC_URL || 'https://www.opac.lib.esn.ac.lk').hostname; } catch { return 'www.opac.lib.esn.ac.lk'; }
+})();
+
 async function kohaFetch(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== KOHA_ALLOWED_HOST) throw new Error(`Blocked request to non-allowlisted host: ${parsed.hostname}`);
+  } catch (e) {
+    throw new Error(`Invalid Koha URL: ${e.message}`);
+  }
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 10000);
   try {
@@ -154,6 +177,9 @@ app.use(cors({
 
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many attempts. Please try again later.' } });
 const contactLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many messages sent. Please try again later.' } });
+const eventRegLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many event registrations. Please try again later.' } });
+const reservationLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many reservation requests. Please try again later.' } });
+const kohaLimiter = rateLimit({ windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many catalog requests. Please try again later.' } });
 
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -171,7 +197,7 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
   try {
     const existing = await prepare('SELECT id FROM users WHERE email = ?').get(email);
     if (existing) return res.status(409).json({ error: 'Email already registered' });
-    const membershipId = 'BPL' + Date.now().toString().slice(-8);
+    const membershipId = 'BPL' + crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase();
     const expiry = new Date();
     expiry.setFullYear(expiry.getFullYear() + 1);
     const result = await prepare(`
@@ -199,7 +225,7 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
     if (user.role === 'public' && user.membership_status === 'pending') return res.status(403).json({ error: 'Your membership is pending approval. Please contact the library.' });
     if (user.role === 'public' && user.membership_status === 'suspended') return res.status(403).json({ error: 'Your membership has been suspended. Please contact the library.' });
     const token = signToken(user);
-    res.cookie('auth_token', token, { httpOnly: true, sameSite: 'lax', secure: IS_PROD, maxAge: 7 * 24 * 3600 * 1000 });
+    res.cookie('auth_token', token, { httpOnly: true, sameSite: 'strict', secure: IS_PROD, maxAge: 7 * 24 * 3600 * 1000 });
     await logAudit(user.id, 'login', 'user', user.id, email, req.ip);
     res.json({ success: true, user: { id: user.id, name: user.full_name, email: user.email, role: user.role, membership_id: user.membership_id, membership_status: user.membership_status } });
   } catch (e) {
@@ -226,6 +252,22 @@ app.get('/api/auth/me', authenticate, async (req, res) => {
   }
 });
 
+app.put('/api/auth/password', authenticate, authLimiter, async (req, res) => {
+  const { current_password, new_password } = req.body;
+  if (!current_password || !new_password) return res.status(400).json({ error: 'current_password and new_password are required' });
+  if (typeof new_password !== 'string' || new_password.length < 8) return res.status(400).json({ error: 'New password must be at least 8 characters' });
+  try {
+    const user = await prepare('SELECT id, password_hash FROM users WHERE id = ?').get(req.user.id);
+    if (!user || !verifyPassword(current_password, user.password_hash)) return res.status(401).json({ error: 'Current password is incorrect' });
+    await prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(new_password), req.user.id);
+    await logAudit(req.user.id, 'change_password', 'user', req.user.id, null, req.ip);
+    res.json({ success: true, message: 'Password updated successfully' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to update password' });
+  }
+});
+
 // ---------- BOOKS / CATALOG ----------
 function safeInt(val, def, min, max) {
   const n = parseInt(val, 10);
@@ -244,7 +286,7 @@ app.get('/api/books', async (req, res) => {
     const { q, category, collection, branch, available } = req.query;
     const limit  = safeInt(req.query.limit,  50, 1, 200);
     const offset = safeInt(req.query.offset,  0, 0, 1e9);
-    let where = ' WHERE 1=1';
+    let where = ' WHERE (is_deleted IS NULL OR is_deleted = 0)';
     const params = [];
     if (q) {
       where += ' AND (title LIKE ? OR author LIKE ? OR isbn LIKE ? OR description LIKE ?)';
@@ -444,7 +486,7 @@ app.get('/api/books/export', authenticate, authorize('admin', 'librarian'), asyn
 
 app.get('/api/books/:id', async (req, res) => {
   try {
-    const book = await prepare('SELECT * FROM books WHERE id = ?').get(req.params.id);
+    const book = await prepare('SELECT * FROM books WHERE id = ? AND (is_deleted IS NULL OR is_deleted = 0)').get(req.params.id);
     if (!book) return res.status(404).json({ error: 'Book not found' });
     res.json({ book });
   } catch (e) {
@@ -507,9 +549,7 @@ app.delete('/api/books/:id', authenticate, authorize('admin', 'librarian'), asyn
     if (!book) return res.status(404).json({ error: 'Book not found' });
     const activeLoans = await prepare("SELECT COUNT(*) AS c FROM loans WHERE book_id = ? AND status = 'active'").get(req.params.id);
     if (activeLoans.c > 0) return res.status(400).json({ error: 'Cannot delete book with active loans' });
-    await prepare('DELETE FROM reservations WHERE book_id = ?').run(req.params.id);
-    await prepare('DELETE FROM loans WHERE book_id = ?').run(req.params.id);
-    await prepare('DELETE FROM books WHERE id = ?').run(req.params.id);
+    await prepare("UPDATE books SET is_deleted = 1 WHERE id = ?").run(req.params.id);
     await logAudit(req.user.id, 'delete', 'book', req.params.id, book.title, req.ip);
     res.json({ success: true });
   } catch (e) {
@@ -556,13 +596,23 @@ app.post('/api/loans', authenticate, authorize('admin', 'librarian'), async (req
   }
 });
 
+function getFineRate(book) {
+  const type = (book.collection_type || '').toLowerCase();
+  const cat  = (book.category || '').toLowerCase();
+  if (type === 'children' || cat.includes('children') || cat.includes('junior') || cat.includes('young adult')) return 5;
+  if (type === 'periodicals' || type === 'periodical' || cat.includes('periodical') || cat.includes('journal') || cat.includes('magazine')) return 15;
+  if (type === 'av' || type === 'media' || cat.includes('audio') || cat.includes('video') || cat.includes(' av ')) return 20;
+  return 10; // default
+}
+
 app.post('/api/loans/:id/return', authenticate, authorize('admin', 'librarian'), async (req, res) => {
   try {
     const loan = await prepare('SELECT * FROM loans WHERE id = ?').get(req.params.id);
     if (!loan) return res.status(404).json({ error: 'Loan not found' });
     if (loan.status === 'returned') return res.status(400).json({ error: 'Already returned' });
     const overdueDays = Math.max(0, Math.floor((Date.now() - new Date(loan.due_date).getTime()) / 86400000));
-    const fine = overdueDays * 10;
+    const loanedBook = await prepare('SELECT collection_type, category FROM books WHERE id = ?').get(loan.book_id);
+    const fine = overdueDays * getFineRate(loanedBook || {});
     await transaction(async () => {
       await prepare('UPDATE loans SET returned_at = CURRENT_TIMESTAMP, status = ?, fine_amount = ? WHERE id = ?').run('returned', fine, req.params.id);
       await prepare('UPDATE books SET available_copies = available_copies + 1 WHERE id = ?').run(loan.book_id);
@@ -589,10 +639,14 @@ app.get('/api/loans', authenticate, async (req, res) => {
     }
     if (status) { conditions.push('l.status = ?'); params.push(status); }
     const where = conditions.length ? ' WHERE ' + conditions.join(' AND ') : '';
+    const loanLimit  = safeInt(req.query.limit,  100, 1, 500);
+    const loanOffset = safeInt(req.query.offset,   0, 0, 1e9);
+    const countSql = `SELECT COUNT(*) AS c FROM loans l JOIN books b ON l.book_id = b.id JOIN users u ON l.user_id = u.id ${where}`;
+    const countRow = await prepare(countSql).get(...params);
     const sql = `SELECT l.*, b.title, b.author, u.full_name AS member_name, u.membership_id
                  FROM loans l JOIN books b ON l.book_id = b.id JOIN users u ON l.user_id = u.id
-                 ${where} ORDER BY l.borrowed_at DESC`;
-    res.json({ loans: await prepare(sql).all(...params) });
+                 ${where} ORDER BY l.borrowed_at DESC LIMIT ? OFFSET ?`;
+    res.json({ loans: await prepare(sql).all(...params, loanLimit, loanOffset), total: countRow.c, limit: loanLimit, offset: loanOffset });
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch loans' });
   }
@@ -630,12 +684,16 @@ app.get('/api/loans/:id', authenticate, async (req, res) => {
 });
 
 // ---------- RESERVATIONS ----------
-app.post('/api/reservations', authenticate, async (req, res) => {
+app.post('/api/reservations', reservationLimiter, authenticate, async (req, res) => {
   const { book_id } = req.body;
   if (!book_id) return res.status(400).json({ error: 'book_id is required' });
   try {
     const book = await prepare('SELECT * FROM books WHERE id = ?').get(book_id);
     if (!book) return res.status(404).json({ error: 'Book not found' });
+    if (book.available_copies > 0) return res.status(400).json({ error: 'This book is currently available. Please borrow it directly instead of reserving.' });
+    const reservingMember = await prepare('SELECT membership_status, membership_expiry FROM users WHERE id = ?').get(req.user.id);
+    if (!reservingMember || reservingMember.membership_status !== 'active') return res.status(400).json({ error: 'You must have an active membership to place a reservation' });
+    if (reservingMember.membership_expiry && new Date(reservingMember.membership_expiry) < new Date()) return res.status(400).json({ error: 'Your membership has expired. Please renew before placing a reservation.' });
     const existing = await prepare("SELECT id FROM reservations WHERE user_id = ? AND book_id = ? AND status = 'pending'").get(req.user.id, book_id);
     if (existing) return res.status(409).json({ error: 'You already have a pending reservation for this book' });
     const activeLoad = await prepare("SELECT id FROM loans WHERE user_id = ? AND book_id = ? AND status = 'active'").get(req.user.id, book_id);
@@ -695,6 +753,19 @@ app.get('/api/events', async (req, res) => {
     res.json({ events: await prepare(sql).all() });
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch events' });
+  }
+});
+
+app.get('/api/events/export', authenticate, authorize('admin', 'librarian'), async (req, res) => {
+  try {
+    const rows = await prepare(
+      'SELECT id, title, description, event_date, location, category, capacity, registration_open, created_at FROM events ORDER BY event_date DESC'
+    ).all();
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="events.csv"');
+    res.send(toCsv(rows));
+  } catch (e) {
+    res.status(500).json({ error: 'Export failed' });
   }
 });
 
@@ -758,7 +829,7 @@ app.delete('/api/events/:id', authenticate, authorize('admin', 'librarian', 'eve
   }
 });
 
-app.post('/api/events/:id/register', optionalAuth, async (req, res) => {
+app.post('/api/events/:id/register', eventRegLimiter, optionalAuth, async (req, res) => {
   const { name, email, phone } = req.body;
   const userId = req.user?.id || null;
   if (!userId && (!name || !email)) return res.status(400).json({ error: 'Name and email are required for registration' });
@@ -800,6 +871,8 @@ app.post('/api/announcements', authenticate, authorize('admin', 'librarian'), as
   const { title, body, category, featured, emergency, publish_at, expires_at } = req.body;
   if (!title || typeof title !== 'string' || !title.trim()) return res.status(400).json({ error: 'Announcement title is required' });
   if (!body || typeof body !== 'string' || !body.trim()) return res.status(400).json({ error: 'Announcement body is required' });
+  if (title.length > 200) return res.status(400).json({ error: 'Title must be 200 characters or fewer' });
+  if (body.length > 5000) return res.status(400).json({ error: 'Body must be 5000 characters or fewer' });
   try {
     const result = await prepare(`
       INSERT INTO announcements (title, body, category, featured, emergency, publish_at, expires_at)
@@ -841,19 +914,6 @@ app.delete('/api/announcements/:id', authenticate, authorize('admin', 'librarian
   }
 });
 
-app.get('/api/events/export', authenticate, authorize('admin', 'librarian'), async (req, res) => {
-  try {
-    const rows = await prepare(
-      'SELECT id, title, description, event_date, location, category, capacity, registration_open, created_at FROM events ORDER BY event_date DESC'
-    ).all();
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename="events.csv"');
-    res.send(toCsv(rows));
-  } catch (e) {
-    res.status(500).json({ error: 'Export failed' });
-  }
-});
-
 app.get('/api/announcements/export', authenticate, authorize('admin', 'librarian'), async (req, res) => {
   try {
     const rows = await prepare(
@@ -872,6 +932,7 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
   const { name, email, subject, message, department } = req.body;
   const phone = req.body.phone != null ? String(req.body.phone) : null;
   if (!name || !email || !message) return res.status(400).json({ error: 'Name, email, and message required' });
+  if (typeof message === 'string' && message.length > 2000) return res.status(400).json({ error: 'Message must be 2000 characters or fewer' });
   try {
     await prepare(`INSERT INTO contact_messages (name, email, phone, subject, message, department) VALUES (?, ?, ?, ?, ?, ?)`)
       .run(name, email, phone, subject, message, department);
@@ -911,6 +972,7 @@ app.put('/api/contact/:id', authenticate, authorize('admin', 'librarian'), async
 app.post('/api/ask-librarian', contactLimiter, optionalAuth, async (req, res) => {
   const { name, email, request_type, topic, details } = req.body;
   if (!name || !email || !details) return res.status(400).json({ error: 'Required fields missing' });
+  if (typeof details === 'string' && details.length > 2000) return res.status(400).json({ error: 'Details must be 2000 characters or fewer' });
   try {
     await prepare(`INSERT INTO librarian_requests (user_id, name, email, request_type, topic, details) VALUES (?, ?, ?, ?, ?, ?)`)
       .run(req.user?.id || null, name, email, request_type || null, topic || null, details);
@@ -1101,7 +1163,7 @@ app.get('/api/stats', authenticate, authorize('admin', 'librarian'), async (req,
 });
 
 // ---------- KOHA OPAC PROXY ----------
-app.get('/api/koha/search', async (req, res) => {
+app.get('/api/koha/search', kohaLimiter, async (req, res) => {
   const { q = '', idx = 'kw', page = 1, count = 20 } = req.query;
   if (!q.trim()) return res.json({ books: [], total: 0, source: 'koha' });
   const searchKey = `${q}|${idx}|${page}|${count}`;
@@ -1135,7 +1197,7 @@ app.get('/api/koha/search', async (req, res) => {
     cacheSet(searchCache, searchKey, result, SEARCH_TTL);
     res.json(result);
   } catch (e) {
-    console.error('Koha proxy error:', e.message);
+    log.error('Koha proxy error', { err: e.message });
     res.status(502).json({ error: 'Unable to reach Koha OPAC. Please try again later.' });
   }
 });
@@ -1150,33 +1212,232 @@ app.delete('/api/koha/cache', authenticate, authorize('admin', 'librarian'), (re
   res.json({ success: true, message: 'Koha cache cleared' });
 });
 
-// ---------- AI CHAT ----------
+// ---------- SMART CHAT AGENT ----------
+
 const CHAT_KB = [
-  { patterns: ['hour','open','close','time','when','schedule'], answer: 'The library is open Monday to Saturday, 8:30 AM – 7:00 PM. We are closed on Sundays and public holidays.\n\nMain Branch: Bar Road, Batticaloa 30000, Eastern Province, Sri Lanka.\n\nPhone: +94 65 222 2222\nEmail: info@batticaloalibrary.lk' },
+  { patterns: ['hour','open','close','time','when','schedule'], answer: 'The library is open Monday to Sunday, 8:00 AM – 5:00 PM.\n\nMain Branch: Braiyan Drive, Batticaloa, Eastern Province, Sri Lanka.\n\nPhone: 065-2222484\nMobile: 077-6718944\nEmail: batticaloalibrary@gmail.com' },
   { patterns: ['membership','member','join','register','fee','cost','price','card'], answer: 'Membership is available to everyone:\n\n• Adults (18–64): LKR 500/year\n• Students: FREE (student ID required)\n• Senior Citizens (65+): FREE\n• Persons with Disabilities: FREE\n• Life Membership: LKR 5,000 (one-time)\n\nYou can register online at batticaloalibrary.lk/register or visit the library in person with a valid photo ID.' },
-  { patterns: ['borrow','loan','lend','book','take','issue','checkout','check out'], answer: 'You can borrow up to:\n• Adults: 5 items at a time\n• Students: 8 items\n• Senior Citizens: 8 items\n\nLoan periods:\n• Regular books: 14 days (renew up to 2 times)\n• Periodicals: 7 days\n• Reference books: In-library use only\n\nOverdue fine: LKR 10 per day for regular books.' },
-  { patterns: ['renew','renewal','extend','extension'], answer: 'To renew borrowed items, please:\n• Call us: +94 65 222 2222\n• Visit the library counter in person\n\nItems can be renewed up to 2 times, provided no one else has reserved them. Overdue items must have fines settled before renewal.' },
+  { patterns: ['renew','renewal','extend','extension'], answer: 'To renew borrowed items, please:\n• Call us: 065-2222484\n• Visit the library counter in person\n\nItems can be renewed up to 2 times, provided no one else has reserved them. Overdue items must have fines settled before renewal.' },
   { patterns: ['reserve','reservation','hold','request','waiting'], answer: 'You can place holds on items currently on loan through your member dashboard or by visiting the library. Up to 3 active holds are allowed per member.\n\nWhen your item is ready, we\'ll notify you by email. Reserved items are held for 5 business days.' },
-  { patterns: ['fine','penalty','overdue','fee','pay','payment'], answer: 'Overdue fines are:\n• Regular books: LKR 10/day\n• Children\'s books: LKR 5/day\n• Periodicals: LKR 15/day\n• AV materials: LKR 20/day\n\nFines can be paid at the library counter or through your member dashboard. Memberships with fines over LKR 500 may be suspended.' },
+  { patterns: ['fine','penalty','overdue','pay','payment'], answer: 'Overdue fines are:\n• Regular books: LKR 10/day\n• Children\'s books: LKR 5/day\n• Periodicals: LKR 15/day\n• AV materials: LKR 20/day\n\nFines can be paid at the library counter or through your member dashboard. Memberships with fines over LKR 500 may be suspended.' },
   { patterns: ['wifi','wi-fi','internet','computer','digital','online','ebook','e-book','database'], answer: 'Digital services available to all members:\n\n• Free Wi-Fi throughout the library\n• Public computer terminals (60-min sessions)\n• E-book and e-journal access\n• Online research databases\n• Document scanning & printing (B&W: LKR 5/page, Colour: LKR 15/page)\n• Digital archive of Eastern Province heritage materials' },
-  { patterns: ['koha','opac','catalog','catalogue','search','find book','isbn','look up'], answer: 'Our catalog is powered by the Koha Integrated Library System, shared with Eastern University Library and partner libraries.\n\nYou can search the catalog at:\n• Our website: /catalog (local collection)\n• Koha OPAC: opac.lib.esn.ac.lk (all partner libraries)\n\nSearch by title, author, ISBN, subject, or call number.' },
-  { patterns: ['event','program','programme','workshop','class','activity','session','storytime','children','kids'], answer: 'We offer many community programs including:\n\n• Children\'s Storytime (Saturdays 10:00 AM)\n• Digital Literacy Workshops\n• Author Meet & Greet events\n• Tamil Heritage Reading Circle (monthly)\n• Research Skills Training\n• Maker Space workshops (3D printing, electronics)\n\nView all upcoming events at /events or check the bulletin board at the library entrance.' },
-  { patterns: ['maker','makerspace','3d','print','3d print','robot','electronic','stem'], answer: 'Our Maker Space is open to all members and features:\n\n• 3D printers\n• Electronics kits and prototyping tools\n• Design workstations\n• Coding resources\n\nBookings required for 3D printing. Visit /services or call us to reserve a Maker Space session.' },
-  { patterns: ['child','children','kid','junior','young','school','student'], answer: 'We have a dedicated Children\'s Corner with:\n\n• Age-appropriate books for all reading levels\n• Picture books and early readers\n• Weekly Storytime on Saturdays at 10:00 AM\n• School holiday special programs\n• Safe, supervised reading environment\n\nChildren under 12 must be accompanied by an adult.' },
-  { patterns: ['research','reference','academic','thesis','journal','article','scholar'], answer: 'Our research support services include:\n\n• Reference librarian consultations (by appointment)\n• Access to academic databases\n• Inter-library loan requests (for items not in our collection)\n• Citation and bibliography assistance\n• Quiet study rooms (bookable for 2-hour sessions)\n\nContact the reference desk or email reference@batticaloalibrary.lk.' },
-  { patterns: ['lost card','lost membership','replace card','lost id'], answer: 'If you\'ve lost your library membership card:\n\n1. Visit the library in person with photo ID\n2. A replacement card will be issued for LKR 100\n3. Your borrowing record and history will be preserved\n\nAlternatively, you can use your membership ID number (found in your registration email) to access services until the replacement is ready.' },
-  { patterns: ['contact','phone','email','address','location','reach','staff','librarian'], answer: 'Contact Batticaloa Public Library:\n\n📍 Bar Road, Batticaloa 30000, Sri Lanka\n📞 +94 65 222 2222\n📧 info@batticaloalibrary.lk\n\nDepartments:\n• Reference: reference@batticaloalibrary.lk\n• Membership: membership@batticaloalibrary.lk\n• Events: events@batticaloalibrary.lk\n• IT/Koha: systems@batticaloalibrary.lk\n\nVisit /contact to send us a message.' },
-  { patterns: ['policy','policies','rules','regulation','terms','condition','privacy','data'], answer: 'Our library policies cover:\n\n• Lending & Borrowing Policy\n• Membership Policy\n• Privacy Policy\n• Computer & Internet Use Policy\n• Code of Conduct\n• Accessibility Statement (WCAG 2.1)\n• Koha ILS Data Policy\n\nRead our full policies at /policies.' },
-  { patterns: ['accessible','accessibility','disability','disabled','wheelchair','hearing','vision','blind','deaf'], answer: 'Batticaloa Library is committed to accessibility:\n\n• Ground-floor ramp access\n• Accessible restrooms\n• Designated seating for patrons with disabilities\n• Large-print books available on request\n• Screen-reader compatible computer terminals\n• Our website meets WCAG 2.1 Level AA\n• Free membership for persons with disabilities\n\nFor specific accommodation requests, contact us at access@batticaloalibrary.lk.' },
-  { patterns: ['hello','hi','hey','good morning','good afternoon','good evening','greet'], answer: 'Hello! Welcome to the Batticaloa Public Library Assistant. I can help you with:\n\n• Library hours & location\n• Membership & how to join\n• Borrowing, renewals & fines\n• Catalog & Koha OPAC\n• Events & programs\n• Digital services\n• Library policies\n\nWhat can I help you with today?' },
-  { patterns: ['thank','thanks','great','perfect','helpful','awesome'], answer: 'You\'re very welcome! Is there anything else I can help you with?\n\nIf you need further assistance, you can also visit us in person, call +94 65 222 2222, or email info@batticaloalibrary.lk.' },
-  { patterns: ['complaint','feedback','suggestion','improve','problem','issue','report'], answer: 'We value your feedback! You can:\n\n• Fill in our feedback form at /contact\n• Email us at feedback@batticaloalibrary.lk\n• Speak to the Head Librarian at the service desk\n• Drop a suggestion in our feedback box near the entrance\n\nFormal complaints and appeals can be made in writing to the Library Director.' },
+  { patterns: ['koha','opac','catalogue'], answer: 'Our catalog is powered by the Koha Integrated Library System, shared with Eastern University Library and partner libraries.\n\nYou can search the catalog at:\n• Our website: /catalog (local collection)\n• Koha OPAC: opac.lib.esn.ac.lk (all partner libraries)\n\nSearch by title, author, ISBN, subject, or call number.' },
+  { patterns: ['event','program','programme','workshop','storytime'], answer: 'We offer many community programs including:\n\n• Children\'s Storytime (Saturdays 10:00 AM)\n• Digital Literacy Workshops\n• Author Meet & Greet events\n• Tamil Heritage Reading Circle (monthly)\n• Research Skills Training\n• Maker Space workshops (3D printing, electronics)\n\nView all upcoming events at /events.' },
+  { patterns: ['maker','makerspace','3d','3d print','robot','electronic','stem'], answer: 'Our Maker Space is open to all members and features:\n\n• 3D printers\n• Electronics kits and prototyping tools\n• Design workstations\n• Coding resources\n\nBookings required for 3D printing. Visit /services or call us to reserve a session.' },
+  { patterns: ['research','reference','academic','thesis','journal','scholar'], answer: 'Our research support services include:\n\n• Reference librarian consultations (by appointment)\n• Access to academic databases\n• Inter-library loan requests\n• Citation and bibliography assistance\n• Quiet study rooms (bookable for 2-hour sessions)\n\nEmail reference@batticaloalibrary.lk.' },
+  { patterns: ['lost card','lost membership','replace card','lost id'], answer: 'If you\'ve lost your library membership card:\n\n1. Visit the library in person with photo ID\n2. A replacement card will be issued for LKR 100\n3. Your borrowing record and history will be preserved' },
+  { patterns: ['contact','phone','email','address','location','reach','staff','librarian'], answer: 'Contact Batticaloa Public Library:\n\nBraiyan Drive, Batticaloa, Sri Lanka\nOffice: 065-2222484\nMobile: 077-6718944\nWhatsApp: 071-2222484\nEmail: batticaloalibrary@gmail.com\n\nVisit /contact to send us a message.' },
+  { patterns: ['policy','policies','rules','regulation','terms','condition','privacy'], answer: 'Our library policies cover:\n\n• Lending & Borrowing Policy\n• Membership Policy\n• Privacy Policy\n• Computer & Internet Use Policy\n• Code of Conduct\n• Accessibility Statement (WCAG 2.1)\n\nRead our full policies at /policies.' },
+  { patterns: ['accessible','accessibility','disability','disabled','wheelchair','blind','deaf'], answer: 'Batticaloa Library is committed to accessibility:\n\n• Ground-floor ramp access\n• Accessible restrooms\n• Large-print books available on request\n• Screen-reader compatible computer terminals\n• Our website meets WCAG 2.1 Level AA\n• Free membership for persons with disabilities\n\nContact us at access@batticaloalibrary.lk.' },
+  { patterns: ['thank','thanks','great','perfect','helpful','awesome'], answer: 'You\'re very welcome! Is there anything else I can help you with?\n\nYou can also visit us in person, call 065-2222484, or email batticaloalibrary@gmail.com.' },
+  { patterns: ['complaint','feedback','suggestion','improve','problem','issue','report'], answer: 'We value your feedback! You can:\n\n• Fill in our feedback form at /contact\n• Email us at feedback@batticaloalibrary.lk\n• Speak to the Head Librarian at the service desk\n\nFormal complaints can be made in writing to the Library Director.' },
 ];
 
-const CHAT_RATE_LIMIT = rateLimit({ windowMs: 5 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many messages. Please slow down.' } });
+// Genre/category keyword mapping for intent detection
+const GENRE_KEYWORDS = {
+  mystery:     ['mystery','detective','crime','whodunit','thriller','suspense','noir'],
+  fiction:     ['fiction','novel','story','stories','literature','literary'],
+  history:     ['history','historical','ancient','war','biography','memoir','autobiography'],
+  science:     ['science','physics','chemistry','biology','astronomy','mathematics','math'],
+  fantasy:     ['fantasy','magic','wizard','dragon','myth','mythology','folklore'],
+  romance:     ['romance','love','relationship'],
+  children:    ['children','kids','picture book','young adult','ya','junior','school'],
+  poetry:      ['poetry','poem','poems','verse','tamil poetry','sinhala poetry'],
+  selfhelp:    ['self-help','self help','motivation','productivity','mindset','wellbeing','wellness'],
+  religion:    ['religion','religious','islam','buddhism','hinduism','christianity','spirituality'],
+  politics:    ['politics','political','government','economics','economy'],
+  geography:   ['geography','travel','nature','environment','ecology'],
+  technology:  ['technology','computing','programming','ai','artificial intelligence','coding'],
+};
 
-async function generateChatReply(message) {
-  const lower = message.toLowerCase().replace(/[?!.,;:]+/g, ' ').trim();
+const LANG_KEYWORDS = {
+  Tamil:   ['tamil','தமிழ்'],
+  Sinhala: ['sinhala','sinhalese','sinhalen','සිංහල'],
+  English: ['english'],
+};
+
+async function searchBooks(query, { category, language, availableOnly = false, limit = 5, excludeIds = [] } = {}) {
+  const cap = Math.min(limit, 10);
+  const like = `%${query}%`;
+
+  // Split into meaningful terms for multi-word queries
+  const terms = query.trim().split(/\s+/).filter(t => t.length > 2);
+
+  function buildTermConditions(cols, params) {
+    if (terms.length <= 1) {
+      const flat = cols.map(c => `${c} LIKE ?`).join(' OR ');
+      params.push(...cols.map(() => like));
+      return `(${flat})`;
+    }
+    // Each word must appear in at least one column (AND of ORs)
+    const perTerm = terms.map(t => {
+      const tl = `%${t}%`;
+      params.push(...cols.map(() => tl));
+      return `(${cols.map(c => `${c} LIKE ?`).join(' OR ')})`;
+    });
+    return perTerm.join(' AND ');
+  }
+
+  // Build local books query
+  const localParams = [];
+  const localTermCond = buildTermConditions(['b.title', 'b.author', 'b.category', 'b.description'], localParams);
+  let localWhere = `WHERE (${localTermCond})`;
+  if (category) { localWhere += ' AND b.category LIKE ?'; localParams.push(`%${category}%`); }
+  if (language) { localWhere += ' AND b.language = ?'; localParams.push(language); }
+  if (availableOnly) { localWhere += ' AND b.available_copies > 0'; }
+  if (excludeIds.length) { localWhere += ` AND b.id NOT IN (${excludeIds.map(() => '?').join(',')})`; localParams.push(...excludeIds); }
+
+  // Score: exact title match ranks higher than partial match
+  const localBooks = await prepare(
+    `SELECT b.id, b.title, b.author, b.category, b.language, b.available_copies, b.cover_image, b.branch, 'local' AS source,
+       (CASE WHEN LOWER(b.title) = LOWER(?) THEN 3 WHEN LOWER(b.title) LIKE ? THEN 2 ELSE 1 END) AS relevance
+     FROM books b ${localWhere}
+     ORDER BY relevance DESC, b.available_copies DESC
+     LIMIT ?`
+  ).all([query, like, ...localParams, cap]);
+
+  const remaining = cap - localBooks.length;
+  let dlpBooks = [];
+  if (remaining > 0) {
+    const dlpParams = [];
+    const dlpTermCond = buildTermConditions(['d.title', 'd.author', 'd.category', 'd.description'], dlpParams);
+    let dlpWhere = `WHERE (${dlpTermCond})`;
+    if (category) { dlpWhere += ' AND d.category LIKE ?'; dlpParams.push(`%${category}%`); }
+    if (language) { dlpWhere += ' AND d.language LIKE ?'; dlpParams.push(`%${language}%`); }
+    if (availableOnly) { dlpWhere += ' AND d.available_copies > 0'; }
+
+    dlpBooks = await prepare(
+      `SELECT d.id, d.title, d.author, d.category, d.language, d.available_copies, NULL AS cover_image, d.branch, 'dlp' AS source,
+         (CASE WHEN LOWER(d.title) = LOWER(?) THEN 3 WHEN LOWER(d.title) LIKE ? THEN 2 ELSE 1 END) AS relevance
+       FROM dlp_books d ${dlpWhere}
+       ORDER BY relevance DESC, d.available_copies DESC, d.checkouts_count DESC NULLS LAST
+       LIMIT ?`
+    ).all([query, like, ...dlpParams, remaining]);
+  }
+
+  return [...localBooks, ...dlpBooks];
+}
+
+async function getUserHistory(userId, limit = 10) {
+  return prepare(
+    `SELECT b.title, b.author, b.category FROM loans l
+     JOIN books b ON l.book_id = b.id
+     WHERE l.user_id = ? ORDER BY l.borrowed_at DESC LIMIT ?`
+  ).all([userId, limit]);
+}
+
+async function getReaderProfile(sessionId) {
+  return prepare('SELECT * FROM reader_profiles WHERE session_id = ?').get(sessionId);
+}
+
+async function saveReaderProfile(sessionId, { preferred_genres, preferred_authors, preferred_languages }) {
+  const existing = await getReaderProfile(sessionId);
+  if (existing) {
+    await prepare(
+      `UPDATE reader_profiles SET preferred_genres = ?, preferred_authors = ?, preferred_languages = ?,
+       updated_at = CURRENT_TIMESTAMP WHERE session_id = ?`
+    ).run([
+      preferred_genres ? JSON.stringify(preferred_genres) : existing.preferred_genres,
+      preferred_authors ? JSON.stringify(preferred_authors) : existing.preferred_authors,
+      preferred_languages ? JSON.stringify(preferred_languages) : existing.preferred_languages,
+      sessionId,
+    ]);
+  } else {
+    await prepare(
+      `INSERT INTO reader_profiles (session_id, preferred_genres, preferred_authors, preferred_languages)
+       VALUES (?, ?, ?, ?)`
+    ).run([
+      sessionId,
+      preferred_genres ? JSON.stringify(preferred_genres) : null,
+      preferred_authors ? JSON.stringify(preferred_authors) : null,
+      preferred_languages ? JSON.stringify(preferred_languages) : null,
+    ]);
+  }
+}
+
+function classifyIntent(lower) {
+  // Greeting
+  if (/\b(hi|hello|hey|good morning|good afternoon|good evening|greetings|howdy)\b/.test(lower)) return 'GREETING';
+
+  // User history / personalised
+  if (/\b(what have i read|my history|books i borrowed|past loans|what should i read next|based on my history|recommend for me)\b/.test(lower)) return 'USER_HISTORY';
+
+  // Direct book title search — "do you have X", "find X", "search for X", "looking for X"
+  if (/\b(do you have|do you carry|is there|find|search for|looking for|get me|show me|i need)\b.{2,60}(book|novel|title|copy)/i.test(lower)) return 'TITLE_SEARCH';
+  if (/\b(do you have|is .{2,50} available|find .{2,50} by)\b/.test(lower)) return 'TITLE_SEARCH';
+
+  // Similar book
+  if (/\b(similar to|like the book|like harry|enjoyed|loved|read .{3,40} and|books like|more like|fans of|if you liked)\b/.test(lower)) return 'SIMILAR';
+
+  // Author search
+  if (/\b(books by|by the author|written by|author named|author called|works of|titles by|anything by)\b/.test(lower)) return 'AUTHOR_SEARCH';
+
+  // Availability check
+  if (/\b(available now|in stock|can i borrow|copies available|is .{3,40} available|currently available)\b/.test(lower)) return 'AVAILABILITY';
+
+  // Explicit recommend / suggest / find
+  if (/\b(recommend|suggest|suggestion|find me a book|looking for a book|good book|any books|books about|books on|i want to read|what to read|what should i read|give me a book|popular books|best books|top books|new books|latest books)\b/.test(lower)) return 'RECOMMEND';
+
+  // Genre keywords — only if they appear standalone (not inside FAQ patterns)
+  for (const [, keywords] of Object.entries(GENRE_KEYWORDS)) {
+    if (keywords.some(k => lower.includes(k))) return 'GENRE_SEARCH';
+  }
+
+  // How many / collection size
+  if (/\b(how many book|total book|collection size|number of book)\b/.test(lower)) return 'COLLECTION_SIZE';
+
+  return 'FAQ';
+}
+
+function extractGenre(lower) {
+  for (const [genre, keywords] of Object.entries(GENRE_KEYWORDS)) {
+    if (keywords.some(k => lower.includes(k))) return genre;
+  }
+  return null;
+}
+
+function extractLanguage(lower) {
+  for (const [lang, keywords] of Object.entries(LANG_KEYWORDS)) {
+    if (keywords.some(k => lower.includes(k))) return lang;
+  }
+  return null;
+}
+
+function extractSimilarTitle(lower) {
+  const match = lower.match(/(?:similar to|like the book|books like|enjoyed|loved|read|fans of|if you liked|more like)\s+["""']?([^"""'\n,?!]{3,60}?)(?:["""',?!]|\s+and\b|$)/i);
+  return match ? match[1].trim() : null;
+}
+
+function extractTitleQuery(lower) {
+  // Extract a book title/query from patterns like "do you have X", "find X by author"
+  const m = lower.match(/(?:do you have|do you carry|is there a|find|search for|looking for|get me|show me|i need)\s+(?:a |an |the )?["""']?([^"""'\n,?!]{3,80}?)(?:["""']|(?:\s+by\s+)|(?:\s+available)|$)/i);
+  return m ? m[1].trim() : null;
+}
+
+function extractAuthorName(lower) {
+  const match = lower.match(/(?:books by|by the author|written by|author named|author called|works of|titles by|anything by)\s+([a-z .'-]{3,60})/i);
+  return match ? match[1].trim() : null;
+}
+
+function extractBookContext(lower) {
+  // Try to understand what kind of book the user wants from free text
+  // Returns { genre, mood, audience, setting }
+  const mood = [];
+  if (/\b(happy|fun|funny|comic|humour|humor|lightheart)\b/.test(lower)) mood.push('light');
+  if (/\b(dark|grim|serious|intense|heavy)\b/.test(lower)) mood.push('dark');
+  if (/\b(inspir|motivat|uplifting|positive)\b/.test(lower)) mood.push('inspirational');
+
+  const audience = /\b(child|kid|junior|young adult|ya|teen)\b/.test(lower) ? 'children'
+    : /\b(adult|mature|grown)\b/.test(lower) ? 'adult' : null;
+
+  const setting = /\b(sri lanka|srilanka|batticaloa|eastern|local|jaffna|colombo)\b/.test(lower) ? 'local'
+    : /\b(india|indian)\b/.test(lower) ? 'indian'
+    : /\b(world war|ww2|wwii)\b/.test(lower) ? 'wwii' : null;
+
+  return { mood, audience, setting };
+}
+
+function faqReply(lower) {
   const words = lower.split(/\s+/);
   let bestMatch = null;
   let bestScore = 0;
@@ -1188,15 +1449,289 @@ async function generateChatReply(message) {
     }
     if (score > bestScore) { bestScore = score; bestMatch = entry; }
   }
-  if (bestMatch && bestScore > 0) return bestMatch.answer;
-  if (lower.includes('how many book') || lower.includes('total book') || lower.includes('collection size')) {
+  return bestMatch && bestScore > 0 ? bestMatch.answer : null;
+}
+
+async function smartChatReply(message, sessionId, userId) {
+  const lower = message.toLowerCase().replace(/[?!.,;:]+/g, ' ').trim();
+  const intent = classifyIntent(lower);
+  const lang = extractLanguage(lower);
+  const ctx = extractBookContext(lower);
+
+  if (intent === 'GREETING') {
+    return {
+      reply: 'Hello! I\'m the Batticaloa Library Assistant. I can help you with:\n\n• Book recommendations by genre, mood, or author\n• Finding books similar to ones you\'ve enjoyed\n• Searching our catalog (local + 80,000+ Koha DLP titles)\n• Library hours, membership & borrowing rules\n• Events and digital services\n\nWhat would you like today?',
+      books: null,
+    };
+  }
+
+  if (intent === 'COLLECTION_SIZE') {
     try {
       const row = await prepare('SELECT COUNT(*) AS c FROM books').get();
-      return `Our local digital catalog currently holds ${row.c.toLocaleString()} titles. The integrated Koha OPAC with Eastern University and partner libraries contains many more.\n\nSearch the catalog at /catalog or visit the Koha OPAC directly.`;
-    } catch (e) {}
+      const dlp = await prepare('SELECT COUNT(*) AS c FROM dlp_books').get();
+      return {
+        reply: `Our local catalog holds ${Number(row.c).toLocaleString()} curated titles. The integrated Koha DLP collection adds ${Number(dlp.c).toLocaleString()} more titles from partner libraries.\n\nSearch the full catalog at /catalog.`,
+        books: null,
+      };
+    } catch { /* fall through */ }
   }
-  return "I'm sorry, I'm not sure about that specific question. Here's how you can get more help:\n\n• Visit us: Bar Road, Batticaloa 30000\n• Call us: +94 65 222 2222\n• Email: info@batticaloalibrary.lk\n• Explore our website for more information\n\nIs there anything else I can help you with?";
+
+  if (intent === 'USER_HISTORY') {
+    if (!userId) {
+      return { reply: 'To get personalised recommendations based on your reading history, please log in to your member account. Or just tell me a genre you enjoy and I\'ll find something for you!', books: null };
+    }
+    const history = await getUserHistory(userId);
+    if (history.length === 0) {
+      return { reply: 'You don\'t have any borrowing history yet. Let me suggest some popular reads — just tell me a genre you enjoy!', books: null };
+    }
+    const categoryCounts = {};
+    const authorCounts = {};
+    for (const { category, author } of history) {
+      if (category) categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      if (author) authorCounts[author] = (authorCounts[author] || 0) + 1;
+    }
+    const topCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+    const topAuthor = Object.entries(authorCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+    const recent = history.slice(0, 3).map(b => `"${b.title}"`).join(', ');
+    // Exclude already-read titles from recommendations
+    const readTitles = history.map(b => b.title);
+    const books = topCategory ? await searchBooks(topCategory, { category: topCategory, limit: 6 }) : [];
+    const filtered = books.filter(b => !readTitles.includes(b.title)).slice(0, 5);
+    const hint = topAuthor ? ` You seem to enjoy ${topAuthor}'s work.` : '';
+    return {
+      reply: `Based on your recent reads (${recent}),${hint} here are some ${topCategory || 'recommended'} titles you haven't read yet:`,
+      books: filtered.length ? filtered : (books.length ? books.slice(0, 5) : null),
+    };
+  }
+
+  if (intent === 'TITLE_SEARCH') {
+    const titleQ = extractTitleQuery(lower) || lower.replace(/\b(do you have|find|search for|looking for|get me|show me|i need|a |an |the )\b/g, '').trim();
+    if (titleQ && titleQ.length > 2) {
+      const books = await searchBooks(titleQ, { language: lang || undefined, limit: 6 });
+      if (books.length) {
+        return {
+          reply: `Here's what I found for "${titleQ}" in our collection:`,
+          books,
+        };
+      }
+      // Try partial — split into words and search by first significant word
+      const words = titleQ.split(/\s+/).filter(w => w.length > 3);
+      if (words.length) {
+        const fallback = await searchBooks(words[0], { limit: 5 });
+        if (fallback.length) {
+          return {
+            reply: `I couldn't find an exact match for "${titleQ}", but here are related titles you might like:`,
+            books: fallback,
+          };
+        }
+      }
+      return {
+        reply: `I couldn't find "${titleQ}" in our catalog right now. Try searching directly at /catalog — it covers 80,000+ titles including the Koha DLP collection.`,
+        books: null,
+      };
+    }
+  }
+
+  if (intent === 'SIMILAR') {
+    const title = extractSimilarTitle(lower);
+    if (title) {
+      // Look up the referenced book in both catalogs to get its category/author
+      const ref = await prepare(
+        `SELECT title, author, category FROM books WHERE LOWER(title) LIKE LOWER(?) LIMIT 1`
+      ).get(`%${title}%`) || await prepare(
+        `SELECT title, author, category FROM dlp_books WHERE LOWER(title) LIKE LOWER(?) LIMIT 1`
+      ).get(`%${title}%`);
+
+      const category = ref?.category;
+      const refAuthor = ref?.author;
+
+      // Strategy 1: same category, exclude the referenced book itself
+      let books = await searchBooks(category || title, {
+        category: category || undefined,
+        language: lang || undefined,
+        limit: 7,
+      });
+      // Filter out the exact title they mentioned
+      books = books.filter(b => b.title.toLowerCase() !== title.toLowerCase()).slice(0, 5);
+
+      if (books.length) {
+        const desc = category ? ` in the ${category} genre` : '';
+        return {
+          reply: `Here are books similar to "${ref?.title || title}"${desc}:`,
+          books,
+        };
+      }
+
+      // Strategy 2: same author if found
+      if (refAuthor) {
+        const authorBooks = await searchBooks(refAuthor, { limit: 5 });
+        if (authorBooks.length) {
+          return {
+            reply: `I found other books by ${refAuthor} you might enjoy:`,
+            books: authorBooks,
+          };
+        }
+      }
+    }
+    // Fall back to genre/keyword search
+    const genre = extractGenre(lower);
+    const books = await searchBooks(genre || lower.slice(0, 40), { language: lang || undefined, limit: 5 });
+    return {
+      reply: books.length
+        ? 'Here are some books you might enjoy based on your taste:'
+        : 'I couldn\'t find an exact match, but try browsing our catalog at /catalog for more options.',
+      books: books.length ? books : null,
+    };
+  }
+
+  if (intent === 'AUTHOR_SEARCH') {
+    const author = extractAuthorName(lower);
+    if (author) {
+      // Search by author name specifically — prioritise author field match
+      const books = await searchBooks(author, { limit: 6 });
+      // Sort to put exact author matches first
+      const sorted = books.sort((a, b) => {
+        const aMatch = (a.author || '').toLowerCase().includes(author.toLowerCase()) ? 0 : 1;
+        const bMatch = (b.author || '').toLowerCase().includes(author.toLowerCase()) ? 0 : 1;
+        return aMatch - bMatch;
+      });
+      return {
+        reply: sorted.length
+          ? `Here are books by "${author}" in our collection:`
+          : `We don't currently have titles by "${author}" in our local catalog, but try /catalog for the full Koha DLP search.`,
+        books: sorted.length ? sorted : null,
+      };
+    }
+  }
+
+  if (intent === 'AVAILABILITY') {
+    const titleQuery = lower
+      .replace(/\b(available now|currently available|in stock|can i borrow|copies available|is|available|the|a|an)\b/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (titleQuery.length > 2) {
+      const books = await searchBooks(titleQuery, { availableOnly: true, limit: 6 });
+      if (books.length) {
+        return { reply: `These titles matching "${titleQuery}" are currently available to borrow:`, books };
+      }
+      // Show all copies (even on loan) so user knows the book exists
+      const allCopies = await searchBooks(titleQuery, { availableOnly: false, limit: 4 });
+      if (allCopies.length) {
+        return {
+          reply: `All copies of titles matching "${titleQuery}" are currently on loan. You can place a hold via your member dashboard or visit /catalog.`,
+          books: allCopies,
+        };
+      }
+    }
+    return {
+      reply: 'No matching titles found right now. Try searching directly at /catalog for all available books.',
+      books: null,
+    };
+  }
+
+  if (intent === 'RECOMMEND' || intent === 'GENRE_SEARCH') {
+    const genre = extractGenre(lower);
+    const detectedLang = lang;
+
+    // Save preference to reader_profiles
+    if (genre || detectedLang) {
+      try {
+        const profile = await getReaderProfile(sessionId);
+        const existingGenres = profile?.preferred_genres ? JSON.parse(profile.preferred_genres) : [];
+        const existingLangs = profile?.preferred_languages ? JSON.parse(profile.preferred_languages) : [];
+        if (genre && !existingGenres.includes(genre)) existingGenres.push(genre);
+        if (detectedLang && !existingLangs.includes(detectedLang)) existingLangs.push(detectedLang);
+        await saveReaderProfile(sessionId, {
+          preferred_genres: existingGenres.length ? existingGenres : null,
+          preferred_languages: existingLangs.length ? existingLangs : null,
+          preferred_authors: null,
+        });
+      } catch { /* non-critical */ }
+    }
+
+    // Build a rich search query from genre keywords + context
+    const genreKeywords = genre ? GENRE_KEYWORDS[genre] : null;
+    let books = [];
+
+    if (ctx.setting === 'local') {
+      // User wants local/Sri Lankan books — search with location context
+      const locationBooks = await searchBooks('sri lanka', { language: detectedLang || undefined, limit: 4 });
+      books = locationBooks;
+    }
+
+    if (!books.length) {
+      // Primary: search by genre category
+      books = await searchBooks(genreKeywords ? genreKeywords[0] : lower.slice(0, 50), {
+        category: genre || undefined,
+        language: detectedLang || undefined,
+        limit: 6,
+      });
+    }
+
+    // If still no results, broaden: search just by genre name
+    if (!books.length && genre) {
+      books = await searchBooks(genre, { language: detectedLang || undefined, limit: 5 });
+    }
+
+    // Try audience filter for children
+    if (!books.length && ctx.audience === 'children') {
+      books = await searchBooks('children', { category: 'children', limit: 5 });
+    }
+
+    if (books.length) {
+      const genreLabel = genre ? genre.charAt(0).toUpperCase() + genre.slice(1) : null;
+      const langLabel = detectedLang && detectedLang !== 'English' ? ` in ${detectedLang}` : '';
+      const ctxLabel = ctx.setting === 'local' ? ' about Sri Lanka' : '';
+      const label = genreLabel ? `${genreLabel}${langLabel}${ctxLabel}` : `${detectedLang || 'recommended'}${ctxLabel}`;
+      return { reply: `Here are some ${label} books from our collection:`, books: books.slice(0, 5) };
+    }
+
+    return {
+      reply: `I couldn't find exact matches for that right now. Our catalog at /catalog has ${80000}+ titles — search with filters for genre, language, and availability.`,
+      books: null,
+    };
+  }
+
+  // FAQ fallback
+  {
+    const faq = faqReply(lower);
+    if (faq) return { reply: faq, books: null };
+
+    if (lower.includes('borrow') || lower.includes('loan') || lower.includes('lend') || lower.includes('checkout')) {
+      return {
+        reply: 'You can borrow up to:\n• Adults: 5 items at a time\n• Students: 8 items\n• Senior Citizens: 8 items\n\nLoan periods:\n• Regular books: 14 days (renew up to 2 times)\n• Periodicals: 7 days\n• Reference books: In-library use only\n\nOverdue fine: LKR 10 per day for regular books.',
+        books: null,
+      };
+    }
+
+    if (lower.includes('catalog') || lower.includes('search') || lower.includes('find book') || lower.includes('isbn')) {
+      return {
+        reply: 'You can search our full catalog at /catalog — it covers our local collection and the Koha DLP library (80,000+ titles). Filter by language, category, and availability.',
+        books: null,
+      };
+    }
+
+    // Last resort: try a free-text book search — the user may just be naming a book
+    if (lower.length > 5 && lower.length < 80) {
+      try {
+        const fuzzyBooks = await searchBooks(lower.slice(0, 60), { limit: 4 });
+        if (fuzzyBooks.length) {
+          return {
+            reply: `I found some books that might match what you're looking for:`,
+            books: fuzzyBooks,
+          };
+        }
+      } catch { /* non-critical */ }
+    }
+
+    return {
+      reply: 'I\'m not sure about that specific question, but I\'m great at book recommendations! Just tell me a genre or an author you like. For other help:\n\n• Visit us: Braiyan Drive, Batticaloa\n• Call: 065-2222484\n• Email: batticaloalibrary@gmail.com',
+      books: null,
+    };
+  }
 }
+
+const CHAT_RATE_LIMIT = rateLimit({ windowMs: 5 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many messages. Please slow down.' } });
 
 app.post('/api/chat', CHAT_RATE_LIMIT, optionalAuth, async (req, res) => {
   const { message, session_id } = req.body;
@@ -1209,9 +1744,9 @@ app.post('/api/chat', CHAT_RATE_LIMIT, optionalAuth, async (req, res) => {
     const existing = await prepare('SELECT id FROM chat_sessions WHERE session_id = ?').get(sid);
     if (!existing) await prepare('INSERT INTO chat_sessions (session_id, user_id, visitor_ip) VALUES (?, ?, ?)').run(sid, userId, ip);
     await prepare('INSERT INTO chat_messages (session_id, role, content) VALUES (?, ?, ?)').run(sid, 'user', msg);
-    const reply = await generateChatReply(msg);
+    const { reply, books } = await smartChatReply(msg, sid, userId);
     await prepare('INSERT INTO chat_messages (session_id, role, content) VALUES (?, ?, ?)').run(sid, 'assistant', reply);
-    res.json({ reply, session_id: sid });
+    res.json({ reply, session_id: sid, books: books || null });
   } catch (e) {
     console.error('Chat error:', e);
     res.status(500).json({ error: 'Chat service unavailable' });
@@ -1262,7 +1797,7 @@ app.delete('/api/chat/sessions/:session_id', authenticate, authorize('admin'), a
   }
 });
 
-app.get('/api/env', (req, res) => {
+app.get('/api/env', authenticate, (req, res) => {
   res.json({ production: IS_PROD });
 });
 
@@ -1399,17 +1934,16 @@ async function bootstrap() {
   scheduleMonthlySyncCron(); // fires on the 1st of each month at 02:xx
   if (require.main === module) {
     app.listen(PORT, () => {
-      console.log(`\n📚 Batticaloa Public Library running on http://localhost:${PORT}`);
-      console.log(`   Admin panel: http://localhost:${PORT}/admin`);
-      console.log(`   Login:       http://localhost:${PORT}/login\n`);
-      console.log(`   DLP sync:    scheduled monthly (1st of month, 02:00)`);
+      log.info('Server started', { port: PORT, env: IS_PROD ? 'production' : 'development' });
     });
   }
 }
 
-bootstrap().catch(err => {
-  console.error('Failed to initialise database:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  bootstrap().catch(err => {
+    console.error('Failed to initialise database:', err);
+    process.exit(1);
+  });
+}
 
-module.exports = app;
+module.exports = { app, bootstrap };
