@@ -18,85 +18,73 @@ function initPreloader(){
       +'<div class="bpl-pre-ring-mid"></div>'
       +'<div class="bpl-pre-ring-glow"></div>'
       +'<div class="bpl-pre-logo-circle">'
-        +'<svg class="bpl-pre-seal-svg" viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
-          /* Outer double ring */
-          +'<circle cx="170" cy="170" r="165" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2.5"/>'
-          +'<circle cx="170" cy="170" r="158" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>'
-          /* Top arc text: BATTICALOA PUBLIC LIBRARY */
-          +'<path id="bpl-top-arc" fill="none" d="M 22,170 A 148,148 0 0,1 318,170"/>'
-          +'<text font-family="Georgia,serif" font-size="17.5" font-weight="700" fill="white" letter-spacing="3">'
-            +'<textPath href="#bpl-top-arc" startOffset="50%" text-anchor="middle">BATTICALOA PUBLIC LIBRARY</textPath>'
-          +'</text>'
-          /* Bottom arc text: motto in Tamil */
-          +'<path id="bpl-bot-arc" fill="none" d="M 35,185 A 148,148 0 0,0 305,185"/>'
-          +'<text font-family="Noto Sans Tamil,serif" font-size="15" font-weight="600" fill="rgba(212,160,23,0.95)" letter-spacing="1">'
-            +'<textPath href="#bpl-bot-arc" startOffset="50%" text-anchor="middle">மெய்ப்பொருள் காண்பதறிவு</textPath>'
-          +'</text>'
-          /* Inner separator rings */
-          +'<circle cx="170" cy="170" r="133" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>'
-          /* Building illustration — simplified white line art matching the seal */
-          /* Base platform */
-          +'<rect x="60" y="210" width="220" height="8" rx="1" fill="rgba(255,255,255,0.9)"/>'
-          +'<rect x="72" y="202" width="196" height="9" rx="1" fill="rgba(255,255,255,0.85)"/>'
-          /* Ground floor columns row */
-          +'<rect x="72" y="168" width="196" height="34" rx="1" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="1.2"/>'
-          /* Ground floor windows */
-          +'<rect x="82"  y="174" width="14" height="18" rx="1" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1"/>'
-          +'<rect x="102" y="174" width="14" height="18" rx="1" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1"/>'
-          +'<rect x="122" y="174" width="14" height="18" rx="1" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1"/>'
-          /* Central door arch */
-          +'<path d="M 155,202 L 155,178 Q 170,168 185,178 L 185,202 Z" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.85)" stroke-width="1.2"/>'
-          +'<rect x="204" y="174" width="14" height="18" rx="1" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1"/>'
-          +'<rect x="224" y="174" width="14" height="18" rx="1" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1"/>'
-          +'<rect x="244" y="174" width="14" height="18" rx="1" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1"/>'
-          /* First floor */
-          +'<rect x="82" y="142" width="176" height="26" rx="1" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/>'
-          /* First floor windows */
-          +'<rect x="92"  y="148" width="11" height="14" rx="1" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1"/>'
-          +'<rect x="109" y="148" width="11" height="14" rx="1" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1"/>'
-          +'<rect x="126" y="148" width="11" height="14" rx="1" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1"/>'
-          +'<rect x="148" y="148" width="14" height="14" rx="1" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.75)" stroke-width="1"/>'
-          +'<rect x="178" y="148" width="11" height="14" rx="1" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1"/>'
-          +'<rect x="195" y="148" width="11" height="14" rx="1" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1"/>'
-          +'<rect x="212" y="148" width="11" height="14" rx="1" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1"/>'
-          +'<rect x="229" y="148" width="11" height="14" rx="1" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1"/>'
-          /* Three domes */
-          /* Left dome */
-          +'<rect x="94" y="115" width="38" height="27" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/>'
-          +'<path d="M 94,115 Q 113,95 132,115" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.85)" stroke-width="1.5"/>'
-          +'<line x1="113" y1="95" x2="113" y2="90" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/>'
-          +'<circle cx="113" cy="89" r="2.5" fill="rgba(255,255,255,0.8)"/>'
-          /* Centre dome — larger */
-          +'<rect x="142" y="108" width="56" height="34" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="1.2"/>'
-          +'<path d="M 142,108 Q 170,82 198,108" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.9)" stroke-width="1.8"/>'
-          +'<line x1="170" y1="82" x2="170" y2="76" stroke="rgba(255,255,255,0.75)" stroke-width="1.5"/>'
-          +'<circle cx="170" cy="75" r="3" fill="rgba(255,255,255,0.9)"/>'
-          /* Right dome */
-          +'<rect x="208" y="115" width="38" height="27" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/>'
-          +'<path d="M 208,115 Q 227,95 246,115" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.85)" stroke-width="1.5"/>'
-          +'<line x1="227" y1="95" x2="227" y2="90" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/>'
-          +'<circle cx="227" cy="89" r="2.5" fill="rgba(255,255,255,0.8)"/>'
-          /* Tamil name inside seal */
-          +'<text x="170" y="238" text-anchor="middle" font-family="Noto Sans Tamil,serif" font-size="13.5" font-weight="700" fill="white" letter-spacing="0.5">மட்டக்களப்பு பொது நூலகம்</text>'
-          /* SINCE 1855 */
-          +'<text x="170" y="256" text-anchor="middle" font-family="Georgia,serif" font-size="11" font-weight="600" fill="rgba(212,160,23,0.9)" letter-spacing="2">SINCE 1855</text>'
-        +'</svg>'
+        +'<img class="bpl-pre-seal-img" src="/images/logo.svg" alt="Batticaloa Public Library Seal" draggable="false"/>'
       +'</div>'
     +'</div>'
     +'<div class="bpl-pre-content">'
       +'<div class="bpl-pre-loader">'
+        +'<div class="bpl-pre-bar-wrap">'
+          +'<div class="bpl-pre-bar-track"><div class="bpl-pre-bar-fill" id="bpl-bar-fill"></div></div>'
+          +'<span class="bpl-pre-pct" id="bpl-pct">0%</span>'
+        +'</div>'
         +'<div class="bpl-pre-dots">'
           +'<span class="bpl-pre-dot"></span>'
           +'<span class="bpl-pre-dot"></span>'
           +'<span class="bpl-pre-dot"></span>'
         +'</div>'
-        +'<div class="bpl-pre-bar-track"><div class="bpl-pre-bar-fill"></div></div>'
       +'</div>'
     +'</div>';
   document.body.insertAdjacentElement('afterbegin',el);
-  var dismiss=function(){el.classList.add('hidden');setTimeout(function(){if(el.parentNode)el.remove();},700);};
+
+  var fill=document.getElementById('bpl-bar-fill');
+  var pct=document.getElementById('bpl-pct');
+  var current=0;
+  var target=0;
+  var loaded=false;
+  var rafId=null;
+
+  /* Animate current toward target smoothly */
+  function tick(){
+    if(current<target){
+      current=Math.min(current+(target-current)*0.07+0.4,target);
+      var v=Math.floor(current);
+      fill.style.width=v+'%';
+      pct.textContent=v+'%';
+    }
+    if(!loaded||current<100){
+      rafId=requestAnimationFrame(tick);
+    } else {
+      fill.style.width='100%';
+      pct.textContent='100%';
+    }
+  }
+
+  /* Crawl target naturally using a timed schedule */
+  var stops=[[400,30],[900,55],[1600,72],[2400,85],[3200,93]];
+  stops.forEach(function(s){
+    setTimeout(function(){if(!loaded)target=s[1];},s[0]);
+  });
+
+  /* On real load, sprint to 100 */
+  function onLoaded(){
+    loaded=true;
+    target=100;
+  }
+  window.addEventListener('load',onLoaded,{once:true});
+
+  rafId=requestAnimationFrame(tick);
+
+  var dismiss=function(){
+    cancelAnimationFrame(rafId);
+    fill.style.width='100%';
+    pct.textContent='100%';
+    setTimeout(function(){
+      el.classList.add('hidden');
+      setTimeout(function(){if(el.parentNode)el.remove();},700);
+    },320);
+  };
   window.addEventListener('load',function(){setTimeout(dismiss,500);},{once:true});
-  setTimeout(dismiss,4000);
+  setTimeout(function(){onLoaded();setTimeout(dismiss,400);},4000);
 }
 initPreloader();
 document.addEventListener("DOMContentLoaded",()=>{renderHeader(document.body.dataset.page||""),renderFooter(),initScrollTop(),i18n.apply()});
