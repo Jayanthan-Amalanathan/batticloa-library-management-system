@@ -1929,15 +1929,31 @@ app.use((err, req, res, next) => {
 });
 
 // Bootstrap schema then start / export
-async function bootstrap() {
-  await initSchema();
-  scheduleMonthlySyncCron(); // fires on the 1st of each month at 02:xx
-  if (require.main === module) {
-    app.listen(PORT, () => {
-      log.info('Server started', { port: PORT, env: IS_PROD ? 'production' : 'development' });
+// Always initialise the DB — on Vercel the file is require()'d (not the
+// entry point), so require.main !== module, but we still need initSchema().
+let _bootstrapPromise = null;
+function bootstrap() {
+  if (!_bootstrapPromise) {
+    _bootstrapPromise = (async () => {
+      await initSchema();
+      scheduleMonthlySyncCron(); // fires on the 1st of each month at 02:xx
+      if (require.main === module) {
+        app.listen(PORT, () => {
+          log.info('Server started', { port: PORT, env: IS_PROD ? 'production' : 'development' });
+        });
+      }
+    })().catch(err => {
+      console.error('Failed to initialise database:', err);
+      _bootstrapPromise = null; // allow retry on next request
+      throw err;
     });
   }
+  return _bootstrapPromise;
 }
+
+// Always kick off bootstrap at module load time so Vercel's cold start
+// initialises the DB schema before the first request arrives.
+bootstrap();
 
 if (require.main === module) {
   bootstrap().catch(err => {
