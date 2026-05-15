@@ -352,4 +352,8 @@
   if (sessionStorage.getItem(MINIMIZED_KEY)) {
     win.classList.add('minimized');
   }
+
+  /* ---- Hero "Ask the Library AI Assistant" button ---- */
+  const heroChatBtn = document.getElementById('hero-chat-btn');
+  if (heroChatBtn) heroChatBtn.addEventListener('click', openChat);
 })();

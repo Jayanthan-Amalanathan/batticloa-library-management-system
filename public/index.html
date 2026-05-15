@@ -24,7 +24,7 @@
 <!-- Preload critical CSS for faster FCP -->
 <link rel="preload" as="style" href="/css/style.css" />
 <!-- Preload hero background SVG (LCP resource) -->
-<link rel="preload" as="image" href="/images/hero-library.svg" fetchpriority="high" />
+<link rel="preload" as="image" href="/images/library-hero.jpg" fetchpriority="high" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" fetchpriority="high" />
@@ -41,17 +41,8 @@
 
 <!-- Hero -->
 <section class="hero" aria-labelledby="hero-heading">
-  <div class="heritage-badge">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-    Established 1855 · Eastern Province's Premier Knowledge Institution
-  </div>
-  <div class="hero-multilang" aria-hidden="true">
-    <span class="lang-ta">பட்டிக்களப்பு பொது நூலகம்</span>
-    <span style="opacity:0.4">|</span>
-    <span class="lang-si">බට්ටිකලෝ පොදු පුස්තකාලය</span>
-  </div>
   <h1 id="hero-heading" data-i18n="home.hero.title">Knowledge for Every Citizen</h1>
-  <p data-i18n="home.hero.desc">Welcome to the Batticaloa Public Library — your unified gateway to thousands of books, digital archives, research support, and community programs serving the Eastern Province.</p>
+  <p data-i18n="home.hero.desc">Welcome to the Batticaloa Public Library, where knowledge comes alive through thousands of books and diverse information resources</p>
 
   <form class="hero-search" id="opac-search" aria-label="Search the integrated Koha catalog">
     <input id="search-q" name="q" type="text" data-i18n-placeholder="home.hero.placeholder" placeholder="Search books by title, author, ISBN, or subject…" aria-label="Search query" />
@@ -70,9 +61,9 @@
     </button>
   </form>
 
-  <p class="hero-note">
-    <span data-i18n="home.hero.note" data-i18n-html="true">Searches the integrated Koha OPAC across <strong>Batticaloa Public Library</strong>, <strong>Eastern University</strong> and partner libraries.</span>
-    &nbsp;<a href="/catalog" data-i18n="home.hero.browse">→ Browse our digital catalog</a>
+  <p class="hero-note" style="margin-top:1.5rem;">
+    <span data-i18n="home.hero.note">Search and discover books across the library collection.</span>
+    &nbsp;<a href="/catalog" data-i18n="home.hero.browse">→ Advanced Search</a>
   </p>
 
   <div class="hero-chips">
@@ -257,7 +248,7 @@
       </a></p>
     </div>
     <div>
-      <img src="/images/about-library.svg" alt="Illustration of Batticaloa Public Library building" width="560" height="420" loading="lazy" />
+      <img src="/images/library-about.jpg" alt="Batticaloa Public Library building" width="560" height="420" loading="lazy" style="object-fit:cover;border-radius:14px;" />
     </div>
   </div>
 </section>
