@@ -150,14 +150,16 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", 'data:', 'https:'],
       connectSrc: ["'self'", kohaOrigin],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
-      frameSrc: ["https://www.google.com", "https://www.openstreetmap.org"],
+      frameSrc: ["'self'", "https://www.google.com", "https://www.openstreetmap.org"],
+      workerSrc: ["'self'", "blob:"],
+      scriptSrcAttr: ["'none'"],
     },
   },
   crossOriginEmbedderPolicy: false,

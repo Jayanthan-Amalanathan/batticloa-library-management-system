@@ -11,24 +11,11 @@
 .bpl-pre-p5{width:3px;height:3px;background:rgba(212,160,23,.55);left:84%;animation-duration:11s;animation-delay:1s}
 .bpl-pre-p6{width:2px;height:2px;background:rgba(181,37,58,.55);left:42%;animation-duration:7.8s;animation-delay:3.1s}
 .bpl-pre-seal-wrap{position:relative;display:flex;align-items:center;justify-content:center;animation:bplSealEntrance .9s cubic-bezier(.34,1.56,.64,1) .1s forwards;opacity:0}
-.bpl-pre-ring-outer{position:absolute;width:300px;height:300px;border-radius:50%;border:1px solid rgba(212,160,23,.18);animation:bplRingPulse 3.2s ease-in-out infinite}
-.bpl-pre-ring-mid{position:absolute;width:278px;height:278px;border-radius:50%;border:1px solid rgba(255,255,255,.07);animation:bplRingPulse 3.2s ease-in-out .6s infinite}
-.bpl-pre-ring-glow{position:absolute;width:255px;height:255px;border-radius:50%;background:radial-gradient(circle,rgba(14,77,92,.35) 0%,transparent 70%);animation:bplGlowBreath 2.8s ease-in-out infinite}
-.bpl-pre-logo-circle{width:240px;height:240px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
-.bpl-pre-seal-svg{width:240px;height:240px;animation:bplLogoBreath 3s ease-in-out infinite;overflow:visible}
-.bpl-pre-seal-img{width:240px;height:240px;object-fit:contain;animation:bplLogoBreathImg 3s ease-in-out infinite}
-.bpl-pre-content{margin-top:2rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.8rem;opacity:0;animation:bplFadeUp .7s ease .75s forwards}
-.bpl-pre-loader{display:flex;flex-direction:column;align-items:center;gap:.75rem}
-.bpl-pre-spinner{position:absolute;width:320px;height:320px;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
-.bpl-pre-spinner circle{fill:none;stroke:url(#bplSpinGrad);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:160 340;animation:bplSpin 1.4s cubic-bezier(.4,0,.2,1) infinite}
+.bpl-pre-logo-circle{display:flex;align-items:center;justify-content:center}
+.bpl-pre-seal-img{width:200px;height:200px;object-fit:contain;animation:bplLogoBreathImg 3s ease-in-out infinite}
 @keyframes bplSealEntrance{0%{opacity:0;transform:scale(.65) translateY(24px)}100%{opacity:1;transform:scale(1) translateY(0)}}
-@keyframes bplFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@keyframes bplRingPulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.035);opacity:.9}}
-@keyframes bplGlowBreath{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}}
-@keyframes bplLogoBreath{0%,100%{filter:drop-shadow(0 0 14px rgba(212,160,23,.25))}50%{filter:drop-shadow(0 0 28px rgba(212,160,23,.5))}}
 @keyframes bplLogoBreathImg{0%,100%{filter:invert(1) drop-shadow(0 0 14px rgba(212,160,23,.25))}50%{filter:invert(1) drop-shadow(0 0 28px rgba(212,160,23,.5))}}
 @keyframes bplParticleFloat{0%{opacity:0;transform:translateY(0) scale(0)}8%{opacity:1}88%{opacity:.4}100%{opacity:0;transform:translateY(-100vh) scale(1.2)}}
-@keyframes bplSpin{0%{stroke-dashoffset:0;transform:rotate(0deg)}100%{stroke-dashoffset:-500;transform:rotate(360deg)}}
 /* Branch finder: list + single map */
 .branches-finder{display:grid;grid-template-columns:340px 1fr;gap:0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border);margin-top:2rem;min-height:520px}
 .branch-list{list-style:none;margin:0;padding:0;background:var(--bg-card);overflow-y:auto;max-height:520px;border-right:1px solid var(--border)}

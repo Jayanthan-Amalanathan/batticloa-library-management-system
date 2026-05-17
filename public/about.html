@@ -52,116 +52,6 @@
   </div>
 </section>
 
-<!-- Library Layout Plans -->
-<style>
-  .layout-tab-btn {
-    padding:.6rem 1.5rem;border-radius:8px;border:2px solid #1a3a5c;
-    background:transparent;color:#1a3a5c;font-weight:600;
-    font-family:Inter,sans-serif;cursor:pointer;font-size:.9rem;transition:background .2s,color .2s;
-  }
-  .layout-tab-btn.active {background:#1a3a5c;color:#fff;}
-  .layout-panel {display:none;}
-  .layout-panel.active {display:block;}
-  .layout-pdf-viewer {
-    width:100%;height:680px;display:block;border:0;
-  }
-  .pdf-object-wrap {width:100%;height:680px;overflow:hidden;}
-</style>
-<section style="background:var(--bg-subtle);padding:5rem 0;">
-  <div class="container">
-    <div class="section-head">
-      <span class="eyebrow">Explore the Building</span>
-      <h2>Library Layout Plans</h2>
-      <p style="color:var(--text-soft);max-width:560px;margin:0.5rem auto 0;">View the official floor plan of the Batticaloa Public Library. Switch between the Front and Rear layout views.</p>
-    </div>
-
-    <!-- Tab buttons -->
-    <div style="display:flex;gap:.75rem;justify-content:center;margin-bottom:2rem;" role="tablist" aria-label="Library layout plans">
-      <button id="tab-front" class="layout-tab-btn active" role="tab" aria-selected="true" aria-controls="panel-front">
-        Front Layout
-      </button>
-      <button id="tab-rear" class="layout-tab-btn" role="tab" aria-selected="false" aria-controls="panel-rear">
-        Rear Layout
-      </button>
-    </div>
-
-    <!-- Front layout panel -->
-    <div id="panel-front" class="layout-panel active" role="tabpanel" aria-labelledby="tab-front"
-      style="background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);overflow:hidden;">
-      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
-        <div>
-          <p style="margin:0;font-weight:700;font-size:1rem;">Batticaloa Public Library — Front Layout</p>
-          <p style="margin:.25rem 0 0;font-size:.83rem;color:#6b7280;">Entrance, Lending, Reference, Children's &amp; IT Sections</p>
-        </div>
-        <a href="/layout-front.pdf" download="Batticaloa-Library-Front-Layout.pdf"
-          class="btn btn-primary btn-sm"
-          style="display:inline-flex;align-items:center;gap:.45rem;white-space:nowrap;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download PDF
-        </a>
-      </div>
-      <div class="pdf-object-wrap">
-        <object data="/layout-front.pdf" type="application/pdf" class="layout-pdf-viewer" aria-label="Batticaloa Public Library Front Layout Plan">
-          <div style="padding:2.5rem;text-align:center;">
-            <p style="margin:0 0 1rem;font-size:1rem;">Your browser cannot display the PDF inline.</p>
-            <a href="/layout-front.pdf" download class="btn btn-primary">Download Front Layout PDF</a>
-          </div>
-        </object>
-      </div>
-    </div>
-
-    <!-- Rear layout panel -->
-    <div id="panel-rear" class="layout-panel" role="tabpanel" aria-labelledby="tab-rear"
-      style="background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);overflow:hidden;">
-      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
-        <div>
-          <p style="margin:0;font-weight:700;font-size:1rem;">Batticaloa Public Library — Rear Layout</p>
-          <p style="margin:.25rem 0 0;font-size:.83rem;color:#6b7280;">Rear Entrance, Art Gallery, Vision Friendly &amp; Newspaper Reading Section</p>
-        </div>
-        <a href="/layout-rear.pdf" download="Batticaloa-Library-Rear-Layout.pdf"
-          class="btn btn-primary btn-sm"
-          style="display:inline-flex;align-items:center;gap:.45rem;white-space:nowrap;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download PDF
-        </a>
-      </div>
-      <div class="pdf-object-wrap">
-        <object data="/layout-rear.pdf" type="application/pdf" class="layout-pdf-viewer" aria-label="Batticaloa Public Library Rear Layout Plan">
-          <div style="padding:2.5rem;text-align:center;">
-            <p style="margin:0 0 1rem;font-size:1rem;">Your browser cannot display the PDF inline.</p>
-            <a href="/layout-rear.pdf" download class="btn btn-primary">Download Rear Layout PDF</a>
-          </div>
-        </object>
-      </div>
-    </div>
-
-    <p style="text-align:center;color:var(--text-soft);font-size:.82rem;margin-top:1.25rem;">
-      Can't see the plan? <a href="/layout-front.pdf" style="color:#1a3a5c;">Download Front</a> or <a href="/layout-rear.pdf" style="color:#1a3a5c;">Download Rear</a> layout as PDF.
-    </p>
-  </div>
-</section>
-
-<script>
-(function () {
-  var tabs = [
-    { btn: document.getElementById('tab-front'), panel: document.getElementById('panel-front') },
-    { btn: document.getElementById('tab-rear'),  panel: document.getElementById('panel-rear')  }
-  ];
-  tabs.forEach(function (t) {
-    t.btn.addEventListener('click', function () {
-      tabs.forEach(function (x) {
-        x.btn.classList.remove('active');
-        x.btn.setAttribute('aria-selected', 'false');
-        x.panel.classList.remove('active');
-      });
-      t.btn.classList.add('active');
-      t.btn.setAttribute('aria-selected', 'true');
-      t.panel.classList.add('active');
-    });
-  });
-}());
-</script>
-
 <!-- Vision, Mission, Values -->
 <section style="background:var(--primary-dark);padding:5rem 0;position:relative;overflow:hidden;">
 
@@ -434,6 +324,121 @@
     </div>
   </div>
 </section>
+
+<!-- Library Layout Plans -->
+<style>
+  .layout-tab-btn {
+    padding:.6rem 1.6rem;border-radius:8px;border:2px solid #1a3a5c;
+    background:transparent;color:#1a3a5c;font-weight:600;
+    font-family:Inter,sans-serif;cursor:pointer;font-size:.9rem;
+    transition:background .18s,color .18s;
+  }
+  .layout-tab-btn.active {background:#1a3a5c;color:#fff;}
+  .layout-panel {display:none;}
+  .layout-panel.active {display:block;}
+  .layout-viewer-card {
+    background:#fff;border-radius:16px;
+    box-shadow:0 4px 28px rgba(0,0,0,.09);overflow:hidden;
+  }
+  .layout-viewer-toolbar {
+    padding:1rem 1.4rem;border-bottom:1px solid #e5e7eb;
+    display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:.75rem;
+  }
+  .layout-pdfjs-frame {
+    width:100%;height:720px;border:0;display:block;background:#404040;
+  }
+</style>
+<section style="background:var(--bg-subtle);padding:5rem 0;">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Explore the Building</span>
+      <h2>Library Layout Plans</h2>
+      <p style="color:var(--text-soft);max-width:560px;margin:0.5rem auto 0;">Browse the official floor plan of the Batticaloa Public Library. Zoom, pan and scroll inside the viewer.</p>
+    </div>
+
+    <!-- Tab buttons -->
+    <div style="display:flex;gap:.75rem;justify-content:center;margin-bottom:2rem;" role="tablist" aria-label="Library layout plans">
+      <button id="tab-front" class="layout-tab-btn active" role="tab" aria-selected="true" aria-controls="panel-front">
+        Front Layout
+      </button>
+      <button id="tab-rear" class="layout-tab-btn" role="tab" aria-selected="false" aria-controls="panel-rear">
+        Rear Layout
+      </button>
+    </div>
+
+    <!-- Front layout panel -->
+    <div id="panel-front" class="layout-panel active layout-viewer-card" role="tabpanel" aria-labelledby="tab-front">
+      <div class="layout-viewer-toolbar">
+        <div>
+          <p style="margin:0;font-weight:700;font-size:1rem;">Batticaloa Public Library — Front Layout</p>
+          <p style="margin:.2rem 0 0;font-size:.82rem;color:#6b7280;">Entrance, Lending, Reference, Children's &amp; IT Sections</p>
+        </div>
+        <a href="/layout-front.pdf" download="Batticaloa-Library-Front-Layout.pdf"
+          class="btn btn-primary btn-sm"
+          style="display:inline-flex;align-items:center;gap:.45rem;white-space:nowrap;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </a>
+      </div>
+      <iframe
+        id="viewer-front"
+        class="layout-pdfjs-frame"
+        src="/pdfjs/web/viewer.html?file=%2Flayout-front.pdf"
+        title="Batticaloa Public Library — Front Layout Plan"
+        allowfullscreen>
+      </iframe>
+    </div>
+
+    <!-- Rear layout panel -->
+    <div id="panel-rear" class="layout-panel layout-viewer-card" role="tabpanel" aria-labelledby="tab-rear">
+      <div class="layout-viewer-toolbar">
+        <div>
+          <p style="margin:0;font-weight:700;font-size:1rem;">Batticaloa Public Library — Rear Layout</p>
+          <p style="margin:.2rem 0 0;font-size:.82rem;color:#6b7280;">Rear Entrance, Art Gallery, Vision Friendly &amp; Newspaper Reading Section</p>
+        </div>
+        <a href="/layout-rear.pdf" download="Batticaloa-Library-Rear-Layout.pdf"
+          class="btn btn-primary btn-sm"
+          style="display:inline-flex;align-items:center;gap:.45rem;white-space:nowrap;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </a>
+      </div>
+      <iframe
+        id="viewer-rear"
+        class="layout-pdfjs-frame"
+        src="/pdfjs/web/viewer.html?file=%2Flayout-rear.pdf"
+        title="Batticaloa Public Library — Rear Layout Plan"
+        allowfullscreen>
+      </iframe>
+    </div>
+
+    <p style="text-align:center;color:var(--text-soft);font-size:.82rem;margin-top:1.25rem;">
+      Download: <a href="/layout-front.pdf" download style="color:#1a3a5c;font-weight:600;">Front Layout PDF</a> &nbsp;·&nbsp; <a href="/layout-rear.pdf" download style="color:#1a3a5c;font-weight:600;">Rear Layout PDF</a>
+    </p>
+  </div>
+</section>
+
+<script>
+(function () {
+  var tabs = [
+    { btn: document.getElementById('tab-front'), panel: document.getElementById('panel-front') },
+    { btn: document.getElementById('tab-rear'),  panel: document.getElementById('panel-rear')  }
+  ];
+  tabs.forEach(function (t) {
+    t.btn.addEventListener('click', function () {
+      tabs.forEach(function (x) {
+        x.btn.classList.remove('active');
+        x.btn.setAttribute('aria-selected', 'false');
+        x.panel.classList.remove('active');
+      });
+      t.btn.classList.add('active');
+      t.btn.setAttribute('aria-selected', 'true');
+      t.panel.classList.add('active');
+    });
+  });
+}());
+</script>
 
 <!-- CTA -->
 <section class="cta-section">
