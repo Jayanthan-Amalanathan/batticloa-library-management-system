@@ -1,80 +1,122 @@
-const { createClient } = require('@libsql/client');
 const path = require('path');
 
-// In production use TURSO_DATABASE_URL + TURSO_AUTH_TOKEN env vars (Turso cloud).
-// In development fall back to a local SQLite file via the file: protocol.
-let client;
-let isRemote = false;
+// Production: use Turso (@libsql/client) via TURSO_DATABASE_URL env var.
+// Development: use better-sqlite3 (synchronous, no concurrency issues).
+// The exported API is always async so callers don't need to know which driver is active.
 
-if (process.env.TURSO_DATABASE_URL) {
-  isRemote = true;
-  client = createClient({
-    url: process.env.TURSO_DATABASE_URL,
-    authToken: process.env.TURSO_AUTH_TOKEN || undefined,
-  });
-} else {
+const IS_REMOTE = !!process.env.TURSO_DATABASE_URL;
+
+// ---------------------------------------------------------------------------
+// Local driver — better-sqlite3 (synchronous)
+// ---------------------------------------------------------------------------
+let _localDb = null;
+function localDb() {
+  if (_localDb) return _localDb;
+  const Database = require('better-sqlite3');
   const fs = require('fs');
   let dataDir = process.env.BPL_DATA_DIR || path.join(__dirname, '..', 'data');
-  try {
-    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-  } catch {
-    dataDir = '/tmp';
-  }
-  client = createClient({ url: `file:${path.join(dataDir, 'library.db')}` });
+  try { if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true }); }
+  catch { dataDir = '/tmp'; }
+  _localDb = new Database(path.join(dataDir, 'library.db'));
+  _localDb.pragma('journal_mode = WAL');
+  _localDb.pragma('foreign_keys = ON');
+  return _localDb;
 }
 
 // ---------------------------------------------------------------------------
-// Thin compatibility shim – mirrors the better-sqlite3 prepare().get/all/run()
-// surface but returns Promises instead of synchronous results.
+// Remote driver — @libsql/client (async, Turso)
+// ---------------------------------------------------------------------------
+let _remoteClient = null;
+function remoteClient() {
+  if (_remoteClient) return _remoteClient;
+  const { createClient } = require('@libsql/client');
+  _remoteClient = createClient({
+    url: process.env.TURSO_DATABASE_URL,
+    authToken: process.env.TURSO_AUTH_TOKEN || undefined,
+  });
+  return _remoteClient;
+}
+
+// ---------------------------------------------------------------------------
+// Unified async API
 // ---------------------------------------------------------------------------
 
 function prepare(sql) {
+  if (IS_REMOTE) {
+    const client = remoteClient();
+    return {
+      async get(...args)  { const rs = await client.execute({ sql, args: args.flat() }); return rs.rows[0] ?? null; },
+      async all(...args)  { const rs = await client.execute({ sql, args: args.flat() }); return rs.rows; },
+      async run(...args)  { const rs = await client.execute({ sql, args: args.flat() }); return { lastInsertRowid: Number(rs.lastInsertRowid ?? 0), changes: rs.rowsAffected }; },
+    };
+  }
+  // Local: better-sqlite3 — wrap sync calls in resolved promises
+  const db = localDb();
+  const stmt = db.prepare(sql);
   return {
-    async get(...args) {
-      const rs = await client.execute({ sql, args: args.flat() });
-      return rs.rows[0] ?? null;
-    },
-    async all(...args) {
-      const rs = await client.execute({ sql, args: args.flat() });
-      return rs.rows;
-    },
-    async run(...args) {
-      const rs = await client.execute({ sql, args: args.flat() });
-      return { lastInsertRowid: Number(rs.lastInsertRowid ?? 0), changes: rs.rowsAffected };
-    },
+    async get(...args)  { return stmt.get(...args.flat()) ?? null; },
+    async all(...args)  { return stmt.all(...args.flat()); },
+    async run(...args)  { const info = stmt.run(...args.flat()); return { lastInsertRowid: Number(info.lastInsertRowid), changes: info.changes }; },
   };
 }
 
 async function exec(sql) {
-  // exec() may contain multiple statements separated by semicolons
-  const statements = sql.split(';').map(s => s.trim()).filter(Boolean);
-  for (const stmt of statements) {
-    await client.execute(stmt);
+  if (IS_REMOTE) {
+    const client = remoteClient();
+    for (const s of sql.split(';').map(s => s.trim()).filter(Boolean)) {
+      await client.execute(s);
+    }
+  } else {
+    localDb().exec(sql);
   }
 }
 
-// transaction() wraps a callback in a BEGIN/COMMIT block.
-// The callback receives no arguments; it must use the module-level prepare()
-// helpers and is itself async.
+// batch() — atomic multi-statement write, safe under concurrent async workloads.
+// For local: wraps all statements in a single better-sqlite3 transaction (truly atomic, synchronous).
+// For remote: uses client.batch() (single Turso round-trip).
+async function batch(statements) {
+  const stmts = statements.map(s => typeof s === 'string' ? { sql: s, args: [] } : s);
+  if (IS_REMOTE) {
+    return remoteClient().batch(stmts, 'write');
+  }
+  const db = localDb();
+  const run = db.transaction(() => {
+    for (const { sql, args } of stmts) {
+      db.prepare(sql).run(...(args || []));
+    }
+  });
+  run();
+}
+
+// transaction() — wraps an async callback in BEGIN/COMMIT.
+// For local this is not needed (better-sqlite3 transactions are synchronous),
+// but kept for API compatibility with any existing callers.
 function transaction(fn) {
   return async function () {
-    await client.execute('BEGIN');
-    try {
-      const result = await fn();
-      await client.execute('COMMIT');
+    if (IS_REMOTE) {
+      const client = remoteClient();
+      await client.execute('BEGIN');
+      try {
+        const result = await fn();
+        await client.execute('COMMIT');
+        return result;
+      } catch (err) {
+        await client.execute('ROLLBACK');
+        throw err;
+      }
+    } else {
+      // better-sqlite3: run synchronously inside a transaction
+      let result;
+      localDb().transaction(() => { result = fn(); })();
       return result;
-    } catch (err) {
-      await client.execute('ROLLBACK');
-      throw err;
     }
   };
 }
 
 async function pragma(stmt) {
-  // Turso remote connections reject PRAGMA statements — skip them silently.
-  // WAL and foreign_keys are handled at the Turso server level automatically.
-  if (isRemote) return;
-  await client.execute(`PRAGMA ${stmt}`);
+  // Remote Turso connections reject PRAGMA — skip silently.
+  if (IS_REMOTE) return;
+  localDb().pragma(stmt);
 }
 
 // ---------------------------------------------------------------------------
@@ -104,7 +146,6 @@ async function initSchema() {
     `CREATE TABLE IF NOT EXISTS books (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       isbn TEXT,
-      dlp_source_key TEXT,
       title TEXT NOT NULL,
       author TEXT NOT NULL,
       publisher TEXT,
@@ -227,47 +268,6 @@ async function initSchema() {
     )`,
     `CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id)`,
     `CREATE INDEX IF NOT EXISTS idx_chat_sessions_session ON chat_sessions(session_id)`,
-    `CREATE TABLE IF NOT EXISTS dlp_sync_log (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      completed_at DATETIME,
-      status TEXT DEFAULT 'running',
-      source TEXT DEFAULT 'dlp_koha',
-      books_added INTEGER DEFAULT 0,
-      books_updated INTEGER DEFAULT 0,
-      books_skipped INTEGER DEFAULT 0,
-      total_fetched INTEGER DEFAULT 0,
-      error_message TEXT,
-      triggered_by TEXT DEFAULT 'cron'
-    )`,
-    `CREATE TABLE IF NOT EXISTS dlp_books (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      koha_biblio_id INTEGER UNIQUE NOT NULL,
-      koha_item_id INTEGER,
-      isbn TEXT,
-      title TEXT NOT NULL,
-      author TEXT,
-      publisher TEXT,
-      publication_year INTEGER,
-      category TEXT,
-      collection_type TEXT DEFAULT 'lending',
-      language TEXT DEFAULT 'en',
-      call_number TEXT,
-      description TEXT,
-      branch TEXT,
-      location TEXT,
-      collection_code TEXT,
-      item_type TEXT,
-      total_copies INTEGER DEFAULT 1,
-      available_copies INTEGER DEFAULT 1,
-      not_for_loan INTEGER DEFAULT 0,
-      last_checkout_date TEXT,
-      checkouts_count INTEGER DEFAULT 0,
-      last_synced_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`,
-    `CREATE INDEX IF NOT EXISTS idx_dlp_books_biblio ON dlp_books(koha_biblio_id)`,
-    `CREATE INDEX IF NOT EXISTS idx_dlp_books_isbn ON dlp_books(isbn)`,
     `CREATE TABLE IF NOT EXISTS reader_profiles (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       session_id TEXT NOT NULL UNIQUE,
@@ -277,55 +277,80 @@ async function initSchema() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`,
     `CREATE INDEX IF NOT EXISTS idx_reader_profiles_session ON reader_profiles(session_id)`,
+    `CREATE TABLE IF NOT EXISTS dlp_sync_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      started_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+      completed_at  DATETIME,
+      status        TEXT NOT NULL DEFAULT 'running',
+      triggered_by  TEXT DEFAULT 'cron',
+      books_added   INTEGER DEFAULT 0,
+      books_updated INTEGER DEFAULT 0,
+      books_skipped INTEGER DEFAULT 0,
+      total_fetched INTEGER DEFAULT 0,
+      error_message TEXT
+    )`,
+    `CREATE TABLE IF NOT EXISTS dlp_books (
+      id               INTEGER PRIMARY KEY AUTOINCREMENT,
+      koha_biblio_id   INTEGER NOT NULL UNIQUE,
+      koha_item_id     INTEGER,
+      isbn             TEXT,
+      title            TEXT NOT NULL,
+      author           TEXT,
+      publisher        TEXT,
+      publication_year INTEGER,
+      category         TEXT,
+      collection_type  TEXT DEFAULT 'lending',
+      language         TEXT DEFAULT 'en',
+      call_number      TEXT,
+      branch           TEXT,
+      location         TEXT,
+      collection_code  TEXT,
+      item_type        TEXT,
+      total_copies     INTEGER DEFAULT 1,
+      available_copies INTEGER DEFAULT 1,
+      not_for_loan     INTEGER DEFAULT 0,
+      last_checkout_date TEXT,
+      checkouts_count  INTEGER DEFAULT 0,
+      last_synced_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_dlp_books_biblio ON dlp_books(koha_biblio_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_dlp_books_title  ON dlp_books(title)`,
+    `CREATE INDEX IF NOT EXISTS idx_dlp_books_author ON dlp_books(author)`,
   ];
 
   for (const stmt of tables) {
-    await client.execute(stmt);
+    await exec(stmt);
   }
 
-  // Idempotent column migrations — run before any indexes that depend on them
+  // Idempotent column migrations
   const migrations = [
-    `ALTER TABLE books ADD COLUMN dlp_source_key TEXT`,
     `ALTER TABLE books ADD COLUMN is_deleted INTEGER DEFAULT 0`,
+    `ALTER TABLE books ADD COLUMN dlp_source_key TEXT`,
+    `ALTER TABLE books ADD COLUMN collection_type TEXT DEFAULT 'lending'`,
+    `ALTER TABLE books ADD COLUMN call_number TEXT`,
   ];
   for (const stmt of migrations) {
-    try { await client.execute(stmt); } catch { /* column already exists — ignore */ }
+    try { await exec(stmt); } catch { /* column already exists */ }
   }
 
-  // Indexes that depend on migrated columns — run after migrations
   const postMigrationIndexes = [
+    `CREATE INDEX IF NOT EXISTS idx_books_title      ON books(title)`,
+    `CREATE INDEX IF NOT EXISTS idx_books_author     ON books(author)`,
+    `CREATE INDEX IF NOT EXISTS idx_books_category   ON books(category)`,
+    `CREATE INDEX IF NOT EXISTS idx_books_branch     ON books(branch)`,
     `CREATE INDEX IF NOT EXISTS idx_books_dlp_source ON books(dlp_source_key)`,
-    // B-tree indexes to speed up LIKE searches on local books
-    `CREATE INDEX IF NOT EXISTS idx_books_title    ON books(title)`,
-    `CREATE INDEX IF NOT EXISTS idx_books_author   ON books(author)`,
-    `CREATE INDEX IF NOT EXISTS idx_books_category ON books(category)`,
-    `CREATE INDEX IF NOT EXISTS idx_books_branch   ON books(branch)`,
-    // B-tree indexes for dlp_books — covers the 80k-row search path
-    `CREATE INDEX IF NOT EXISTS idx_dlp_title      ON dlp_books(title)`,
-    `CREATE INDEX IF NOT EXISTS idx_dlp_author     ON dlp_books(author)`,
-    `CREATE INDEX IF NOT EXISTS idx_dlp_category   ON dlp_books(category)`,
-    `CREATE INDEX IF NOT EXISTS idx_dlp_branch     ON dlp_books(branch)`,
-    `CREATE INDEX IF NOT EXISTS idx_dlp_language   ON dlp_books(language)`,
-    `CREATE INDEX IF NOT EXISTS idx_dlp_available  ON dlp_books(available_copies)`,
   ];
   for (const stmt of postMigrationIndexes) {
-    await client.execute(stmt);
+    await exec(stmt);
   }
 
-  // FTS5 virtual tables for fast full-text search — gracefully skipped if the
-  // libsql build or Turso remote doesn't expose the fts5 extension.
+  // FTS5 — gracefully skipped if unavailable
   const ftsStatements = [
     `CREATE VIRTUAL TABLE IF NOT EXISTS books_fts USING fts5(
       title, author, isbn, description, category,
       content='books', content_rowid='id',
       tokenize='unicode61 remove_diacritics 1'
     )`,
-    `CREATE VIRTUAL TABLE IF NOT EXISTS dlp_books_fts USING fts5(
-      title, author, isbn, description, category,
-      content='dlp_books', content_rowid='id',
-      tokenize='unicode61 remove_diacritics 1'
-    )`,
-    // Keep books_fts in sync
     `CREATE TRIGGER IF NOT EXISTS books_fts_insert AFTER INSERT ON books BEGIN
        INSERT INTO books_fts(rowid, title, author, isbn, description, category)
        VALUES (new.id, new.title, new.author, new.isbn, new.description, new.category);
@@ -340,31 +365,61 @@ async function initSchema() {
        INSERT INTO books_fts(rowid, title, author, isbn, description, category)
        VALUES (new.id, new.title, new.author, new.isbn, new.description, new.category);
      END`,
-    // Keep dlp_books_fts in sync
+    // dlp_books FTS (no description column)
+    `CREATE VIRTUAL TABLE IF NOT EXISTS dlp_books_fts USING fts5(
+      title, author, isbn, category,
+      content='dlp_books', content_rowid='id',
+      tokenize='unicode61 remove_diacritics 1'
+    )`,
     `CREATE TRIGGER IF NOT EXISTS dlp_books_fts_insert AFTER INSERT ON dlp_books BEGIN
-       INSERT INTO dlp_books_fts(rowid, title, author, isbn, description, category)
-       VALUES (new.id, new.title, new.author, new.isbn, new.description, new.category);
+       INSERT INTO dlp_books_fts(rowid, title, author, isbn, category)
+       VALUES (new.id, new.title, new.author, new.isbn, new.category);
      END`,
     `CREATE TRIGGER IF NOT EXISTS dlp_books_fts_delete AFTER DELETE ON dlp_books BEGIN
-       INSERT INTO dlp_books_fts(dlp_books_fts, rowid, title, author, isbn, description, category)
-       VALUES ('delete', old.id, old.title, old.author, old.isbn, old.description, old.category);
+       INSERT INTO dlp_books_fts(dlp_books_fts, rowid, title, author, isbn, category)
+       VALUES ('delete', old.id, old.title, old.author, old.isbn, old.category);
      END`,
     `CREATE TRIGGER IF NOT EXISTS dlp_books_fts_update AFTER UPDATE ON dlp_books BEGIN
-       INSERT INTO dlp_books_fts(dlp_books_fts, rowid, title, author, isbn, description, category)
-       VALUES ('delete', old.id, old.title, old.author, old.isbn, old.description, old.category);
-       INSERT INTO dlp_books_fts(rowid, title, author, isbn, description, category)
-       VALUES (new.id, new.title, new.author, new.isbn, new.description, new.category);
+       INSERT INTO dlp_books_fts(dlp_books_fts, rowid, title, author, isbn, category)
+       VALUES ('delete', old.id, old.title, old.author, old.isbn, old.category);
+       INSERT INTO dlp_books_fts(rowid, title, author, isbn, category)
+       VALUES (new.id, new.title, new.author, new.isbn, new.category);
      END`,
   ];
   for (const stmt of ftsStatements) {
-    try { await client.execute(stmt); } catch { /* FTS5 not available — fall back to LIKE search */ }
+    try { await exec(stmt); } catch { /* FTS5 not available */ }
   }
 
-  // Repair any sync log rows left in 'running' state from a previous crashed process
-  await client.execute(
-    `UPDATE dlp_sync_log SET status = 'failed', error_message = 'Process terminated unexpectedly',
-     completed_at = datetime('now') WHERE status = 'running'`
-  );
+  // Repair: replace any old dlp_books_fts triggers that referenced 'description'
+  const dlpFtsRepair = [
+    `DROP TRIGGER IF EXISTS dlp_books_fts_insert`,
+    `DROP TRIGGER IF EXISTS dlp_books_fts_delete`,
+    `DROP TRIGGER IF EXISTS dlp_books_fts_update`,
+    `DROP TABLE IF EXISTS dlp_books_fts`,
+    `CREATE VIRTUAL TABLE IF NOT EXISTS dlp_books_fts USING fts5(
+      title, author, isbn, category,
+      content='dlp_books', content_rowid='id',
+      tokenize='unicode61 remove_diacritics 1'
+    )`,
+    `CREATE TRIGGER IF NOT EXISTS dlp_books_fts_insert AFTER INSERT ON dlp_books BEGIN
+       INSERT INTO dlp_books_fts(rowid, title, author, isbn, category)
+       VALUES (new.id, new.title, new.author, new.isbn, new.category);
+     END`,
+    `CREATE TRIGGER IF NOT EXISTS dlp_books_fts_delete AFTER DELETE ON dlp_books BEGIN
+       INSERT INTO dlp_books_fts(dlp_books_fts, rowid, title, author, isbn, category)
+       VALUES ('delete', old.id, old.title, old.author, old.isbn, old.category);
+     END`,
+    `CREATE TRIGGER IF NOT EXISTS dlp_books_fts_update AFTER UPDATE ON dlp_books BEGIN
+       INSERT INTO dlp_books_fts(dlp_books_fts, rowid, title, author, isbn, category)
+       VALUES ('delete', old.id, old.title, old.author, old.isbn, old.category);
+       INSERT INTO dlp_books_fts(rowid, title, author, isbn, category)
+       VALUES (new.id, new.title, new.author, new.isbn, new.category);
+     END`,
+    `INSERT INTO dlp_books_fts(dlp_books_fts) VALUES ('rebuild')`,
+  ];
+  for (const stmt of dlpFtsRepair) {
+    try { await exec(stmt); } catch { /* gracefully skip */ }
+  }
 }
 
-module.exports = { prepare, exec, transaction, pragma, initSchema };
+module.exports = { prepare, exec, transaction, batch, pragma, initSchema };

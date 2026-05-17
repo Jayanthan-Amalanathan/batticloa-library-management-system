@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225" fill="none">
+  <defs>
+    <linearGradient id="ag" x1="0" y1="0" x2="400" y2="225" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1b4332"/>
+      <stop offset="100%" stop-color="#52b788"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="225" fill="url(#ag)"/>
+  <!-- Soil ground -->
+  <rect x="0" y="155" width="400" height="70" fill="#5d3a1a" opacity="0.7"/>
+  <!-- Plant left -->
+  <rect x="90" y="105" width="6" height="55" rx="3" fill="#40916c"/>
+  <ellipse cx="80" cy="95" rx="20" ry="14" fill="#52b788" opacity="0.9"/>
+  <ellipse cx="108" cy="88" rx="18" ry="12" fill="#74c69d" opacity="0.85"/>
+  <ellipse cx="93" cy="78" rx="15" ry="10" fill="#95d5b2" opacity="0.8"/>
+  <!-- Plant right -->
+  <rect x="304" y="110" width="6" height="50" rx="3" fill="#40916c"/>
+  <ellipse cx="294" cy="100" rx="18" ry="12" fill="#52b788" opacity="0.9"/>
+  <ellipse cx="318" cy="93" rx="16" ry="10" fill="#74c69d" opacity="0.85"/>
+  <!-- Central leaf/logo -->
+  <ellipse cx="200" cy="90" rx="30" ry="20" fill="#40916c" opacity="0.8"/>
+  <ellipse cx="185" cy="75" rx="22" ry="15" fill="#52b788" opacity="0.9"/>
+  <path d="M200 110 L200 140" stroke="#40916c" stroke-width="3"/>
+  <!-- Hands cupping soil -->
+  <path d="M155 150 Q175 135 200 140 Q225 135 245 150 Q235 165 200 165 Q165 165 155 150Z" fill="#fad7a0" opacity="0.7"/>
+  <!-- Sun -->
+  <circle cx="340" cy="40" r="18" fill="#f9c74f" opacity="0.85"/>
+  <line x1="340" y1="16" x2="340" y2="10" stroke="#f9c74f" stroke-width="2" opacity="0.7"/>
+  <line x1="360" y1="25" x2="365" y2="20" stroke="#f9c74f" stroke-width="2" opacity="0.7"/>
+  <line x1="365" y1="45" x2="372" y2="44" stroke="#f9c74f" stroke-width="2" opacity="0.7"/>
+  <!-- Label -->
+  <text x="200" y="202" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#fff" opacity="0.9" letter-spacing="1">AGRICULTURE SEMINAR</text>
+</svg>

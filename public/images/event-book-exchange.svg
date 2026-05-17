@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225" fill="none">
+  <defs>
+    <linearGradient id="beg" x1="0" y1="0" x2="400" y2="225" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0d1b2a"/>
+      <stop offset="100%" stop-color="#1b4080"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="225" fill="url(#beg)"/>
+  <!-- Book stack left -->
+  <rect x="70" y="115" width="60" height="12" rx="3" fill="#e74c3c" opacity="0.85"/>
+  <rect x="73" y="103" width="54" height="12" rx="3" fill="#3498db" opacity="0.85"/>
+  <rect x="68" y="91" width="62" height="12" rx="3" fill="#2ecc71" opacity="0.85"/>
+  <rect x="72" y="79" width="56" height="12" rx="3" fill="#f39c12" opacity="0.85"/>
+  <!-- Book stack right -->
+  <rect x="270" y="115" width="60" height="12" rx="3" fill="#9b59b6" opacity="0.85"/>
+  <rect x="273" y="103" width="54" height="12" rx="3" fill="#1abc9c" opacity="0.85"/>
+  <rect x="268" y="91" width="62" height="12" rx="3" fill="#e67e22" opacity="0.85"/>
+  <rect x="272" y="79" width="56" height="12" rx="3" fill="#e74c3c" opacity="0.85"/>
+  <!-- Exchange arrows -->
+  <path d="M155 95 L245 95" stroke="#f6d860" stroke-width="3" fill="none" marker-end="url(#arr)" opacity="0.85"/>
+  <path d="M245 115 L155 115" stroke="#f6d860" stroke-width="3" fill="none" marker-end="url(#arr2)" opacity="0.85"/>
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#f6d860"/>
+    </marker>
+    <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#f6d860"/>
+    </marker>
+  </defs>
+  <!-- People icons -->
+  <circle cx="100" cy="148" r="10" fill="#fad7a0" opacity="0.85"/>
+  <rect x="90" y="158" width="20" height="20" rx="4" fill="#3498db" opacity="0.7"/>
+  <circle cx="300" cy="148" r="10" fill="#fad7a0" opacity="0.85"/>
+  <rect x="290" y="158" width="20" height="20" rx="4" fill="#e74c3c" opacity="0.7"/>
+  <!-- Label -->
+  <text x="200" y="55" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#f6d860" opacity="0.95" letter-spacing="2">BOOK EXCHANGE</text>
+  <text x="200" y="72" text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#fff" opacity="0.65" letter-spacing="1">நூல் சேகரிப்பும் மீளவழங்கலும்</text>
+  <!-- Stars decoration -->
+  <circle cx="50" cy="40" r="2" fill="#f6d860" opacity="0.6"/>
+  <circle cx="350" cy="30" r="2" fill="#f6d860" opacity="0.5"/>
+  <circle cx="360" cy="185" r="2" fill="#fff" opacity="0.4"/>
+</svg>

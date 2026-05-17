@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225" fill="none">
+  <defs>
+    <linearGradient id="sg" x1="0" y1="0" x2="400" y2="225" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#134e5e"/>
+      <stop offset="100%" stop-color="#71b280"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="225" fill="url(#sg)"/>
+  <!-- Person at podium -->
+  <circle cx="200" cy="75" r="20" fill="#fad7a0" opacity="0.95"/>
+  <!-- Body -->
+  <rect x="182" y="95" width="36" height="40" rx="6" fill="#c0392b" opacity="0.85"/>
+  <!-- Arms raised slightly -->
+  <line x1="182" y1="105" x2="155" y2="120" stroke="#fad7a0" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+  <line x1="218" y1="105" x2="245" y2="120" stroke="#fad7a0" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+  <!-- Podium -->
+  <rect x="160" y="135" width="80" height="50" rx="5" fill="#1a5276" opacity="0.8"/>
+  <rect x="150" y="133" width="100" height="10" rx="4" fill="#2471a3" opacity="0.8"/>
+  <!-- Microphone -->
+  <circle cx="200" cy="122" r="6" fill="#aab7b8" opacity="0.9"/>
+  <rect x="198" y="128" width="4" height="10" rx="2" fill="#aab7b8" opacity="0.9"/>
+  <!-- Sound waves -->
+  <path d="M155 90 Q140 100 155 112" stroke="#f6d860" stroke-width="2.5" fill="none" opacity="0.6"/>
+  <path d="M148 82 Q125 100 148 120" stroke="#f6d860" stroke-width="2" fill="none" opacity="0.4"/>
+  <path d="M245 90 Q260 100 245 112" stroke="#f6d860" stroke-width="2.5" fill="none" opacity="0.6"/>
+  <path d="M252 82 Q275 100 252 120" stroke="#f6d860" stroke-width="2" fill="none" opacity="0.4"/>
+  <!-- Banner -->
+  <rect x="40" y="30" width="320" height="28" rx="5" fill="#1a5276" opacity="0.6"/>
+  <text x="200" y="49" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#f6d860" opacity="0.95" letter-spacing="1">SPEECH COMPETITION</text>
+  <!-- Label bottom -->
+  <text x="200" y="205" text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#fff" opacity="0.7" letter-spacing="1">பேச்சுப் போட்டி</text>
+</svg>

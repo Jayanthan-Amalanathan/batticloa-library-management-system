@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225" fill="none">
+  <defs>
+    <linearGradient id="swg" x1="0" y1="0" x2="400" y2="225" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2d1f3d"/>
+      <stop offset="100%" stop-color="#7b2d8b"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="225" fill="url(#swg)"/>
+  <!-- Paper background -->
+  <rect x="110" y="45" width="180" height="140" rx="8" fill="#fff" opacity="0.12"/>
+  <!-- Writing lines -->
+  <rect x="125" y="65" width="150" height="5" rx="2" fill="#fff" opacity="0.4"/>
+  <rect x="125" y="78" width="130" height="5" rx="2" fill="#fff" opacity="0.4"/>
+  <rect x="125" y="91" width="145" height="5" rx="2" fill="#fff" opacity="0.4"/>
+  <rect x="125" y="104" width="110" height="5" rx="2" fill="#fff" opacity="0.4"/>
+  <rect x="125" y="117" width="140" height="5" rx="2" fill="#fff" opacity="0.4"/>
+  <rect x="125" y="130" width="125" height="5" rx="2" fill="#fff" opacity="0.4"/>
+  <rect x="125" y="143" width="100" height="5" rx="2" fill="#f9c74f" opacity="0.5"/>
+  <!-- Pen/pencil drawing -->
+  <rect x="260" y="130" width="8" height="50" rx="4" fill="#f9c74f" opacity="0.9" transform="rotate(-30 265 155)"/>
+  <path d="M252 165 L258 175 L264 163Z" fill="#f39c12" opacity="0.9" transform="rotate(-30 258 168)"/>
+  <!-- Flowers decoration -->
+  <circle cx="70" cy="60" r="8" fill="#e91e8c" opacity="0.5"/>
+  <circle cx="62" cy="52" r="5" fill="#ff6fb4" opacity="0.5"/>
+  <circle cx="78" cy="52" r="5" fill="#ff6fb4" opacity="0.5"/>
+  <circle cx="62" cy="68" r="5" fill="#ff6fb4" opacity="0.5"/>
+  <circle cx="78" cy="68" r="5" fill="#ff6fb4" opacity="0.5"/>
+  <!-- Stars -->
+  <circle cx="330" cy="50" r="3" fill="#f9c74f" opacity="0.6"/>
+  <circle cx="350" cy="70" r="2" fill="#f9c74f" opacity="0.5"/>
+  <circle cx="60" cy="160" r="2" fill="#fff" opacity="0.4"/>
+  <!-- Label -->
+  <text x="200" y="205" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#f9c74f" opacity="0.95" letter-spacing="1">STORY WRITING COMPETITION</text>
+</svg>

@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Batticaloa Public Library — Knowledge, Heritage & Innovation</title>
-<meta name="description" content="The official digital portal for Batticaloa Public Library. Search the catalog, register membership, browse collections, and join community programs." />
+<title>Batticaloa Public Library</title>
+<meta name="description" content="Batticaloa Public Library, serving the Eastern Province since 1972. Search the catalog, register for membership, and explore our collections." />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://batticloa-library-management-system.vercel.app/" />
 <!-- Open Graph -->
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://batticloa-library-management-system.vercel.app/" />
-<meta property="og:title" content="Batticaloa Public Library — Knowledge, Heritage & Innovation" />
-<meta property="og:description" content="The official digital portal for Batticaloa Public Library. Search the catalog, register membership, browse collections, and join community programs." />
+<meta property="og:title" content="Batticaloa Public Library" />
+<meta property="og:description" content="Batticaloa Public Library, serving the Eastern Province since 1972. Search the catalog, register for membership, and explore our collections." />
 <meta property="og:image" content="https://batticloa-library-management-system.vercel.app/images/hero-library.svg" />
 <meta property="og:site_name" content="Batticaloa Public Library" />
 <meta property="og:locale" content="en_LK" />
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Batticaloa Public Library — Knowledge, Heritage & Innovation" />
-<meta name="twitter:description" content="The official digital portal for Batticaloa Public Library. Search the catalog, register membership, browse collections, and join community programs." />
+<meta name="twitter:title" content="Batticaloa Public Library" />
+<meta name="twitter:description" content="Batticaloa Public Library, serving the Eastern Province since 1972. Search the catalog, register for membership, and explore our collections." />
 <meta name="twitter:image" content="https://batticloa-library-management-system.vercel.app/images/hero-library.svg" />
 <!-- Fonts: preconnect for zero-RTT, then async load with font-display:swap -->
 <!-- Preload critical CSS for faster FCP -->
@@ -41,8 +41,8 @@
 
 <!-- Hero -->
 <section class="hero" aria-labelledby="hero-heading">
-  <h1 id="hero-heading" data-i18n="home.hero.title">Knowledge for Every Citizen</h1>
-  <p data-i18n="home.hero.desc">Welcome to the Batticaloa Public Library, where knowledge comes alive through thousands of books and diverse information resources</p>
+  <h1 id="hero-heading" data-i18n="home.hero.title">Batticaloa Public Library</h1>
+  <p data-i18n="home.hero.desc">Serving the Eastern Province since 1972. Browse over 50,000 books, use our digital resources, and take part in community programs.</p>
 
   <form class="hero-search" id="opac-search" aria-label="Search the integrated Koha catalog">
     <input id="search-q" name="q" type="text" data-i18n-placeholder="home.hero.placeholder" placeholder="Search books by title, author, ISBN, or subject…" aria-label="Search query" />
@@ -63,7 +63,7 @@
 
   <p class="hero-note" style="margin-top:1.5rem;">
     <span data-i18n="home.hero.note">Search and discover books across the library collection.</span>
-    &nbsp;<a href="/catalog" data-i18n="home.hero.browse">→ Advanced Search</a>
+    &nbsp;<a href="https://batticaloa.dlp.gov.lk/cgi-bin/koha/opac-search.pl" target="_blank" rel="noopener" data-i18n="home.hero.browse">→ Advanced Search</a>
   </p>
 
   <div class="hero-chips">
@@ -97,93 +97,8 @@
   <div class="container">
     <div><div class="stat-num" id="s-books">—</div><div class="stat-label" data-i18n="home.stats.titles">Titles in Catalog</div></div>
     <div><div class="stat-num">500<span style="font-size:1.8rem">+</span></div><div class="stat-label" data-i18n="home.stats.members">Active Members</div></div>
-    <div><div class="stat-num" id="s-events">—</div><div class="stat-label" data-i18n="home.stats.programs">Programs This Year</div></div>
-    <div><div class="stat-num">3</div><div class="stat-label" data-i18n="home.stats.catalogs">Connected Catalogs</div></div>
-  </div>
-</section>
-
-<!-- Services teaser — moved above announcements -->
-<section aria-labelledby="services-heading">
-  <div class="container">
-    <div class="section-head">
-      <span class="eyebrow" data-i18n="home.services.eyebrow">Library Services</span>
-      <h2 id="services-heading" data-i18n="home.services.title">What We Offer</h2>
-      <p data-i18n="home.services.desc">Comprehensive services for students, researchers, families and the community.</p>
-    </div>
-    <div class="grid grid-4">
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-        </div>
-        <h3 data-i18n="home.services.lending">Lending & Reference</h3>
-        <p data-i18n="home.services.lending.desc">Borrow from our 50,000+ titles or access our reference and research collections.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        </div>
-        <h3 data-i18n="home.services.digital">Digital Services</h3>
-        <p data-i18n="home.services.digital.desc">Free Wi-Fi, computer access, e-document delivery and online research databases.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-        </div>
-        <h3 data-i18n="home.services.programs">Programs & Events</h3>
-        <p data-i18n="home.services.programs.desc">Workshops, author meets, children's storytime and community learning programs.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        </div>
-        <h3 data-i18n="home.services.maker">Maker Space</h3>
-        <p data-i18n="home.services.maker.desc">Hands-on innovation space with 3D printers, electronics kits and design tools.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-        </div>
-        <h3>Research Support</h3>
-        <p>Dedicated research librarians to assist with academic queries, citations and literature reviews.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        </div>
-        <h3>Children's Corner</h3>
-        <p>A dedicated, safe and stimulating space for young readers with curated books and storytelling sessions.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        </div>
-        <h3>Ask a Librarian</h3>
-        <p>Get expert help in person, over the phone or through our AI-powered chat service anytime.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-        </div>
-        <h3>Digital Archives</h3>
-        <p>Access rare manuscripts, historical newspapers and the Eastern Province heritage digitization project.</p>
-      </div>
-    </div>
-    <div class="text-center mt-4"><a href="/services" class="btn btn-ghost" data-i18n="home.services.all">
-      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-      View All Services
-    </a></div>
-  </div>
-</section>
-
-<!-- Announcements -->
-<section style="background:var(--bg-subtle);" aria-labelledby="announcements-heading">
-  <div class="container">
-    <div class="section-head">
-      <span class="eyebrow" data-i18n="home.announcements.eyebrow">Announcements & News</span>
-      <h2 id="announcements-heading" data-i18n="home.announcements.title">Stay Informed</h2>
-      <p data-i18n="home.announcements.desc">Latest notices, service updates and community programs from your library.</p>
-    </div>
-    <div id="announcements" class="grid grid-3"></div>
+    <div><div class="stat-num" id="s-events">—</div><div class="stat-label" data-i18n="home.stats.programs">Total Events</div></div>
+    <div><div class="stat-num">8</div><div class="stat-label" data-i18n="home.stats.services">Total Services</div></div>
   </div>
 </section>
 
@@ -212,105 +127,60 @@
   </div>
 </section>
 
-<!-- Upcoming events -->
-<section style="background:var(--bg-subtle);" aria-labelledby="events-heading">
+<!-- Services teaser -->
+<section aria-labelledby="services-heading">
   <div class="container">
     <div class="section-head">
-      <span class="eyebrow" data-i18n="home.events.eyebrow">Upcoming</span>
-      <h2 id="events-heading" data-i18n="home.events.title">Programs & Events</h2>
-      <p data-i18n="home.events.desc">Join us for workshops, exhibitions, training and community gatherings.</p>
+      <span class="eyebrow" data-i18n="home.services.eyebrow">Library Services</span>
+      <h2 id="services-heading" data-i18n="home.services.title">What We Offer</h2>
+      <p data-i18n="home.services.desc">Services for students, researchers, families and the general public.</p>
     </div>
-    <div id="upcoming-events" class="grid grid-3"></div>
-    <div class="text-center mt-4"><a href="/events" class="btn btn-primary" data-i18n="home.events.all">
-      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      View All Events
+    <div class="grid grid-3">
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">📝</div>
+        <h3 data-i18n="services.join.title">Join the Library</h3>
+        <p data-i18n="services.join.desc">Register online for membership. Annual renewal is supported. Student membership is free.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">📄</div>
+        <h3 data-i18n="services.delivery.title">Document Delivery</h3>
+        <p data-i18n="services.delivery.desc">Request scanned articles or chapters by email or secure download. Copyright-compliant service.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">💻</div>
+        <h3 data-i18n="services.internet.title">Internet & Computers</h3>
+        <p data-i18n="services.internet.desc">Free high-speed Wi-Fi and 20+ public-access workstations throughout the library. Booking recommended.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">🛠</div>
+        <h3 data-i18n="services.maker.title">Maker Space</h3>
+        <p data-i18n="services.maker.desc">3D printers, electronics workstations, and project kits. Workshops held every Saturday at 10 AM.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">🖨</div>
+        <h3 data-i18n="services.print.title">Print, Copy & Scan</h3>
+        <p data-i18n="services.print.desc">Printing, photocopying, and scanning available. LKR 5/page black and white, LKR 15/page colour.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">🧑‍🏫</div>
+        <h3 data-i18n="services.workshops.title">Workshops & Training</h3>
+        <p data-i18n="services.workshops.desc">Digital literacy, language classes, and skills programs for adults and children. Most are free to attend.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">🤝</div>
+        <h3 data-i18n="services.volunteer.title">Volunteer Programs</h3>
+        <p data-i18n="services.volunteer.desc">Support community outreach, children's programs, and digitization projects as a library volunteer.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" aria-hidden="true">🎁</div>
+        <h3 data-i18n="services.donations.title">Donations</h3>
+        <p data-i18n="services.donations.desc">Donate books or contribute to our acquisitions fund. Receipts provided for all donations.</p>
+      </div>
+    </div>
+    <div class="text-center mt-4"><a href="/services" class="btn btn-ghost" data-i18n="home.services.all">
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      View All Services
     </a></div>
-  </div>
-</section>
-
-<!-- About teaser / Mission -->
-<section aria-labelledby="mission-heading">
-  <div class="container about-grid">
-    <div>
-      <span class="eyebrow" data-i18n="home.mission.eyebrow">Our Mission</span>
-      <h2 id="mission-heading" style="margin-top:0.5rem;" data-i18n="home.mission.title">A Modern Knowledge Hub for Batticaloa</h2>
-      <p style="color:var(--text-soft);margin-bottom:1.25rem;" data-i18n="home.mission.desc">For over five decades, the Batticaloa Public Library has served as the cultural and intellectual heart of the Eastern Province. Today, we are transforming into a fully digital, integrated library — connecting Koha catalogs, the Eastern University Library, and Open Library to bring the world's knowledge to every citizen.</p>
-      <ul class="feature-list">
-        <li data-i18n="home.mission.f1">Integrated catalog spanning multiple libraries</li>
-        <li data-i18n="home.mission.f2">Multilingual services in English, Tamil, and Sinhala</li>
-        <li data-i18n="home.mission.f3">Digital archive of local heritage and rare manuscripts</li>
-        <li data-i18n="home.mission.f4">Free programs for students, seniors, and researchers</li>
-        <li data-i18n="home.mission.f5">Accessible to all — WCAG 2.1 compliant platform</li>
-      </ul>
-      <p class="mt-3"><a href="/about" class="btn btn-outline" data-i18n="home.mission.btn">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        Learn About Us
-      </a></p>
-    </div>
-    <div>
-      <img src="/images/library-about.jpg" alt="Batticaloa Public Library building" width="560" height="420" loading="lazy" style="object-fit:cover;border-radius:14px;" />
-    </div>
-  </div>
-</section>
-
-<!-- Heritage & History -->
-<section class="heritage-section" aria-labelledby="heritage-heading">
-  <div class="container">
-    <div class="section-head">
-      <span class="eyebrow" style="color:var(--accent-light);">Our Heritage</span>
-      <h2 id="heritage-heading" style="color:#fff;">170 Years of Knowledge &amp; Culture</h2>
-      <p style="color:rgba(255,255,255,0.75);max-width:620px;margin:.5rem auto 0;">Since 1855, the Batticaloa Public Library has been the cultural and intellectual heart of the Eastern Province — preserving heritage and empowering communities through knowledge.</p>
-    </div>
-    <div class="grid grid-4" style="margin-bottom:2.5rem;">
-      <div class="heritage-card">
-        <div class="heritage-card-icon"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
-        <h3>Historical Archives</h3>
-        <p>Rare manuscripts, historical newspapers, and Eastern Province heritage documents preserved for future generations.</p>
-      </div>
-      <div class="heritage-card">
-        <div class="heritage-card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-        <h3>170+ Years of Service</h3>
-        <p>Continuously serving the Batticaloa community through social change, rebuilding, and transformation since 1855.</p>
-      </div>
-      <div class="heritage-card">
-        <div class="heritage-card-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-        <h3>Multilingual Community</h3>
-        <p>Serving Tamil, Sinhala, and English-speaking communities with equal respect and dedicated multilingual collections.</p>
-      </div>
-      <div class="heritage-card">
-        <div class="heritage-card-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-        <h3>Digital Transformation</h3>
-        <p>Modernizing into a fully digital, AI-enabled library while preserving the rich cultural heritage of the Eastern Province.</p>
-      </div>
-    </div>
-    <div class="heritage-grid">
-      <div class="heritage-stat">
-        <div class="heritage-stat-num">1855</div>
-        <div class="heritage-stat-label">Year Founded</div>
-      </div>
-      <div class="heritage-stat">
-        <div class="heritage-stat-num">170+</div>
-        <div class="heritage-stat-label">Years of Service</div>
-      </div>
-      <div class="heritage-stat">
-        <div class="heritage-stat-num">50K+</div>
-        <div class="heritage-stat-label">Books &amp; Resources</div>
-      </div>
-      <div class="heritage-stat">
-        <div class="heritage-stat-num">3</div>
-        <div class="heritage-stat-label">Languages Served</div>
-      </div>
-    </div>
-    <div class="text-center">
-      <a href="/about" class="btn btn-outline-white" style="margin-right:1rem;">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        Our History
-      </a>
-      <a href="/collections" class="btn" style="background:var(--accent);color:var(--navy-dark,#0D1A30);border-color:var(--accent);">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-        Digital Archive
-      </a>
-    </div>
   </div>
 </section>
 
@@ -318,7 +188,7 @@
 <section class="cta-section">
   <div class="container">
     <h2 data-i18n="home.cta.title">Become a Member Today</h2>
-    <p data-i18n="home.cta.desc">Annual membership is just LKR 500 for adults, free for students and seniors. Get borrowing privileges, event access, computer use, and full digital library access.</p>
+    <p data-i18n="home.cta.desc">Annual membership is LKR 500 for adults, free for students and seniors. Members can borrow books, attend events, use computers and access the digital library.</p>
     <div class="cta-btns">
       <a href="/register" class="btn btn-white btn-lg" data-i18n="home.cta.join">
         <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
@@ -331,6 +201,125 @@
     </div>
   </div>
 </section>
+
+<!-- Announcements -->
+<section style="background:var(--bg-subtle);" aria-labelledby="announcements-heading">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow" data-i18n="home.announcements.eyebrow">Announcements & News</span>
+      <h2 id="announcements-heading" data-i18n="home.announcements.title">Stay Informed</h2>
+      <p data-i18n="home.announcements.desc">Latest notices, service updates and community programs.</p>
+    </div>
+    <div id="announcements" class="grid grid-3"></div>
+  </div>
+</section>
+
+<!-- Programs & Events (unified — upcoming + 2025 highlights) -->
+<section style="background:var(--bg-subtle);" aria-labelledby="events-heading">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">அறிவுச் சுரங்கம் 2025 · Community Programs</span>
+      <h2 id="events-heading">Programs &amp; Events</h2>
+      <p>Upcoming events, workshops and a look back at our 2025 community programmes — free and open to all.</p>
+    </div>
+
+    <!-- Tab pills -->
+    <div class="filter-pills" role="tablist" aria-label="Events view" style="margin-bottom:1.75rem;">
+      <button class="btn btn-ghost active" role="tab" aria-selected="true"  id="tab-upcoming" data-events-tab="upcoming">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Upcoming
+      </button>
+      <button class="btn btn-ghost" role="tab" aria-selected="false" id="tab-past" data-events-tab="past">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        2025 Highlights
+      </button>
+    </div>
+
+    <!-- Upcoming panel -->
+    <div id="panel-upcoming" role="tabpanel" aria-labelledby="tab-upcoming">
+      <div id="upcoming-events" class="grid grid-3"></div>
+    </div>
+
+    <!-- Past panel (hidden by default) -->
+    <div id="panel-past" role="tabpanel" aria-labelledby="tab-past" hidden>
+      <div id="past-events" class="grid grid-3"></div>
+    </div>
+
+    <div class="text-center mt-4">
+      <a href="/events" class="btn btn-primary">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        View All Events
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Heritage & Mission (merged) -->
+<section class="heritage-section" aria-labelledby="heritage-heading">
+  <div class="container">
+
+    <!-- Section header -->
+    <div class="section-head">
+      <span class="eyebrow" style="color:var(--accent-light);">Our Heritage</span>
+      <h2 id="heritage-heading" style="color:#fff;">50+ Years of Service</h2>
+      <p style="color:rgba(255,255,255,0.75);max-width:620px;margin:.5rem auto 0;">Since 1972, the Batticaloa Public Library has been a place of reading, learning and community life for the people of the Eastern Province.</p>
+    </div>
+
+    <!-- Image + Vision & Mission -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center;margin-bottom:2.5rem;">
+      <img src="/images/library-about.jpg" alt="Batticaloa Public Library building" width="560" height="420" loading="lazy" style="width:100%;height:340px;object-fit:cover;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.35);" />
+      <div style="display:flex;flex-direction:column;gap:1.25rem;">
+        <div class="heritage-card" style="text-align:left;">
+          <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.6rem;">
+            <span style="font-size:1.4rem;" aria-hidden="true">🌟</span>
+            <h3 style="margin:0;color:#fff;">Vision</h3>
+          </div>
+          <p style="color:rgba(255,255,255,0.82);margin:0;">To be a lending center that provides information services to support a knowledgeable and creative society.</p>
+        </div>
+        <div class="heritage-card" style="text-align:left;">
+          <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.6rem;">
+            <span style="font-size:1.4rem;" aria-hidden="true">🎯</span>
+            <h3 style="margin:0;color:#fff;">Mission</h3>
+          </div>
+          <p style="color:rgba(255,255,255,0.82);margin:0;">To support lifelong learning through quality library services that benefit education, creativity and cultural life in Batticaloa.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="heritage-grid">
+      <div class="heritage-stat">
+        <div class="heritage-stat-num">1972</div>
+        <div class="heritage-stat-label">Year Founded</div>
+      </div>
+      <div class="heritage-stat">
+        <div class="heritage-stat-num">50+</div>
+        <div class="heritage-stat-label">Years of Service</div>
+      </div>
+      <div class="heritage-stat">
+        <div class="heritage-stat-num">80K+</div>
+        <div class="heritage-stat-label">Books &amp; Resources</div>
+      </div>
+      <div class="heritage-stat">
+        <div class="heritage-stat-num">3</div>
+        <div class="heritage-stat-label">Languages Served</div>
+      </div>
+    </div>
+
+    <div class="text-center" style="margin-top:2rem;">
+      <a href="/about" class="btn btn-outline-white" style="margin-right:1rem;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Our History
+      </a>
+      <a href="/collections" class="btn" style="background:var(--accent);color:var(--navy-dark,#0D1A30);border-color:var(--accent);">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        Digital Archive
+      </a>
+    </div>
+
+  </div>
+</section>
+
 
 </main>
 <div id="site-footer"></div>
@@ -385,7 +374,7 @@
   "url": "https://batticloa-library-management-system.vercel.app/",
   "logo": "https://batticloa-library-management-system.vercel.app/images/logo.svg",
   "image": "https://batticloa-library-management-system.vercel.app/images/hero-library.svg",
-  "description": "The official digital portal for Batticaloa Public Library — your unified gateway to thousands of books, digital archives, research support, and community programs serving the Eastern Province.",
+  "description": "Batticaloa Public Library, serving the Eastern Province since 1972. Search the catalog, borrow books, use digital archives and attend community programs.",
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "Braiyan Drive",

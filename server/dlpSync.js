@@ -1,6 +1,6 @@
 'use strict';
 
-const { prepare } = require('./db');
+const { prepare, batch } = require('./db');
 
 const DLP_BASE          = process.env.DLP_API_URL      || 'https://batticaloa.dlp.gov.lk/api/v1';
 const DLP_CLIENT_ID     = process.env.DLP_CLIENT_ID;
@@ -202,6 +202,10 @@ async function runSync({ triggeredBy = 'cron', onProgress = () => {} } = {}) {
     const biblioCache = new Map();
 
     for await (const items of fetchAllItems(msg => onProgress(msg))) {
+      // ── Phase 1: all HTTP fetches BEFORE touching the DB ──────────────────
+      // Resolving biblios while a DB transaction is open causes interleaved
+      // async I/O that corrupts the WAL on @libsql/client file: connections.
+      const resolved = [];
       for (const item of items) {
         total++;
         const biblioId = item.biblio_id;
@@ -213,82 +217,128 @@ async function runSync({ triggeredBy = 'cron', onProgress = () => {} } = {}) {
           biblioCache.set(biblioId, biblio || {});
         }
 
-        const title  = str(biblio?.title) || str(item.external_id) || `Item ${item.item_id}`;
-        const author = str(biblio?.author);
-        const isbn   = str(biblio?.isbn);
+        resolved.push({
+          item,
+          biblioId,
+          title:          str(biblio?.title) || str(item.external_id) || `Item ${item.item_id}`,
+          author:         str(biblio?.author),
+          isbn:           str(biblio?.isbn),
+          publisher:      str(biblio?.publisher),
+          pubYear:        num(biblio?.publication_year) || num(str(biblio?.copyright_date)?.slice(0, 4)),
+          lang:           str(biblio?.language) || 'en',
+          callNumber:     str(item.callnumber),
+          branch:         str(item.home_library_id),
+          location:       str(item.location),
+          collCode:       str(item.collection_code),
+          itemType:       str(item.item_type),
+          notForLoan:     item.not_for_loan_status !== 0 ? 1 : 0,
+          available:      (item.not_for_loan_status === 0 && !item.checked_out_date) ? 1 : 0,
+          collectionType: mapCollectionType(str(item.location), str(item.item_type)),
+          category:       mapCategory(str(item.collection_code), str(item.item_type)),
+        });
+      }
 
-        const publisher  = str(biblio?.publisher);
-        const pubYear    = num(biblio?.publication_year) || num(str(biblio?.copyright_date)?.slice(0, 4));
-        const lang       = str(biblio?.language) || 'en';
-        const callNumber = str(item.callnumber);
-        const branch     = str(item.home_library_id);
-        const location   = str(item.location);
-        const collCode   = str(item.collection_code);
-        const itemType   = str(item.item_type);
-        const notForLoan = item.not_for_loan_status !== 0 ? 1 : 0;
-        const available  = (notForLoan === 0 && !item.checked_out_date) ? 1 : 0;
+      // ── Phase 2: look up existing rows (reads only, no transaction) ─────────
+      const existingSet = new Set();
+      for (const r of resolved) {
+        const row = await prepare(
+          'SELECT id FROM dlp_books WHERE koha_biblio_id = ?'
+        ).get(r.biblioId);
+        if (row) existingSet.add(r.biblioId);
+      }
 
-        const collectionType = mapCollectionType(location, itemType);
-        const category       = mapCategory(collCode, itemType);
-
-        const existing = await prepare(
-          'SELECT id, total_copies, available_copies FROM dlp_books WHERE koha_biblio_id = ?'
-        ).get(biblioId);
-
-        if (existing) {
-          await prepare(`
-            UPDATE dlp_books SET
-              isbn             = COALESCE(?, isbn),
-              title            = ?,
-              author           = COALESCE(?, author),
-              publisher        = COALESCE(?, publisher),
-              publication_year = COALESCE(?, publication_year),
-              category         = ?,
-              collection_type  = ?,
-              language         = COALESCE(?, language),
-              call_number      = COALESCE(?, call_number),
-              branch           = COALESCE(?, branch),
-              location         = COALESCE(?, location),
-              collection_code  = COALESCE(?, collection_code),
-              item_type        = COALESCE(?, item_type),
-              total_copies     = total_copies + 1,
-              available_copies = available_copies + ?,
-              not_for_loan     = ?,
-              last_checkout_date = COALESCE(?, last_checkout_date),
-              checkouts_count  = checkouts_count + ?,
-              last_synced_at   = datetime('now')
-            WHERE koha_biblio_id = ?
-          `).run(
-            isbn, title, author, publisher, pubYear,
-            category, collectionType, lang, callNumber,
-            branch, location, collCode, itemType,
-            available, notForLoan,
-            str(item.last_checkout_date), item.checkouts_count || 0,
-            biblioId
-          );
+      // ── Phase 3: build statement list and fire as one atomic batch ────────
+      // client.batch() is a single round-trip with no nested BEGIN — the only
+      // safe way to do bulk writes on @libsql/client file: connections.
+      const stmts = [];
+      for (const r of resolved) {
+        if (existingSet.has(r.biblioId)) {
+          stmts.push({
+            sql: `UPDATE dlp_books SET
+                isbn             = COALESCE(?, isbn),
+                title            = ?,
+                author           = COALESCE(?, author),
+                publisher        = COALESCE(?, publisher),
+                publication_year = COALESCE(?, publication_year),
+                category         = ?,
+                collection_type  = ?,
+                language         = COALESCE(?, language),
+                call_number      = COALESCE(?, call_number),
+                branch           = COALESCE(?, branch),
+                location         = COALESCE(?, location),
+                collection_code  = COALESCE(?, collection_code),
+                item_type        = COALESCE(?, item_type),
+                total_copies     = total_copies + 1,
+                available_copies = available_copies + ?,
+                not_for_loan     = ?,
+                last_checkout_date = COALESCE(?, last_checkout_date),
+                checkouts_count  = checkouts_count + ?,
+                last_synced_at   = datetime('now')
+              WHERE koha_biblio_id = ?`,
+            args: [
+              r.isbn, r.title, r.author, r.publisher, r.pubYear,
+              r.category, r.collectionType, r.lang, r.callNumber,
+              r.branch, r.location, r.collCode, r.itemType,
+              r.available, r.notForLoan,
+              str(r.item.last_checkout_date), r.item.checkouts_count || 0,
+              r.biblioId,
+            ],
+          });
           updated++;
         } else {
-          await prepare(`
-            INSERT INTO dlp_books (
-              koha_biblio_id, koha_item_id, isbn, title, author,
-              publisher, publication_year, category, collection_type,
-              language, call_number, branch, location, collection_code,
-              item_type, total_copies, available_copies, not_for_loan,
-              last_checkout_date, checkouts_count
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)
-          `).run(
-            biblioId, item.item_id, isbn, title, author,
-            publisher, pubYear, category, collectionType,
-            lang, callNumber, branch, location, collCode,
-            itemType, available, notForLoan,
-            str(item.last_checkout_date), item.checkouts_count || 0
-          );
+          stmts.push({
+            sql: `INSERT INTO dlp_books (
+                koha_biblio_id, koha_item_id, isbn, title, author,
+                publisher, publication_year, category, collection_type,
+                language, call_number, branch, location, collection_code,
+                item_type, total_copies, available_copies, not_for_loan,
+                last_checkout_date, checkouts_count
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+            args: [
+              r.biblioId, r.item.item_id, r.isbn, r.title, r.author,
+              r.publisher, r.pubYear, r.category, r.collectionType,
+              r.lang, r.callNumber, r.branch, r.location, r.collCode,
+              r.itemType, r.available, r.notForLoan,
+              str(r.item.last_checkout_date), r.item.checkouts_count || 0,
+            ],
+          });
           added++;
         }
 
-        await mirrorToBooks(biblioId, isbn, title, author, publisher, pubYear,
-          category, collectionType, lang, callNumber, branch, available);
+        // Mirror into main books table — INSERT new row if not yet present,
+        // then UPDATE to keep metadata current (SQLite has no UPSERT without UNIQUE).
+        const sourceKey = `dlp:${r.biblioId}`;
+        stmts.push({
+          sql: `INSERT OR IGNORE INTO books (
+                dlp_source_key, isbn, title, author, publisher, publication_year,
+                category, collection_type, language, call_number,
+                branch, total_copies, available_copies, description, cover_image
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, '/images/book-default.svg')`,
+          args: [
+            sourceKey, r.isbn, r.title, r.author || 'Unknown', r.publisher, r.pubYear,
+            r.category, r.collectionType, r.lang || 'en', r.callNumber,
+            r.branch || 'BPL', r.available, 'Synced from Batticaloa DLP Koha catalog.',
+          ],
+        });
+        stmts.push({
+          sql: `UPDATE books SET
+                title            = ?,
+                author           = COALESCE(NULLIF(?, ''), author),
+                publisher        = COALESCE(NULLIF(?, ''), publisher),
+                publication_year = COALESCE(?, publication_year),
+                category         = COALESCE(NULLIF(?, ''), category),
+                collection_type  = ?,
+                language         = COALESCE(NULLIF(?, ''), language),
+                call_number      = COALESCE(NULLIF(?, ''), call_number)
+              WHERE dlp_source_key = ?`,
+          args: [
+            r.title, r.author, r.publisher, r.pubYear, r.category,
+            r.collectionType, r.lang, r.callNumber, sourceKey,
+          ],
+        });
       }
+
+      if (stmts.length > 0) await batch(stmts);
 
       // Prevent unbounded memory growth when processing many unique biblios
       if (biblioCache.size > 500) biblioCache.clear();
@@ -306,57 +356,6 @@ async function runSync({ triggeredBy = 'cron', onProgress = () => {} } = {}) {
   }
 }
 
-// ── Mirror to main books table ────────────────────────────────────────────────
-// Uses the dlp_source_key column (added by initSchema) for fast O(1) lookups
-// instead of the slow LIKE '%[dlp:X]%' description scan.
-async function mirrorToBooks(biblioId, isbn, title, author, publisher, pubYear,
-  category, collectionType, language, callNumber, branch, available) {
-  try {
-    const sourceKey = `dlp:${biblioId}`;
-
-    let existing = null;
-    // Try source key first (indexed, fast)
-    existing = await prepare('SELECT id FROM books WHERE dlp_source_key = ?').get(sourceKey);
-    // Fall back to ISBN match for books that existed before the dlp_source_key column
-    if (!existing && isbn) {
-      existing = await prepare('SELECT id FROM books WHERE isbn = ?').get(isbn);
-    }
-
-    if (existing) {
-      await prepare(`
-        UPDATE books SET
-          dlp_source_key   = ?,
-          title            = ?,
-          author           = COALESCE(NULLIF(?, ''), author),
-          publisher        = COALESCE(NULLIF(?, ''), publisher),
-          publication_year = COALESCE(?, publication_year),
-          category         = COALESCE(NULLIF(?, ''), category),
-          collection_type  = ?,
-          language         = COALESCE(NULLIF(?, ''), language),
-          call_number      = COALESCE(NULLIF(?, ''), call_number),
-          branch           = COALESCE(NULLIF(?, ''), branch),
-          available_copies = available_copies + ?
-        WHERE id = ?
-      `).run(sourceKey, title, author, publisher, pubYear, category, collectionType,
-             language, callNumber, branch, available, existing.id);
-    } else {
-      await prepare(`
-        INSERT INTO books (
-          dlp_source_key, isbn, title, author, publisher, publication_year,
-          category, collection_type, language, call_number,
-          branch, total_copies, available_copies, description, cover_image
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, '/images/book-default.svg')
-      `).run(
-        sourceKey, isbn, title, author || 'Unknown', publisher, pubYear,
-        category, collectionType, language || 'en', callNumber,
-        branch || 'BPL', available,
-        `Synced from Batticaloa DLP Koha catalog.`
-      );
-    }
-  } catch {
-    // Non-fatal: main books table mirror failure should not abort the sync
-  }
-}
 
 // ── Monthly cron scheduler ────────────────────────────────────────────────────
 

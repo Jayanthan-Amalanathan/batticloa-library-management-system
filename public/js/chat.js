@@ -264,7 +264,7 @@
       "Hello! I'm the Batticaloa Library Assistant. I can help you with:\n\n" +
       "• Book recommendations by genre, author, or mood\n" +
       "• Finding books similar to ones you've enjoyed\n" +
-      "• Searching our catalog (local + 80,000+ Koha DLP titles)\n" +
+      "• Searching our local catalog\n" +
       "• Library hours, membership & borrowing rules\n" +
       "• Events and digital services\n\n" +
       "What would you like today?"

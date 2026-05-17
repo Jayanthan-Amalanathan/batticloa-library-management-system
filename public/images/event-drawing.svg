@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225" fill="none">
+  <defs>
+    <linearGradient id="drg" x1="0" y1="0" x2="400" y2="225" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1a237e"/>
+      <stop offset="100%" stop-color="#4fc3f7"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="225" fill="url(#drg)"/>
+  <!-- Canvas/paper -->
+  <rect x="100" y="40" width="200" height="145" rx="6" fill="#fff" opacity="0.14"/>
+  <!-- Drawing on canvas: globe with books and tree (winning artwork theme) -->
+  <circle cx="200" cy="108" r="45" fill="#1565c0" opacity="0.7"/>
+  <ellipse cx="200" cy="108" rx="45" ry="18" fill="none" stroke="#4fc3f7" stroke-width="1.5" opacity="0.4"/>
+  <line x1="200" y1="63" x2="200" y2="153" stroke="#4fc3f7" stroke-width="1.5" opacity="0.4"/>
+  <!-- Tree growing from globe -->
+  <rect x="197" y="45" width="6" height="30" rx="3" fill="#2e7d32" opacity="0.9"/>
+  <ellipse cx="200" cy="38" rx="18" ry="13" fill="#388e3c" opacity="0.9"/>
+  <ellipse cx="188" cy="46" rx="13" ry="9" fill="#4caf50" opacity="0.85"/>
+  <ellipse cx="212" cy="46" rx="13" ry="9" fill="#4caf50" opacity="0.85"/>
+  <!-- Coloured pencils -->
+  <rect x="45" y="80" width="8" height="60" rx="4" fill="#e53935" opacity="0.85"/>
+  <rect x="57" y="85" width="8" height="55" rx="4" fill="#fb8c00" opacity="0.85"/>
+  <rect x="69" y="82" width="8" height="58" rx="4" fill="#fdd835" opacity="0.85"/>
+  <rect x="330" y="80" width="8" height="60" rx="4" fill="#43a047" opacity="0.85"/>
+  <rect x="318" y="85" width="8" height="55" rx="4" fill="#1e88e5" opacity="0.85"/>
+  <rect x="306" y="82" width="8" height="58" rx="4" fill="#8e24aa" opacity="0.85"/>
+  <!-- Stars/sparkles -->
+  <circle cx="355" cy="35" r="3" fill="#fdd835" opacity="0.7"/>
+  <circle cx="45" cy="40" r="2" fill="#fff" opacity="0.5"/>
+  <!-- Label -->
+  <text x="200" y="204" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#fff" opacity="0.9" letter-spacing="1">DRAWING COMPETITION</text>
+</svg>

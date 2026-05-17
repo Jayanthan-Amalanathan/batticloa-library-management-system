@@ -4,18 +4,18 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>About — Batticaloa Public Library</title>
-<meta name="description" content="Learn about the Batticaloa Public Library — its history, mission, branches, leadership and community programs since 1855." />
+<meta name="description" content="Learn about the Batticaloa Public Library: its history since 1972, mission, branches, leadership and community programs." />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://batticloa-library-management-system.vercel.app/about" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://batticloa-library-management-system.vercel.app/about" />
 <meta property="og:title" content="About — Batticaloa Public Library" />
-<meta property="og:description" content="Learn about the Batticaloa Public Library — its history, mission, branches, leadership and community programs since 1855." />
+<meta property="og:description" content="Learn about the Batticaloa Public Library: its history since 1972, mission, branches, leadership and community programs." />
 <meta property="og:image" content="https://batticloa-library-management-system.vercel.app/images/about-library.svg" />
 <meta property="og:site_name" content="Batticaloa Public Library" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="About — Batticaloa Public Library" />
-<meta name="twitter:description" content="Learn about the Batticaloa Public Library — its history, mission, branches, leadership and community programs since 1855." />
+<meta name="twitter:description" content="Learn about the Batticaloa Public Library: its history since 1972, mission, branches, leadership and community programs." />
 <meta name="twitter:image" content="https://batticloa-library-management-system.vercel.app/images/about-library.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -35,7 +35,7 @@
   <div class="container">
     <p class="breadcrumbs"><a href="/" data-i18n="common.home">Home</a> / <span data-i18n="nav.about">About</span></p>
     <h1 data-i18n="about.hero.title">About the Library</h1>
-    <p data-i18n="about.hero.desc">Serving the Eastern Province since 1855 — preserving heritage, empowering communities.</p>
+    <p data-i18n="about.hero.desc">Serving the Batticaloa Municipal Council area since 1972, providing books and information services to the people of the Eastern Province.</p>
   </div>
 </section>
 
@@ -45,36 +45,175 @@
     <div>
       <span class="eyebrow" data-i18n="about.story.eyebrow">Our Story</span>
       <h2 style="margin-top:0.5rem;" data-i18n="about.story.title">A Heritage of Learning</h2>
-      <p style="color:var(--text-soft);margin-bottom:1rem;" data-i18n="about.story.p1">Established in 1855, the Batticaloa Public Library has grown from a modest reading room into a comprehensive knowledge institution. Through decades of social change and rebuilding, the library has remained a steadfast home for readers, researchers, students and dreamers across the Eastern Province.</p>
-      <p style="color:var(--text-soft);" data-i18n="about.story.p2" data-i18n-html="true">Today, in partnership with the <strong>Eastern University</strong> and the Municipal Council, we are completing a digital transformation that brings together multiple library systems under one platform — making knowledge truly accessible to all.</p>
+      <p style="color:var(--text-soft);margin-bottom:1rem;" data-i18n="about.story.p1">Established in 1972, the Batticaloa Public Library has grown from a modest reading room into the main public library of the Eastern Province. Through decades of social change and rebuilding, the library has remained a place of learning for readers, researchers and students across the region.</p>
+      <p style="color:var(--text-soft);" data-i18n="about.story.p2" data-i18n-html="true">Today, in partnership with the Municipal Council, we are completing a digital transformation that brings together multiple library systems under one platform, making the collection accessible to all members online.</p>
     </div>
     <div><img src="/images/library-about.jpg" alt="Batticaloa Public Library building" width="560" height="420" loading="lazy" style="object-fit:cover;border-radius:14px;" /></div>
   </div>
 </section>
 
-<!-- Vision, Mission, Values -->
-<section style="background:var(--bg-subtle);">
+<!-- Library Layout Plans -->
+<style>
+  .layout-tab-btn {
+    padding:.6rem 1.5rem;border-radius:8px;border:2px solid #1a3a5c;
+    background:transparent;color:#1a3a5c;font-weight:600;
+    font-family:Inter,sans-serif;cursor:pointer;font-size:.9rem;transition:background .2s,color .2s;
+  }
+  .layout-tab-btn.active {background:#1a3a5c;color:#fff;}
+  .layout-panel {display:none;}
+  .layout-panel.active {display:block;}
+  .layout-pdf-viewer {
+    width:100%;height:680px;display:block;border:0;
+  }
+  .pdf-object-wrap {width:100%;height:680px;overflow:hidden;}
+</style>
+<section style="background:var(--bg-subtle);padding:5rem 0;">
   <div class="container">
     <div class="section-head">
-      <span class="eyebrow" data-i18n="about.vmv.eyebrow">Vision & Mission</span>
-      <h2 data-i18n="about.vmv.title">Our Purpose</h2>
+      <span class="eyebrow">Explore the Building</span>
+      <h2>Library Layout Plans</h2>
+      <p style="color:var(--text-soft);max-width:560px;margin:0.5rem auto 0;">View the official floor plan of the Batticaloa Public Library. Switch between the Front and Rear layout views.</p>
     </div>
-    <div class="grid grid-3">
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">🌟</div>
-        <h3 data-i18n="about.vision.title">Vision</h3>
-        <p data-i18n="about.vision.desc">To be a leading center providing diverse information resources and services that nurture a knowledgeable and creative society.</p>
+
+    <!-- Tab buttons -->
+    <div style="display:flex;gap:.75rem;justify-content:center;margin-bottom:2rem;" role="tablist" aria-label="Library layout plans">
+      <button id="tab-front" class="layout-tab-btn active" role="tab" aria-selected="true" aria-controls="panel-front">
+        Front Layout
+      </button>
+      <button id="tab-rear" class="layout-tab-btn" role="tab" aria-selected="false" aria-controls="panel-rear">
+        Rear Layout
+      </button>
+    </div>
+
+    <!-- Front layout panel -->
+    <div id="panel-front" class="layout-panel active" role="tabpanel" aria-labelledby="tab-front"
+      style="background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);overflow:hidden;">
+      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+        <div>
+          <p style="margin:0;font-weight:700;font-size:1rem;">Batticaloa Public Library — Front Layout</p>
+          <p style="margin:.25rem 0 0;font-size:.83rem;color:#6b7280;">Entrance, Lending, Reference, Children's &amp; IT Sections</p>
+        </div>
+        <a href="/layout-front.pdf" download="Batticaloa-Library-Front-Layout.pdf"
+          class="btn btn-primary btn-sm"
+          style="display:inline-flex;align-items:center;gap:.45rem;white-space:nowrap;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download PDF
+        </a>
       </div>
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">🎯</div>
-        <h3 data-i18n="about.mission.title">Mission</h3>
-        <p data-i18n="about.mission.desc">To cultivate lifelong learning through high-quality library services that enhance education, creativity, and cultural enrichment.</p>
+      <div class="pdf-object-wrap">
+        <object data="/layout-front.pdf" type="application/pdf" class="layout-pdf-viewer" aria-label="Batticaloa Public Library Front Layout Plan">
+          <div style="padding:2.5rem;text-align:center;">
+            <p style="margin:0 0 1rem;font-size:1rem;">Your browser cannot display the PDF inline.</p>
+            <a href="/layout-front.pdf" download class="btn btn-primary">Download Front Layout PDF</a>
+          </div>
+        </object>
       </div>
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">💎</div>
-        <h3 data-i18n="about.values.title">Values</h3>
-        <p data-i18n="about.values.desc">Inclusivity, integrity, accessibility, intellectual freedom, community service, and continuous innovation in library services.</p>
+    </div>
+
+    <!-- Rear layout panel -->
+    <div id="panel-rear" class="layout-panel" role="tabpanel" aria-labelledby="tab-rear"
+      style="background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);overflow:hidden;">
+      <div style="padding:1.25rem 1.5rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+        <div>
+          <p style="margin:0;font-weight:700;font-size:1rem;">Batticaloa Public Library — Rear Layout</p>
+          <p style="margin:.25rem 0 0;font-size:.83rem;color:#6b7280;">Rear Entrance, Art Gallery, Vision Friendly &amp; Newspaper Reading Section</p>
+        </div>
+        <a href="/layout-rear.pdf" download="Batticaloa-Library-Rear-Layout.pdf"
+          class="btn btn-primary btn-sm"
+          style="display:inline-flex;align-items:center;gap:.45rem;white-space:nowrap;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download PDF
+        </a>
       </div>
+      <div class="pdf-object-wrap">
+        <object data="/layout-rear.pdf" type="application/pdf" class="layout-pdf-viewer" aria-label="Batticaloa Public Library Rear Layout Plan">
+          <div style="padding:2.5rem;text-align:center;">
+            <p style="margin:0 0 1rem;font-size:1rem;">Your browser cannot display the PDF inline.</p>
+            <a href="/layout-rear.pdf" download class="btn btn-primary">Download Rear Layout PDF</a>
+          </div>
+        </object>
+      </div>
+    </div>
+
+    <p style="text-align:center;color:var(--text-soft);font-size:.82rem;margin-top:1.25rem;">
+      Can't see the plan? <a href="/layout-front.pdf" style="color:#1a3a5c;">Download Front</a> or <a href="/layout-rear.pdf" style="color:#1a3a5c;">Download Rear</a> layout as PDF.
+    </p>
+  </div>
+</section>
+
+<script>
+(function () {
+  var tabs = [
+    { btn: document.getElementById('tab-front'), panel: document.getElementById('panel-front') },
+    { btn: document.getElementById('tab-rear'),  panel: document.getElementById('panel-rear')  }
+  ];
+  tabs.forEach(function (t) {
+    t.btn.addEventListener('click', function () {
+      tabs.forEach(function (x) {
+        x.btn.classList.remove('active');
+        x.btn.setAttribute('aria-selected', 'false');
+        x.panel.classList.remove('active');
+      });
+      t.btn.classList.add('active');
+      t.btn.setAttribute('aria-selected', 'true');
+      t.panel.classList.add('active');
+    });
+  });
+}());
+</script>
+
+<!-- Vision, Mission, Values -->
+<section style="background:var(--primary-dark);padding:5rem 0;position:relative;overflow:hidden;">
+
+  <!-- Decorative rings -->
+  <div aria-hidden="true" style="position:absolute;top:-140px;right:-140px;width:520px;height:520px;border-radius:50%;border:1px solid rgba(255,255,255,.05);pointer-events:none;"></div>
+  <div aria-hidden="true" style="position:absolute;top:-70px;right:-70px;width:300px;height:300px;border-radius:50%;border:1px solid rgba(255,255,255,.06);pointer-events:none;"></div>
+  <div aria-hidden="true" style="position:absolute;bottom:-100px;left:-100px;width:400px;height:400px;border-radius:50%;border:1px solid rgba(212,160,23,.07);pointer-events:none;"></div>
+
+  <div class="container" style="position:relative;z-index:1;">
+
+    <!-- Section header -->
+    <div style="text-align:center;margin-bottom:3.5rem;">
+      <span style="display:inline-flex;align-items:center;gap:.6rem;text-transform:uppercase;letter-spacing:.2em;font-size:.72rem;font-weight:700;color:var(--accent);font-family:Inter,sans-serif;">
+        <span style="width:24px;height:1px;background:var(--accent);display:inline-block;"></span>
+        Vision &amp; Mission
+        <span style="width:24px;height:1px;background:var(--accent);display:inline-block;"></span>
+      </span>
+      <h2 style="color:#fff;margin:.65rem 0 0;">Our Purpose</h2>
+    </div>
+
+    <!-- Three pillars grid -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));border:1px solid rgba(255,255,255,.1);border-radius:20px;overflow:hidden;">
+
+      <!-- Vision -->
+      <div style="padding:2.8rem 2.4rem;border-right:1px solid rgba(255,255,255,.1)">
+        <div style="width:36px;height:3px;background:var(--accent);border-radius:2px;margin-bottom:1.5rem;"></div>
+        <p style="text-transform:uppercase;letter-spacing:.18em;font-size:.68rem;font-weight:700;color:var(--accent);font-family:Inter,sans-serif;margin:0 0 .75rem;">Vision</p>
+        <h3 style="color:#fff;font-size:1.2rem;line-height:1.35;margin:0 0 1rem;font-family:Merriweather,Georgia,serif;">A Knowledgeable,<br>Creative Society</h3>
+        <p style="color:rgba(255,255,255,.58);font-size:.91rem;line-height:1.75;margin:0;" data-i18n="about.vision.desc">To be a lending center that provides information services to support a knowledgeable and creative society.</p>
+      </div>
+
+      <!-- Mission -->
+      <div style="padding:2.8rem 2.4rem;border-right:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03)">
+        <div style="width:36px;height:3px;background:#4fc3d8;border-radius:2px;margin-bottom:1.5rem;"></div>
+        <p style="text-transform:uppercase;letter-spacing:.18em;font-size:.68rem;font-weight:700;color:#4fc3d8;font-family:Inter,sans-serif;margin:0 0 .75rem;">Mission</p>
+        <h3 style="color:#fff;font-size:1.2rem;line-height:1.35;margin:0 0 1rem;font-family:Merriweather,Georgia,serif;">Lifelong Learning<br>for All</h3>
+        <p style="color:rgba(255,255,255,.58);font-size:.91rem;line-height:1.75;margin:0;" data-i18n="about.mission.desc">To cultivate lifelong learning through high quality library services that enhance education, creativity and cultural enrichment.</p>
+      </div>
+
+      <!-- Values -->
+      <div style="padding:2.8rem 2.4rem">
+        <div style="width:36px;height:3px;background:#a8e6cf;border-radius:2px;margin-bottom:1.5rem;"></div>
+        <p style="text-transform:uppercase;letter-spacing:.18em;font-size:.68rem;font-weight:700;color:#a8e6cf;font-family:Inter,sans-serif;margin:0 0 .75rem;">Values</p>
+        <h3 style="color:#fff;font-size:1.2rem;line-height:1.35;margin:0 0 1.2rem;font-family:Merriweather,Georgia,serif;">What We<br>Stand For</h3>
+        <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:.65rem;">
+          <li style="color:rgba(255,255,255,.62);font-size:.88rem;display:flex;align-items:baseline;gap:.65rem;"><span style="width:5px;height:5px;border-radius:50%;background:#a8e6cf;flex-shrink:0;margin-top:.38em;"></span>Inclusivity &amp; equal access</li>
+          <li style="color:rgba(255,255,255,.62);font-size:.88rem;display:flex;align-items:baseline;gap:.65rem;"><span style="width:5px;height:5px;border-radius:50%;background:#a8e6cf;flex-shrink:0;margin-top:.38em;"></span>Integrity in every service</li>
+          <li style="color:rgba(255,255,255,.62);font-size:.88rem;display:flex;align-items:baseline;gap:.65rem;"><span style="width:5px;height:5px;border-radius:50%;background:#a8e6cf;flex-shrink:0;margin-top:.38em;"></span>Intellectual freedom</li>
+          <li style="color:rgba(255,255,255,.62);font-size:.88rem;display:flex;align-items:baseline;gap:.65rem;"><span style="width:5px;height:5px;border-radius:50%;background:#a8e6cf;flex-shrink:0;margin-top:.38em;"></span>Cultural preservation</li>
+        </ul>
+      </div>
+
     </div>
   </div>
 </section>
@@ -88,17 +227,10 @@
     </div>
     <div class="timeline">
       <div class="timeline-item">
-        <div class="timeline-year">1855</div>
-        <div>
-          <h3>Foundation</h3>
-          <p style="color:var(--text-soft);">The Batticaloa Public Library was established, becoming one of the earliest public knowledge institutions in the Eastern Province, serving the multilingual community of Batticaloa.</p>
-        </div>
-      </div>
-      <div class="timeline-item">
         <div class="timeline-year">1972</div>
         <div>
-          <h3>Modernisation</h3>
-          <p style="color:var(--text-soft);">Major institutional modernization and expansion — the library was re-inaugurated with 3,000 new volumes donated by the community, expanding its multilingual collections.</p>
+          <h3>Foundation</h3>
+          <p style="color:var(--text-soft);">The Batticaloa Public Library was established, serving Tamil, Sinhala and Muslim communities of Batticaloa. 3,000 founding volumes formed the multilingual collection, making it a cornerstone of learning in the Eastern Province.</p>
         </div>
       </div>
       <div class="timeline-item">
@@ -111,77 +243,168 @@
       <div class="timeline-item">
         <div class="timeline-year">2010</div>
         <div>
-          <h3>Koha Migration</h3>
-          <p style="color:var(--text-soft);">Library catalog fully digitized using the Koha Integrated Library System — enabling OPAC access from anywhere.</p>
+          <h3>Digital Catalog Launch</h3>
+          <p style="color:var(--text-soft);">Library catalog fully digitized, enabling members to search the collection online.</p>
         </div>
       </div>
       <div class="timeline-item">
         <div class="timeline-year">2018</div>
         <div>
-          <h3>Digital Services & Eastern University Integration</h3>
-          <p style="color:var(--text-soft);">Free Wi-Fi, computer lab and Maker Space launched. Eastern University catalog integration begins at Vantharumoolai branch.</p>
+          <h3>Digital Services Expansion</h3>
+          <p style="color:var(--text-soft);">Free Wi-Fi, computer lab and Maker Space launched.</p>
         </div>
       </div>
       <div class="timeline-item" style="border-color:var(--accent);">
         <div class="timeline-year">2026</div>
         <div>
           <h3>Unified Digital Library <span class="badge gold" style="vertical-align:middle;">Now</span></h3>
-          <p style="color:var(--text-soft);">Launch of the integrated digital library platform connecting Koha, Eastern University, and Open Library — serving every citizen of the Eastern Province.</p>
+          <p style="color:var(--text-soft);">Launch of the integrated digital library platform, bringing together all branch catalogs for members across the Eastern Province.</p>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Hours & Location -->
+<!-- Find Us / Branches -->
 <section style="background:var(--bg-subtle);">
   <div class="container">
     <div class="section-head">
-      <span class="eyebrow" data-i18n="about.hours.eyebrow">Find Us</span>
-      <h2 data-i18n="about.hours.title">Hours & Location</h2>
+      <span class="eyebrow">Find Us</span>
+      <h2>Our Branch Libraries</h2>
+      <p style="color:var(--text-soft);max-width:560px;margin:0.5rem auto 0;">Select a branch to see its location on the map. For opening hours and contact details see the <a href="/contact">Contact page</a>.</p>
     </div>
-    <div class="about-grid">
-      <div>
-        <h3 style="margin-bottom:0.5rem;" data-i18n="about.hours.branch">Main Branch — Braiyan Drive</h3>
-        <p style="color:var(--text-soft);" data-i18n="about.hours.address">Braiyan Drive, Batticaloa, Eastern Province, Sri Lanka</p>
-        <p class="mt-1">📞 <a href="tel:+94652222484">065-2222484</a> &nbsp;·&nbsp; 📱 <a href="tel:+94776718944">077-6718944</a> &nbsp;·&nbsp; ✉ <a href="mailto:batticaloalibrary@gmail.com">batticaloalibrary@gmail.com</a></p>
 
-        <h3 class="mt-3" style="margin-bottom:0.5rem;" data-i18n="about.hours.schedule">Opening Hours</h3>
-        <div class="table-wrap">
-          <table class="data-table">
-            <tr><td>Monday – Sunday</td><td><strong>8:00 AM – 5:00 PM</strong></td></tr>
-          </table>
-        </div>
+    <div class="branches-finder">
 
-        <h3 class="mt-3" style="margin-bottom:0.5rem;" data-i18n="about.hours.branches">Our Branches</h3>
-        <ul class="feature-list">
-          <li>Main Branch — Braiyan Drive, Batticaloa</li>
-          <li>Children's Branch — Kallady</li>
-          <li>Eastern University Branch — Vantharumoolai</li>
-          <li>Mobile Library Service (rotating schedule)</li>
-        </ul>
-      </div>
-      <div>
+      <!-- Branch list (left) -->
+      <ul class="branch-list" id="branch-list" role="list">
+
+        <li class="branch-list-item active"
+            data-lat="7.699842" data-lng="81.706521"
+            data-dir="https://maps.google.com/?q=7.699842,81.706521"
+            data-area="Kallady, Batticaloa">
+          <span class="branch-num">01</span>
+          <span class="branch-info">
+            <strong>Kallady Public Library</strong>
+            <small>Kallady, Batticaloa</small>
+          </span>
+          <svg class="branch-arrow" viewBox="0 0 20 20" fill="none"><path d="M7 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </li>
+
+        <li class="branch-list-item"
+            data-lat="7.712884" data-lng="81.703118"
+            data-dir="https://maps.google.com/?q=7.712884,81.703118"
+            data-area="Arasady, Batticaloa">
+          <span class="branch-num">02</span>
+          <span class="branch-info">
+            <strong>Arasady Public Library</strong>
+            <small>Arasady, Batticaloa</small>
+          </span>
+          <svg class="branch-arrow" viewBox="0 0 20 20" fill="none"><path d="M7 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </li>
+
+        <li class="branch-list-item"
+            data-lat="7.731246" data-lng="81.676954"
+            data-dir="https://maps.google.com/?q=7.731246,81.676954"
+            data-area="Puthur, Batticaloa">
+          <span class="branch-num">03</span>
+          <span class="branch-info">
+            <strong>Puthur Public Library</strong>
+            <small>Puthur, Batticaloa</small>
+          </span>
+          <svg class="branch-arrow" viewBox="0 0 20 20" fill="none"><path d="M7 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </li>
+
+        <li class="branch-list-item"
+            data-lat="7.716245" data-lng="81.699214"
+            data-dir="https://maps.google.com/?q=7.716245,81.699214"
+            data-area="Barathy Lane, Batticaloa">
+          <span class="branch-num">04</span>
+          <span class="branch-info">
+            <strong>Barathy Lane Public Library</strong>
+            <small>Barathy Lane, Batticaloa</small>
+          </span>
+          <svg class="branch-arrow" viewBox="0 0 20 20" fill="none"><path d="M7 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </li>
+
+        <li class="branch-list-item"
+            data-lat="7.720487" data-lng="81.695884"
+            data-dir="https://maps.google.com/?q=7.720487,81.695884"
+            data-area="Boundary Road, Batticaloa">
+          <span class="branch-num">05</span>
+          <span class="branch-info">
+            <strong>Boundary Road Public Library</strong>
+            <small>Boundary Road, Batticaloa</small>
+          </span>
+          <svg class="branch-arrow" viewBox="0 0 20 20" fill="none"><path d="M7 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </li>
+
+        <li class="branch-list-item"
+            data-lat="7.707884" data-lng="81.714932"
+            data-dir="https://maps.google.com/?q=7.707884,81.714932"
+            data-area="Mattikali, Batticaloa">
+          <span class="branch-num">06</span>
+          <span class="branch-info">
+            <strong>Mattikali Public Library</strong>
+            <small>Mattikali, Batticaloa</small>
+          </span>
+          <svg class="branch-arrow" viewBox="0 0 20 20" fill="none"><path d="M7 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </li>
+
+        <li class="branch-list-item"
+            data-lat="7.724118" data-lng="81.691337"
+            data-dir="https://maps.google.com/?q=7.724118,81.691337"
+            data-area="Chinna Urani, Batticaloa">
+          <span class="branch-num">07</span>
+          <span class="branch-info">
+            <strong>Chinna Urani Public Library</strong>
+            <small>Chinna Urani, Batticaloa</small>
+          </span>
+          <svg class="branch-arrow" viewBox="0 0 20 20" fill="none"><path d="M7 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </li>
+
+        <li class="branch-list-item"
+            data-lat="7.686214" data-lng="81.694887"
+            data-dir="https://maps.google.com/?q=7.686214,81.694887"
+            data-area="Nawatkudha, Batticaloa">
+          <span class="branch-num">08</span>
+          <span class="branch-info">
+            <strong>Nawatkudha Public Library</strong>
+            <small>Nawatkudha, Batticaloa</small>
+          </span>
+          <svg class="branch-arrow" viewBox="0 0 20 20" fill="none"><path d="M7 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </li>
+
+      </ul>
+
+      <!-- Map panel (right) -->
+      <div class="branch-map-panel" id="branch-map-panel">
         <iframe
-          src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d669.657750545642!2d81.6990434360083!3d7.709328927949149!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zN8KwNDInMzMuNSJOIDgxwrA0MSc1OC4wIkU!5e1!3m2!1sen!2slk!4v1778406235669!5m2!1sen!2slk"
-          width="100%" height="380"
-          style="border:0;border-radius:var(--radius);box-shadow:var(--shadow);"
+          id="branch-map-iframe"
+          src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d2000!2d81.706521!3d7.699842!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2slk!4v1"
+          width="100%" height="100%"
+          style="border:0;display:block;"
           allowfullscreen=""
           loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
-          title="Batticaloa Public Library location map"></iframe>
-        <p class="card-meta mt-2 text-center">📍 Braiyan Drive, Batticaloa — <a href="https://maps.google.com/?q=7.709303,81.699443" target="_blank" rel="noopener">Get directions ↗</a></p>
+          title="Branch library location map"></iframe>
+        <div class="branch-map-footer" id="branch-map-footer">
+          <span id="branch-map-label">📍 Kallady, Batticaloa</span>
+          <a id="branch-map-dir" href="https://maps.google.com/?q=7.699842,81.706521" target="_blank" rel="noopener" class="btn btn-sm btn-primary">Get directions ↗</a>
+        </div>
       </div>
+
     </div>
   </div>
 </section>
+
 
 <!-- Leadership -->
 <section>
   <div class="container">
     <div class="section-head">
       <span class="eyebrow" data-i18n="about.leadership.eyebrow">Governance</span>
-      <h2 data-i18n="about.leadership.title">Leadership & Staff</h2>
+      <h2 data-i18n="about.leadership.title">Library Staff</h2>
     </div>
     <div class="grid grid-4">
       <div class="service-card">
@@ -216,7 +439,7 @@
 <section class="cta-section">
   <div class="container">
     <h2 data-i18n="about.cta.title">Be Part of Our Story</h2>
-    <p data-i18n="about.cta.desc">Join thousands of members who call Batticaloa Public Library their intellectual home.</p>
+    <p data-i18n="about.cta.desc">Register for membership and start using the library today.</p>
     <div class="cta-btns">
       <a href="/register" class="btn btn-white btn-lg" data-i18n="about.cta.join">Join the Library</a>
       <a href="/contact" class="btn btn-outline-white btn-lg" data-i18n="about.cta.contact">Get in Touch</a>
@@ -239,7 +462,7 @@
     </div>
     <div class="chat-head-text">
       <strong>Library Assistant</strong>
-      <small>Batticaloa Public Library · Koha System</small>
+      <small>Batticaloa Public Library</small>
     </div>
     <div class="chat-head-actions">
       <button class="chat-minimize-btn" id="chat-minimize-btn" aria-label="Minimize chat" title="Minimise">
@@ -267,5 +490,39 @@
 
 <script src="/js/app.js" defer></script>
 <script src="/js/chat.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var list = document.getElementById('branch-list');
+  var panel = document.getElementById('branch-map-panel');
+  var label = document.getElementById('branch-map-label');
+  var dirLink = document.getElementById('branch-map-dir');
+  if (!list || !panel) return;
+
+  function loadMap(lat, lng) {
+    var old = document.getElementById('branch-map-iframe');
+    var iframe = document.createElement('iframe');
+    iframe.id = 'branch-map-iframe';
+    iframe.width = '100%';
+    iframe.height = '100%';
+    iframe.style.cssText = 'border:0;display:block;';
+    iframe.allowFullscreen = true;
+    iframe.loading = 'lazy';
+    iframe.referrerPolicy = 'no-referrer-when-downgrade';
+    iframe.title = 'Branch library location map';
+    iframe.src = 'https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d2000!2d' + parseFloat(lng) + '!3d' + parseFloat(lat) + '!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2slk!4v1';
+    panel.replaceChild(iframe, old);
+  }
+
+  list.addEventListener('click', function (e) {
+    var item = e.target.closest('.branch-list-item');
+    if (!item) return;
+    list.querySelectorAll('.branch-list-item').forEach(function (i) { i.classList.remove('active'); });
+    item.classList.add('active');
+    loadMap(item.dataset.lat, item.dataset.lng);
+    label.textContent = '📍 ' + item.dataset.area;
+    dirLink.href = item.dataset.dir;
+  });
+});
+</script>
 </body>
 </html>

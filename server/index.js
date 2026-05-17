@@ -150,14 +150,14 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", 'data:', 'https:'],
       connectSrc: ["'self'", kohaOrigin],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
-      frameSrc: ["https://www.google.com"],
+      frameSrc: ["https://www.google.com", "https://www.openstreetmap.org"],
     },
   },
   crossOriginEmbedderPolicy: false,
@@ -309,21 +309,9 @@ app.get('/api/books', async (req, res) => {
 
 app.get('/api/books/new-arrivals', async (req, res) => {
   try {
-    // Prefer curated books with real cover images over DLP-synced placeholders
     const books = await prepare(
-      `SELECT * FROM books
-       WHERE cover_image IS NOT NULL AND cover_image != '/images/book-default.svg'
-       ORDER BY added_at DESC LIMIT 8`
+      `SELECT * FROM books WHERE is_deleted = 0 ORDER BY added_at DESC LIMIT 8`
     ).all();
-    // Fall back to most-recent if not enough curated books
-    if (books.length < 8) {
-      const ids = books.map(b => b.id);
-      const placeholders = ids.length ? ids.map(() => '?').join(',') : '0';
-      const extra = await prepare(
-        `SELECT * FROM books WHERE id NOT IN (${placeholders}) ORDER BY added_at DESC LIMIT ?`
-      ).all(...ids, 8 - books.length);
-      books.push(...extra);
-    }
     res.json({ books });
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch new arrivals' });
@@ -746,11 +734,13 @@ app.post('/api/reservations/:id/fulfill', authenticate, authorize('admin', 'libr
 // ---------- EVENTS ----------
 app.get('/api/events', async (req, res) => {
   try {
-    const { upcoming } = req.query;
+    const { upcoming, recent } = req.query;
     let sql = 'SELECT * FROM events';
     if (upcoming === 'true') sql += " WHERE event_date >= datetime('now')";
-    sql += ' ORDER BY event_date ASC';
-    res.json({ events: await prepare(sql).all() });
+    else if (recent === 'true') sql += " WHERE event_date < datetime('now')";
+    sql += ' ORDER BY event_date ' + (upcoming === 'true' ? 'ASC' : 'DESC');
+    const total = prepare('SELECT COUNT(*) AS c FROM events').get().c;
+    res.json({ events: await prepare(sql).all(), total });
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch events' });
   }
@@ -857,10 +847,17 @@ app.post('/api/events/:id/register', eventRegLimiter, optionalAuth, async (req, 
 // ---------- ANNOUNCEMENTS ----------
 app.get('/api/announcements', async (req, res) => {
   try {
-    const sql = `SELECT * FROM announcements
-                 WHERE publish_at <= datetime('now')
-                 AND (expires_at IS NULL OR expires_at >= datetime('now'))
-                 ORDER BY featured DESC, emergency DESC, publish_at DESC`;
+    const { latest } = req.query;
+    // latest=true → return the 3 most recently created/updated, for the home page widget
+    const sql = latest === 'true'
+      ? `SELECT * FROM announcements
+         WHERE publish_at <= datetime('now')
+         AND (expires_at IS NULL OR expires_at >= datetime('now'))
+         ORDER BY created_at DESC LIMIT 3`
+      : `SELECT * FROM announcements
+         WHERE publish_at <= datetime('now')
+         AND (expires_at IS NULL OR expires_at >= datetime('now'))
+         ORDER BY featured DESC, emergency DESC, publish_at DESC`;
     res.json({ announcements: await prepare(sql).all() });
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch announcements' });
@@ -1125,7 +1122,7 @@ app.get('/api/stats', authenticate, authorize('admin', 'librarian'), async (req,
       total_books, total_copies, available_copies,
       total_members, active_members, pending_members, suspended_members,
       active_loans, overdue_loans, total_fines,
-      pending_reservations, upcoming_events, new_messages,
+      pending_reservations, upcoming_events, total_events, new_messages,
       open_librarian_requests, popular_books
     ] = await Promise.all([
       prepare('SELECT COUNT(*) AS c FROM books').get(),
@@ -1140,6 +1137,7 @@ app.get('/api/stats', authenticate, authorize('admin', 'librarian'), async (req,
       prepare("SELECT COALESCE(SUM(fine_amount),0) AS c FROM loans WHERE fine_amount > 0").get(),
       prepare("SELECT COUNT(*) AS c FROM reservations WHERE status = 'pending'").get(),
       prepare("SELECT COUNT(*) AS c FROM events WHERE event_date >= datetime('now')").get(),
+      prepare("SELECT COUNT(*) AS c FROM events").get(),
       prepare("SELECT COUNT(*) AS c FROM contact_messages WHERE status = 'new'").get(),
       prepare("SELECT COUNT(*) AS c FROM librarian_requests WHERE status = 'open'").get(),
       prepare(`SELECT b.title, b.author, COUNT(l.id) AS loan_count
@@ -1153,6 +1151,7 @@ app.get('/api/stats', authenticate, authorize('admin', 'librarian'), async (req,
       active_loans: active_loans.c, overdue_loans: overdue_loans.c,
       total_fines: total_fines.c,
       pending_reservations: pending_reservations.c, upcoming_events: upcoming_events.c,
+      total_events: total_events.c,
       new_messages: new_messages.c, open_librarian_requests: open_librarian_requests.c,
       popular_books,
     });

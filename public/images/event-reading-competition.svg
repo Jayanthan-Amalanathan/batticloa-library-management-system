@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225" fill="none">
+  <defs>
+    <linearGradient id="rcg" x1="0" y1="0" x2="400" y2="225" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0a3d0a"/>
+      <stop offset="100%" stop-color="#ffd700"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="225" fill="url(#rcg)"/>
+  <!-- Person reading -->
+  <circle cx="200" cy="75" r="22" fill="#fad7a0" opacity="0.9"/>
+  <!-- Open book held up -->
+  <rect x="155" y="98" width="50" height="35" rx="4" fill="#fff" opacity="0.9"/>
+  <rect x="205" y="98" width="50" height="35" rx="4" fill="#fff" opacity="0.85"/>
+  <line x1="205" y1="98" x2="205" y2="133" stroke="#c8a96e" stroke-width="2"/>
+  <!-- Book lines -->
+  <rect x="161" y="107" width="38" height="3" rx="1" fill="#2d6a4f" opacity="0.5"/>
+  <rect x="161" y="113" width="30" height="3" rx="1" fill="#2d6a4f" opacity="0.5"/>
+  <rect x="161" y="119" width="35" height="3" rx="1" fill="#2d6a4f" opacity="0.5"/>
+  <rect x="211" y="107" width="38" height="3" rx="1" fill="#2d6a4f" opacity="0.5"/>
+  <rect x="211" y="113" width="30" height="3" rx="1" fill="#2d6a4f" opacity="0.5"/>
+  <rect x="211" y="119" width="35" height="3" rx="1" fill="#2d6a4f" opacity="0.5"/>
+  <!-- Arms holding book -->
+  <line x1="177" y1="95" x2="160" y2="115" stroke="#fad7a0" stroke-width="8" stroke-linecap="round"/>
+  <line x1="223" y1="95" x2="240" y2="115" stroke="#fad7a0" stroke-width="8" stroke-linecap="round"/>
+  <!-- Trophy/stars above -->
+  <text x="200" y="47" text-anchor="middle" font-size="24" fill="#ffd700" opacity="0.9">★</text>
+  <text x="160" y="53" text-anchor="middle" font-size="16" fill="#ffd700" opacity="0.6">★</text>
+  <text x="240" y="53" text-anchor="middle" font-size="16" fill="#ffd700" opacity="0.6">★</text>
+  <!-- Audience dots (library setting) -->
+  <circle cx="80" cy="155" r="8" fill="#fad7a0" opacity="0.6"/>
+  <circle cx="110" cy="155" r="8" fill="#fad7a0" opacity="0.5"/>
+  <circle cx="140" cy="155" r="8" fill="#fad7a0" opacity="0.6"/>
+  <circle cx="260" cy="155" r="8" fill="#fad7a0" opacity="0.5"/>
+  <circle cx="290" cy="155" r="8" fill="#fad7a0" opacity="0.6"/>
+  <circle cx="320" cy="155" r="8" fill="#fad7a0" opacity="0.5"/>
+  <!-- Label -->
+  <text x="200" y="202" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#fff" opacity="0.9" letter-spacing="1">READING COMPETITION</text>
+</svg>

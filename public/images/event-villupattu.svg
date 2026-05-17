@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225" fill="none">
+  <defs>
+    <linearGradient id="vg" x1="0" y1="0" x2="400" y2="225" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4a0e0e"/>
+      <stop offset="100%" stop-color="#c0392b"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="225" fill="url(#vg)"/>
+  <!-- Stage floor -->
+  <rect x="0" y="155" width="400" height="70" fill="#2c0b0b" opacity="0.8"/>
+  <!-- Curtains -->
+  <path d="M0 0 Q40 60 20 155 L0 155Z" fill="#922b21" opacity="0.7"/>
+  <path d="M400 0 Q360 60 380 155 L400 155Z" fill="#922b21" opacity="0.7"/>
+  <!-- Bow shape (villu instrument) -->
+  <path d="M140 50 Q200 120 260 50" stroke="#f9c74f" stroke-width="5" fill="none" opacity="0.9"/>
+  <line x1="140" y1="50" x2="260" y2="50" stroke="#d4ac0d" stroke-width="2.5" opacity="0.8"/>
+  <!-- Bells on bow -->
+  <circle cx="170" cy="72" r="5" fill="#f9c74f" opacity="0.9"/>
+  <circle cx="200" cy="82" r="5" fill="#f9c74f" opacity="0.9"/>
+  <circle cx="230" cy="72" r="5" fill="#f9c74f" opacity="0.9"/>
+  <!-- Performers (simplified) -->
+  <circle cx="140" cy="118" r="12" fill="#fad7a0" opacity="0.85"/>
+  <rect x="130" y="130" width="20" height="28" rx="4" fill="#c0392b" opacity="0.7"/>
+  <circle cx="260" cy="118" r="12" fill="#fad7a0" opacity="0.85"/>
+  <rect x="250" y="130" width="20" height="28" rx="4" fill="#8e44ad" opacity="0.7"/>
+  <!-- Music notes -->
+  <text x="190" y="42" font-size="18" fill="#f9c74f" opacity="0.8" font-family="serif">♪</text>
+  <text x="220" y="35" font-size="14" fill="#f9c74f" opacity="0.7" font-family="serif">♫</text>
+  <!-- Label -->
+  <text x="200" y="198" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#f9c74f" opacity="0.95" letter-spacing="1">வில்லுப்பாட்டு போட்டி</text>
+</svg>

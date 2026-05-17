@@ -4,18 +4,18 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Catalog Search — Batticaloa Public Library</title>
-<meta name="description" content="Search the Batticaloa Public Library catalog or the integrated Koha OPAC across Eastern University and partner libraries." />
+<meta name="description" content="Search the Batticaloa Public Library catalog." />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://batticloa-library-management-system.vercel.app/catalog" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://batticloa-library-management-system.vercel.app/catalog" />
 <meta property="og:title" content="Catalog Search — Batticaloa Public Library" />
-<meta property="og:description" content="Search the Batticaloa Public Library catalog or the integrated Koha OPAC across Eastern University and partner libraries." />
+<meta property="og:description" content="Search the Batticaloa Public Library catalog." />
 <meta property="og:image" content="https://batticloa-library-management-system.vercel.app/images/hero-library.svg" />
 <meta property="og:site_name" content="Batticaloa Public Library" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Catalog Search — Batticaloa Public Library" />
-<meta name="twitter:description" content="Search the Batticaloa Public Library catalog or the integrated Koha OPAC across Eastern University and partner libraries." />
+<meta name="twitter:description" content="Search the Batticaloa Public Library catalog." />
 <meta name="twitter:image" content="https://batticloa-library-management-system.vercel.app/images/hero-library.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -25,40 +25,6 @@
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" /></noscript>
 <link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
 <link rel="stylesheet" href="/css/style.css" />
-<style>
-.tab-bar { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:1.5rem; }
-.tab-btn {
-  padding:0.65rem 1.4rem; font-size:0.9rem; font-weight:600; border:none; background:none;
-  cursor:pointer; color:var(--text-soft); border-bottom:3px solid transparent;
-  margin-bottom:-2px; transition:color .2s, border-color .2s;
-}
-.tab-btn.active { color:var(--primary); border-bottom-color:var(--primary); }
-.tab-btn:hover:not(.active) { color:var(--text); }
-.tab-pane { display:none; }
-.tab-pane.active { display:block; }
-.koha-badge {
-  display:inline-flex; align-items:center; gap:0.3rem; font-size:0.72rem;
-  padding:0.2rem 0.55rem; border-radius:99px; background:var(--primary-light,#e8f4f8);
-  color:var(--primary); font-weight:600; letter-spacing:.02em;
-}
-.dlp-badge {
-  display:inline-flex; align-items:center; gap:0.3rem; font-size:0.72rem;
-  padding:0.2rem 0.55rem; border-radius:99px; background:#f0fdf4;
-  color:#166534; font-weight:600; letter-spacing:.02em;
-}
-.card-source { font-size:0.72rem; color:var(--text-muted); margin-bottom:0.3rem; }
-.pagination-bar {
-  display:flex; align-items:center; justify-content:center; gap:0.5rem;
-  margin-top:1.5rem; flex-wrap:wrap;
-}
-.pagination-bar span { font-size:0.85rem; color:var(--text-muted); }
-.filter-tags { display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:1rem; }
-.filter-tag {
-  display:inline-flex; align-items:center; gap:0.3rem; font-size:0.78rem;
-  padding:0.2rem 0.6rem; border-radius:99px; background:var(--bg-subtle);
-  color:var(--text-soft); border:1px solid var(--border);
-}
-</style>
 </head>
 <body data-page="catalog">
 <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -69,25 +35,16 @@
   <div class="container">
     <p class="breadcrumbs"><a href="/" data-i18n="common.home">Home</a> / <span data-i18n="nav.catalog">Catalog</span></p>
     <h1 data-i18n="catalog.hero.title">Search the Catalog</h1>
-    <p data-i18n="catalog.hero.desc">Browse our local digital catalog, search the DLP library collection, or search the integrated Koha OPAC.</p>
+    <p data-i18n="catalog.hero.desc">Browse our local library catalog.</p>
   </div>
 </section>
 
 <section>
   <div class="container">
 
-    <!-- Search bar (shared) -->
+    <!-- Search bar -->
     <div class="filter-bar" role="search" aria-label="Search catalog">
       <input type="text" id="q" data-i18n-placeholder="catalog.placeholder" placeholder="Search title, author, ISBN…" aria-label="Search query" />
-      <select id="search-idx" aria-label="Search field (Koha)">
-        <option value="kw">Keyword</option>
-        <option value="ti">Title</option>
-        <option value="au">Author</option>
-        <option value="su">Subject</option>
-        <option value="nb">ISBN</option>
-        <option value="se">Series</option>
-        <option value="callnum">Call Number</option>
-      </select>
       <select id="category" aria-label="Category">
         <option value="">All categories</option>
         <option>Biography</option><option>Computer Science</option><option>Fiction</option>
@@ -111,7 +68,6 @@
       <select id="branch" aria-label="Branch">
         <option value="">All branches</option>
         <option>Main</option>
-        <option>Eastern University</option>
         <option>Children's Branch</option>
       </select>
       <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.88rem;color:var(--text-soft);white-space:nowrap;">
@@ -120,77 +76,21 @@
       <button class="btn btn-primary" id="search-btn" aria-label="Search catalog" data-i18n="catalog.search">Search</button>
     </div>
 
-    <!-- Tabs -->
-    <div class="tab-bar" role="tablist">
-      <button class="tab-btn active" role="tab" aria-selected="true"  data-tab="local"  id="tab-local">Local Catalog</button>
-      <button class="tab-btn"        role="tab" aria-selected="false" data-tab="dlp"    id="tab-dlp">
-        DLP Library <span id="dlp-count-badge" style="font-size:0.75rem;color:var(--text-muted);font-weight:400;"></span>
-      </button>
-      <button class="tab-btn"        role="tab" aria-selected="false" data-tab="koha"   id="tab-koha">
-        Koha OPAC — Eastern University
-        <span id="koha-status-dot" title="Checking…" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warning);margin-left:6px;vertical-align:middle;"></span>
-      </button>
-    </div>
-
-    <!-- LOCAL TAB -->
-    <div class="tab-pane active" id="pane-local">
-      <div class="flex-between mb-3">
-        <div id="result-count" class="card-meta" aria-live="polite">Loading…</div>
-        <div id="sort-wrap" style="display:flex;gap:0.5rem;align-items:center;">
-          <label for="sort" style="font-size:0.85rem;color:var(--text-muted);" data-i18n="catalog.sort">Sort:</label>
-          <select id="sort" style="width:auto;padding:0.4rem 2rem 0.4rem 0.7rem;" aria-label="Sort results">
-            <option value="newest" data-i18n="catalog.sort.newest">Newest First</option>
-            <option value="title" data-i18n="catalog.sort.title">Title A–Z</option>
-            <option value="author" data-i18n="catalog.sort.author">Author A–Z</option>
-          </select>
-        </div>
-      </div>
-      <div id="results" class="grid grid-4" role="list" aria-label="Local search results"></div>
-      <div class="text-center mt-4 hidden" id="load-more-wrap">
-        <button class="btn btn-outline" id="load-more">Load more results</button>
+    <!-- Results -->
+    <div class="flex-between mb-3">
+      <div id="result-count" class="card-meta" aria-live="polite">Loading…</div>
+      <div id="sort-wrap" style="display:flex;gap:0.5rem;align-items:center;">
+        <label for="sort" style="font-size:0.85rem;color:var(--text-muted);" data-i18n="catalog.sort">Sort:</label>
+        <select id="sort" style="width:auto;padding:0.4rem 2rem 0.4rem 0.7rem;" aria-label="Sort results">
+          <option value="newest" data-i18n="catalog.sort.newest">Newest First</option>
+          <option value="title" data-i18n="catalog.sort.title">Title A–Z</option>
+          <option value="author" data-i18n="catalog.sort.author">Author A–Z</option>
+        </select>
       </div>
     </div>
-
-    <!-- DLP TAB -->
-    <div class="tab-pane" id="pane-dlp">
-      <div style="background:var(--bg-subtle);border-radius:var(--radius-sm);padding:0.85rem 1.1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;">
-        <div>
-          <strong style="font-size:0.9rem;">DLP Library Collection</strong><br>
-          <small style="color:var(--text-soft);">Batticaloa Public Library's full catalog — synced from the DLP Koha system. Search across all branches and collections.</small>
-        </div>
-        <span id="dlp-fts-indicator" style="margin-left:auto;font-size:0.75rem;color:var(--text-muted);"></span>
-      </div>
-      <div class="flex-between mb-3">
-        <div id="dlp-result-count" class="card-meta" aria-live="polite">Enter a term or browse all titles.</div>
-        <div style="display:flex;gap:0.5rem;align-items:center;">
-          <button class="btn btn-sm btn-ghost" id="dlp-prev" disabled>← Prev</button>
-          <span id="dlp-page-info" style="font-size:0.85rem;color:var(--text-muted);"></span>
-          <button class="btn btn-sm btn-ghost" id="dlp-next" disabled>Next →</button>
-        </div>
-      </div>
-      <div id="dlp-results" class="grid grid-4" role="list" aria-label="DLP library search results"></div>
-    </div>
-
-    <!-- KOHA TAB -->
-    <div class="tab-pane" id="pane-koha">
-      <div style="background:var(--bg-subtle);border-radius:var(--radius-sm);padding:0.85rem 1.1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;">
-        <div>
-          <strong style="font-size:0.9rem;">Eastern University Library — Live Catalog</strong><br>
-          <small style="color:var(--text-soft);">Results fetched in real-time from Koha OPAC at Eastern University, Vantharumoolai. Click any title to view full record.</small>
-        </div>
-        <a id="opac-fulllink" href="https://www.opac.lib.esn.ac.lk/cgi-bin/koha/opac-search.pl" target="_blank" rel="noopener" class="btn btn-sm btn-outline" style="margin-left:auto;">
-          Open Full OPAC ↗
-        </a>
-      </div>
-      <div class="flex-between mb-3">
-        <div id="koha-count" class="card-meta" aria-live="polite">Enter a search term to browse the Koha catalog.</div>
-        <div style="display:flex;gap:0.5rem;align-items:center;">
-          <button class="btn btn-sm btn-ghost" id="koha-prev" disabled>← Prev</button>
-          <span id="koha-page-info" style="font-size:0.85rem;color:var(--text-muted);"></span>
-          <button class="btn btn-sm btn-ghost" id="koha-next" disabled>Next →</button>
-        </div>
-      </div>
-      <div id="koha-results" class="grid grid-4" role="list" aria-label="Koha OPAC search results"></div>
+    <div id="results" class="grid grid-4" role="list" aria-label="Search results"></div>
+    <div class="text-center mt-4 hidden" id="load-more-wrap">
+      <button class="btn btn-outline" id="load-more">Load more results</button>
     </div>
 
   </div>
@@ -213,7 +113,7 @@
     </div>
     <div class="chat-head-text">
       <strong>Library Assistant</strong>
-      <small>Batticaloa Public Library · Koha System</small>
+      <small>Batticaloa Public Library</small>
     </div>
     <div class="chat-head-actions">
       <button class="chat-minimize-btn" id="chat-minimize-btn" aria-label="Minimize chat" title="Minimise">

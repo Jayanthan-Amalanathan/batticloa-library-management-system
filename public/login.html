@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Member Login — Batticaloa Public Library</title>
-<meta name="description" content="Sign in to your Batticaloa Public Library member account to access loans, reservations and digital resources." />
+<meta name="description" content="Sign in to your Batticaloa Public Library member account to manage loans, reservations and digital resources." />
 <meta name="robots" content="noindex, follow" />
 <link rel="canonical" href="https://batticloa-library-management-system.vercel.app/login" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -25,56 +25,53 @@
   <div class="container">
     <p class="breadcrumbs"><a href="/">Home</a> / Login</p>
     <h1>Sign In</h1>
-    <p>Library members use the Koha portal. Staff and administrators sign in below.</p>
   </div>
 </section>
 
 <section>
   <div class="container">
-    <!-- Member Portal Card -->
-    <div class="form-card" style="margin-bottom:1.5rem;">
-      <div style="text-align:center;margin-bottom:1.25rem;">
-        <div style="font-size:2rem;margin-bottom:0.5rem;">📚</div>
-        <h2 style="margin-bottom:0.25rem;">Library Members</h2>
-        <p class="card-meta">Access your loans, reservations and account via the Koha member portal</p>
-      </div>
-      <a href="https://batticaloa.dlp.gov.lk/cgi-bin/koha/opac-user.pl"
-         class="btn btn-primary btn-block"
-         style="display:block;text-align:center;text-decoration:none;"
-         target="_blank" rel="noopener noreferrer">
-        Go to Member Portal →
-      </a>
-      <p class="card-meta" style="text-align:center;margin-top:1rem;">
-        Sign in with your <strong>Koha Library ID</strong> and password.<br/>
-        Not yet a member? <a href="/register">Register here →</a>
-      </p>
-    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:2rem;max-width:800px;margin:0 auto;">
 
-    <!-- Staff / Admin Card -->
-    <div class="form-card">
-      <div style="text-align:center;margin-bottom:1.5rem;">
-        <div style="font-size:2rem;margin-bottom:0.5rem;">🔐</div>
-        <h2 style="margin-bottom:0.25rem;">Staff &amp; Admin</h2>
-        <p class="card-meta">Library staff and administrators sign in here</p>
-      </div>
-      <div id="msg"></div>
-      <form id="login-form" novalidate>
-        <div class="form-group">
-          <label for="login-email">Email Address</label>
-          <input type="email" id="login-email" name="email" autocomplete="email" required placeholder="your@email.com" />
+      <!-- Library Member Card -->
+      <div class="form-card">
+        <div style="text-align:center;margin-bottom:1.5rem;">
+          <div style="font-size:2rem;margin-bottom:0.5rem;">📚</div>
+          <h2 style="margin-bottom:0.25rem;">Library Members</h2>
+          <p class="card-meta">Sign in to manage your loans, reservations and access digital resources</p>
         </div>
-        <div class="form-group">
-          <label for="login-password">Password</label>
-          <div class="input-wrap">
-            <input type="password" id="login-password" name="password" autocomplete="current-password" required placeholder="Enter your password" />
-            <button type="button" class="toggle-pw" aria-label="Toggle password visibility" data-target="login-password">👁</button>
+        <a href="https://batticaloa.dlp.gov.lk/cgi-bin/koha/opac-user.pl" class="btn btn-primary btn-block" style="text-align:center;text-decoration:none;display:block;" target="_blank" rel="noopener">Sign In as Member →</a>
+        <div style="text-align:center;margin-top:1rem;">
+          <a href="/register" class="card-meta" style="font-size:0.83rem;">New member? Register here</a>
+        </div>
+      </div>
+
+      <!-- Staff / Admin Card -->
+      <div class="form-card">
+        <div style="text-align:center;margin-bottom:1.5rem;">
+          <div style="font-size:2rem;margin-bottom:0.5rem;">🔐</div>
+          <h2 style="margin-bottom:0.25rem;">Staff &amp; Admin</h2>
+          <p class="card-meta">Library staff and administrators sign in here</p>
+        </div>
+        <div id="msg"></div>
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label for="login-email">Email Address</label>
+            <input type="email" id="login-email" name="email" autocomplete="email" required placeholder="your@email.com" />
           </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <div class="input-wrap">
+              <input type="password" id="login-password" name="password" autocomplete="current-password" required placeholder="Enter your password" />
+              <button type="button" class="toggle-pw" aria-label="Toggle password visibility" data-target="login-password">👁</button>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-block" type="submit" id="login-btn" style="margin-top:0.5rem;">Sign In</button>
+        </form>
+        <div style="text-align:center;margin-top:1rem;">
+          <a href="/contact" class="card-meta" style="font-size:0.83rem;">Need help accessing your account?</a>
         </div>
-        <button class="btn btn-primary btn-block" type="submit" id="login-btn" style="margin-top:0.5rem;">Sign In</button>
-      </form>
-      <div style="text-align:center;margin-top:1rem;">
-        <a href="/contact" class="card-meta" style="font-size:0.83rem;">Need help accessing your account?</a>
       </div>
+
     </div>
   </div>
 </section>
@@ -96,7 +93,7 @@
     </div>
     <div class="chat-head-text">
       <strong>Library Assistant</strong>
-      <small>Batticaloa Public Library · Koha System</small>
+      <small>Batticaloa Public Library</small>
     </div>
     <div class="chat-head-actions">
       <button class="chat-minimize-btn" id="chat-minimize-btn" aria-label="Minimize chat" title="Minimise">

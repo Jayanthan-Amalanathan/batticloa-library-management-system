@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225" fill="none">
+  <defs>
+    <linearGradient id="dg" x1="0" y1="0" x2="400" y2="225" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#8b0000"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="225" fill="url(#dg)"/>
+  <!-- Stage curtain hints -->
+  <rect x="0" y="0" width="40" height="225" fill="#7a0000" opacity="0.5"/>
+  <rect x="360" y="0" width="40" height="225" fill="#7a0000" opacity="0.5"/>
+  <!-- Podium left -->
+  <rect x="80" y="110" width="50" height="60" rx="4" fill="#c0392b" opacity="0.7"/>
+  <rect x="72" y="108" width="66" height="8" rx="3" fill="#e74c3c" opacity="0.8"/>
+  <!-- Podium right -->
+  <rect x="270" y="110" width="50" height="60" rx="4" fill="#c0392b" opacity="0.7"/>
+  <rect x="262" y="108" width="66" height="8" rx="3" fill="#e74c3c" opacity="0.8"/>
+  <!-- Person left -->
+  <circle cx="105" cy="86" r="14" fill="#fad7a0" opacity="0.9"/>
+  <rect x="93" y="100" width="24" height="30" rx="4" fill="#2980b9" opacity="0.8"/>
+  <!-- Person right -->
+  <circle cx="295" cy="86" r="14" fill="#fad7a0" opacity="0.9"/>
+  <rect x="283" y="100" width="24" height="30" rx="4" fill="#27ae60" opacity="0.8"/>
+  <!-- Microphone icons -->
+  <circle cx="105" cy="118" r="5" fill="#bdc3c7" opacity="0.8"/>
+  <rect x="103" y="123" width="4" height="8" rx="2" fill="#bdc3c7" opacity="0.8"/>
+  <circle cx="295" cy="118" r="5" fill="#bdc3c7" opacity="0.8"/>
+  <rect x="293" y="123" width="4" height="8" rx="2" fill="#bdc3c7" opacity="0.8"/>
+  <!-- VS in center -->
+  <text x="200" y="110" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="28" fill="#f39c12" opacity="0.95" font-weight="bold">VS</text>
+  <!-- Label -->
+  <text x="200" y="198" text-anchor="middle" font-family="Georgia, serif" font-size="13" fill="#fff" opacity="0.9" letter-spacing="2">DEBATE COMPETITION</text>
+</svg>
