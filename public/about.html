@@ -289,38 +289,102 @@
 </section>
 
 
-<!-- Leadership -->
-<section>
+<!-- Library Staff -->
+<style>
+  /* ── section wrapper ── */
+  .ls-section { padding: 5rem 0 6rem; background: #fff; }
+
+  /* ── card grid ── */
+  .ls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+    gap: 1rem;
+  }
+
+  /* ── individual card ── */
+  .ls-card {
+    position: relative; overflow: hidden;
+    background: var(--bg-card); border-radius: 18px;
+    border: 1.5px solid var(--border);
+    padding: 1.4rem 1.2rem 1.15rem;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    box-shadow: 0 2px 8px rgba(14,77,92,0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .ls-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(14,77,92,0.13);
+    border-color: var(--primary-light);
+  }
+  /* coloured top bar */
+  .ls-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 4px; background: var(--ls-accent, var(--primary));
+    border-radius: 18px 18px 0 0;
+  }
+
+  /* avatar */
+  .ls-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; font-weight: 700; color: #fff;
+    background: var(--ls-accent, var(--primary));
+    margin-bottom: 0.85rem;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--ls-accent, var(--primary)) 35%, transparent);
+    letter-spacing: 0.03em;
+  }
+
+  .ls-card-name {
+    font-family: Inter, sans-serif;
+    font-size: 0.88rem; font-weight: 600; color: var(--text);
+    line-height: 1.3; margin-bottom: 0.3rem;
+  }
+  .ls-card-role {
+    font-size: 0.73rem; font-weight: 500;
+    color: var(--ls-accent, var(--primary));
+    background: color-mix(in srgb, var(--ls-accent, var(--primary)) 10%, transparent);
+    padding: 0.2rem 0.65rem; border-radius: 999px;
+  }
+  .ls-card-num {
+    position: absolute; top: 0.6rem; right: 0.75rem;
+    font-size: 0.68rem; font-weight: 700; color: var(--text-muted);
+    opacity: 0.55;
+  }
+
+  /* accent palettes */
+  .ls-cat--librarian  { --ls-accent: #062f3a; }
+  .ls-cat--servaha    { --ls-accent: #0e6d7c; }
+  .ls-cat--office     { --ls-accent: #6d28d9; }
+  .ls-cat--other      { --ls-accent: #0f766e; }
+  .ls-cat--trainees   { --ls-accent: #b45309; }
+</style>
+
+<section class="ls-section">
   <div class="container">
     <div class="section-head">
       <span class="eyebrow" data-i18n="about.leadership.eyebrow">Governance</span>
       <h2 data-i18n="about.leadership.title">Library Staff</h2>
     </div>
-    <div class="grid grid-4">
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">👤</div>
-        <h3>Director</h3>
-        <p style="font-weight:600;color:var(--primary-dark);">Mrs. Selvi Kanagasabai</p>
-        <p class="card-meta mt-1">Head of Library Services</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">👤</div>
-        <h3>Head Librarian</h3>
-        <p style="font-weight:600;color:var(--primary-dark);">Mr. Rasiah Thamotharampillai</p>
-        <p class="card-meta mt-1">Catalog & Acquisitions</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">👤</div>
-        <h3>Digital Services</h3>
-        <p style="font-weight:600;color:var(--primary-dark);">Ms. Aisha Fernando</p>
-        <p class="card-meta mt-1">IT & Integrations</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">👤</div>
-        <h3>Programs</h3>
-        <p style="font-weight:600;color:var(--primary-dark);">Mr. Vijay Kumar</p>
-        <p class="card-meta mt-1">Events & Outreach</p>
-      </div>
+    <div class="ls-grid">
+      <div class="ls-card ls-cat--librarian"><span class="ls-card-num">01</span><div class="ls-avatar">TS</div><div class="ls-card-name">T. Sivarani</div><span class="ls-card-role">Librarian</span></div>
+      <div class="ls-card ls-cat--servaha"><span class="ls-card-num">02</span><div class="ls-avatar">RR</div><div class="ls-card-name">R. Rama</div><span class="ls-card-role">Library Servaha</span></div>
+      <div class="ls-card ls-cat--servaha"><span class="ls-card-num">03</span><div class="ls-avatar">ML</div><div class="ls-card-name">M. Luxman</div><span class="ls-card-role">Library Servaha</span></div>
+      <div class="ls-card ls-cat--servaha"><span class="ls-card-num">04</span><div class="ls-avatar">TS</div><div class="ls-card-name">T. Selvarani</div><span class="ls-card-role">Library Servaha</span></div>
+      <div class="ls-card ls-cat--servaha"><span class="ls-card-num">05</span><div class="ls-avatar">SG</div><div class="ls-card-name">S. Geethanjali</div><span class="ls-card-role">Library Servaha</span></div>
+      <div class="ls-card ls-cat--servaha"><span class="ls-card-num">06</span><div class="ls-avatar">RS</div><div class="ls-card-name">R. Sivani</div><span class="ls-card-role">Library Servaha</span></div>
+      <div class="ls-card ls-cat--servaha"><span class="ls-card-num">07</span><div class="ls-avatar">KP</div><div class="ls-card-name">K. Pushpalatha</div><span class="ls-card-role">Library Servaha</span></div>
+      <div class="ls-card ls-cat--servaha"><span class="ls-card-num">08</span><div class="ls-avatar">KT</div><div class="ls-card-name">K. Thayalini</div><span class="ls-card-role">Library Servaha</span></div>
+      <div class="ls-card ls-cat--office"><span class="ls-card-num">09</span><div class="ls-avatar">VV</div><div class="ls-card-name">V. Vijarani</div><span class="ls-card-role">Office Assistant</span></div>
+      <div class="ls-card ls-cat--other"><span class="ls-card-num">10</span><div class="ls-avatar">BN</div><div class="ls-card-name">B.S. Niranjan</div><span class="ls-card-role">Other Staff</span></div>
+      <div class="ls-card ls-cat--other"><span class="ls-card-num">11</span><div class="ls-avatar">SM</div><div class="ls-card-name">S. Monika</div><span class="ls-card-role">Other Staff</span></div>
+      <div class="ls-card ls-cat--other"><span class="ls-card-num">12</span><div class="ls-avatar">RM</div><div class="ls-card-name">R. Manthahini</div><span class="ls-card-role">Other Staff</span></div>
+      <div class="ls-card ls-cat--other"><span class="ls-card-num">13</span><div class="ls-avatar">RS</div><div class="ls-card-name">R. Sarogini</div><span class="ls-card-role">Other Staff</span></div>
+      <div class="ls-card ls-cat--other"><span class="ls-card-num">14</span><div class="ls-avatar">PS</div><div class="ls-card-name">P. Sujana</div><span class="ls-card-role">Other Staff</span></div>
+      <div class="ls-card ls-cat--other"><span class="ls-card-num">15</span><div class="ls-avatar">GP</div><div class="ls-card-name">G. Punithadevi</div><span class="ls-card-role">Other Staff</span></div>
+      <div class="ls-card ls-cat--other"><span class="ls-card-num">16</span><div class="ls-avatar">VV</div><div class="ls-card-name">V. Vajini</div><span class="ls-card-role">Other Staff</span></div>
+      <div class="ls-card ls-cat--trainees"><span class="ls-card-num">17</span><div class="ls-avatar">SS</div><div class="ls-card-name">S. Saravanathas</div><span class="ls-card-role">Trainee</span></div>
+      <div class="ls-card ls-cat--trainees"><span class="ls-card-num">18</span><div class="ls-avatar">MG</div><div class="ls-card-name">M. Ganakerthana</div><span class="ls-card-role">Trainee</span></div>
+      <div class="ls-card ls-cat--trainees"><span class="ls-card-num">19</span><div class="ls-avatar">LM</div><div class="ls-card-name">L. Mayuri</div><span class="ls-card-role">Trainee</span></div>
     </div>
   </div>
 </section>
