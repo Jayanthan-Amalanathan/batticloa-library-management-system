@@ -1931,50 +1931,57 @@ app.use((err, req, res, next) => {
 
 // Bootstrap schema then start / export
 let _bootstrapPromise = null;
+let _bootstrapError   = null;
+
 function bootstrap() {
-  if (!_bootstrapPromise) {
-    _bootstrapPromise = (async () => {
-      await initSchema();
-      // scheduleMonthlySyncCron uses setInterval which doesn't work in
-      // Vercel serverless — skip it in production; use a Vercel cron job instead.
-      if (!IS_PROD) {
-        scheduleMonthlySyncCron();
-      }
-      if (require.main === module) {
-        app.listen(PORT, () => {
-          log.info('Server started', { port: PORT, env: IS_PROD ? 'production' : 'development' });
-        });
-      }
-    })().catch(err => {
-      console.error('Failed to initialise database:', err);
-      _bootstrapPromise = null;
-      // Do not rethrow — let the request handler respond with 503 instead of crashing the process
+  if (_bootstrapPromise) return _bootstrapPromise;
+  _bootstrapError = null;
+  _bootstrapPromise = (async () => {
+    // Log which env vars are present so Vercel logs show the root cause clearly
+    log.info('Bootstrap starting', {
+      TURSO_DATABASE_URL: process.env.TURSO_DATABASE_URL ? 'set' : 'MISSING',
+      TURSO_AUTH_TOKEN:   process.env.TURSO_AUTH_TOKEN   ? 'set' : 'MISSING',
+      JWT_SECRET:         process.env.JWT_SECRET          ? 'set' : 'MISSING',
+      NODE_ENV:           process.env.NODE_ENV || 'unset',
     });
-  }
+    await initSchema();
+    // scheduleMonthlySyncCron uses setInterval — not compatible with serverless.
+    if (!IS_PROD) {
+      scheduleMonthlySyncCron();
+    }
+    log.info('Bootstrap complete');
+  })().catch(err => {
+    _bootstrapError   = err;
+    _bootstrapPromise = null; // allow retry on next cold start
+    log.error('Bootstrap failed', { error: err.message, stack: err.stack });
+  });
   return _bootstrapPromise;
 }
 
-// Wrap the Express app so every request waits for bootstrap to finish.
-// If bootstrap fails, respond 503 instead of crashing.
-const rawApp = app;
+// Kick off bootstrap immediately at module load so it runs during cold start.
+bootstrap();
+
+// Every request waits for bootstrap. If it failed, respond 503 with the reason.
 const handler = async (req, res) => {
-  try {
-    await bootstrap();
-  } catch (err) {
-    console.error('Bootstrap failed, responding 503:', err);
-    return res.status(503).json({ error: 'Service temporarily unavailable. Please try again.' });
+  await bootstrap();
+  if (_bootstrapError) {
+    return res.status(503).json({
+      error: 'Database initialisation failed. Check Vercel environment variables.',
+      detail: _bootstrapError.message,
+    });
   }
-  rawApp(req, res);
+  app(req, res);
 };
 
 if (require.main === module) {
   bootstrap().then(() => {
-    rawApp.listen(PORT, () => {
+    if (_bootstrapError) {
+      console.error('Failed to initialise database:', _bootstrapError);
+      process.exit(1);
+    }
+    app.listen(PORT, () => {
       log.info('Server started', { port: PORT, env: IS_PROD ? 'production' : 'development' });
     });
-  }).catch(err => {
-    console.error('Failed to initialise database:', err);
-    process.exit(1);
   });
 }
 
