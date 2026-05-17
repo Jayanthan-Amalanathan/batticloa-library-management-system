@@ -1930,14 +1930,16 @@ app.use((err, req, res, next) => {
 });
 
 // Bootstrap schema then start / export
-// Always initialise the DB — on Vercel the file is require()'d (not the
-// entry point), so require.main !== module, but we still need initSchema().
 let _bootstrapPromise = null;
 function bootstrap() {
   if (!_bootstrapPromise) {
     _bootstrapPromise = (async () => {
       await initSchema();
-      scheduleMonthlySyncCron(); // fires on the 1st of each month at 02:xx
+      // scheduleMonthlySyncCron uses setInterval which doesn't work in
+      // Vercel serverless — skip it in production; use a Vercel cron job instead.
+      if (!IS_PROD) {
+        scheduleMonthlySyncCron();
+      }
       if (require.main === module) {
         app.listen(PORT, () => {
           log.info('Server started', { port: PORT, env: IS_PROD ? 'production' : 'development' });
@@ -1945,22 +1947,35 @@ function bootstrap() {
       }
     })().catch(err => {
       console.error('Failed to initialise database:', err);
-      _bootstrapPromise = null; // allow retry on next request
-      throw err;
+      _bootstrapPromise = null;
+      // Do not rethrow — let the request handler respond with 503 instead of crashing the process
     });
   }
   return _bootstrapPromise;
 }
 
-// Always kick off bootstrap at module load time so Vercel's cold start
-// initialises the DB schema before the first request arrives.
-bootstrap();
+// Wrap the Express app so every request waits for bootstrap to finish.
+// If bootstrap fails, respond 503 instead of crashing.
+const rawApp = app;
+const handler = async (req, res) => {
+  try {
+    await bootstrap();
+  } catch (err) {
+    console.error('Bootstrap failed, responding 503:', err);
+    return res.status(503).json({ error: 'Service temporarily unavailable. Please try again.' });
+  }
+  rawApp(req, res);
+};
 
 if (require.main === module) {
-  bootstrap().catch(err => {
+  bootstrap().then(() => {
+    rawApp.listen(PORT, () => {
+      log.info('Server started', { port: PORT, env: IS_PROD ? 'production' : 'development' });
+    });
+  }).catch(err => {
     console.error('Failed to initialise database:', err);
     process.exit(1);
   });
 }
 
-module.exports = { app, bootstrap };
+module.exports = handler;
