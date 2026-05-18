@@ -4,21 +4,21 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Batticaloa Public Library</title>
-<meta name="description" content="Batticaloa Public Library, serving the Eastern Province since 1972. Search the catalog, register for membership, and explore our collections." />
+<meta name="description" content="Batticaloa Public Library, serving the Eastern Province since 1855. Search the catalog, register for membership, and explore our collections." />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://batticloa-library-management-system.vercel.app/" />
 <!-- Open Graph -->
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://batticloa-library-management-system.vercel.app/" />
 <meta property="og:title" content="Batticaloa Public Library" />
-<meta property="og:description" content="Batticaloa Public Library, serving the Eastern Province since 1972. Search the catalog, register for membership, and explore our collections." />
+<meta property="og:description" content="Batticaloa Public Library, serving the Eastern Province since 1855. Search the catalog, register for membership, and explore our collections." />
 <meta property="og:image" content="https://batticloa-library-management-system.vercel.app/images/hero-library.svg" />
 <meta property="og:site_name" content="Batticaloa Public Library" />
 <meta property="og:locale" content="en_LK" />
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Batticaloa Public Library" />
-<meta name="twitter:description" content="Batticaloa Public Library, serving the Eastern Province since 1972. Search the catalog, register for membership, and explore our collections." />
+<meta name="twitter:description" content="Batticaloa Public Library, serving the Eastern Province since 1855. Search the catalog, register for membership, and explore our collections." />
 <meta name="twitter:image" content="https://batticloa-library-management-system.vercel.app/images/hero-library.svg" />
 <!-- Fonts: preconnect for zero-RTT, then async load with font-display:swap -->
 <!-- Preload critical CSS for faster FCP -->
@@ -42,7 +42,7 @@
 <!-- Hero -->
 <section class="hero" aria-labelledby="hero-heading">
   <h1 id="hero-heading" data-i18n="home.hero.title">Batticaloa Public Library</h1>
-  <p data-i18n="home.hero.desc">Serving the Eastern Province since 1972. Browse over 50,000 books, use our digital resources, and take part in community programs.</p>
+  <p data-i18n="home.hero.desc">Serving the Eastern Province since 1855. Browse over 50,000 books, use our digital resources, and take part in community programs.</p>
 
   <form class="hero-search" id="opac-search" aria-label="Search the integrated Koha catalog">
     <input id="search-q" name="q" type="text" data-i18n-placeholder="home.hero.placeholder" placeholder="Search books by title, author, ISBN, or subject…" aria-label="Search query" />
@@ -142,6 +142,11 @@
         <p data-i18n="services.join.desc">Register online for membership. Annual renewal is supported. Student membership is free.</p>
       </div>
       <div class="service-card">
+        <div class="service-icon" aria-hidden="true">📚</div>
+        <h3 data-i18n="services.lending.title">Lending Facilities</h3>
+        <p data-i18n="services.lending.desc">Borrow up to 3 books for 14 days, renewable once. Fines and replacement charges apply for overdue or damaged items.</p>
+      </div>
+      <div class="service-card">
         <div class="service-icon" aria-hidden="true">📄</div>
         <h3 data-i18n="services.delivery.title">Document Delivery</h3>
         <p data-i18n="services.delivery.desc">Request scanned articles or chapters by email or secure download. Copyright-compliant service.</p>
@@ -170,11 +175,6 @@
         <div class="service-icon" aria-hidden="true">🤝</div>
         <h3 data-i18n="services.volunteer.title">Volunteer Programs</h3>
         <p data-i18n="services.volunteer.desc">Support community outreach, children's programs, and digitization projects as a library volunteer.</p>
-      </div>
-      <div class="service-card">
-        <div class="service-icon" aria-hidden="true">🎁</div>
-        <h3 data-i18n="services.donations.title">Donations</h3>
-        <p data-i18n="services.donations.desc">Donate books or contribute to our acquisitions fund. Receipts provided for all donations.</p>
       </div>
     </div>
     <div class="text-center mt-4"><a href="/services" class="btn btn-ghost" data-i18n="home.services.all">
@@ -254,72 +254,61 @@
   </div>
 </section>
 
-<!-- Heritage & Mission (merged) -->
-<section class="heritage-section" aria-labelledby="heritage-heading">
-  <div class="container">
 
-    <!-- Section header -->
-    <div class="section-head">
-      <span class="eyebrow" style="color:var(--accent-light);">Our Heritage</span>
-      <h2 id="heritage-heading" style="color:#fff;">50+ Years of Service</h2>
-      <p style="color:rgba(255,255,255,0.75);max-width:620px;margin:.5rem auto 0;">Since 1972, the Batticaloa Public Library has been a place of reading, learning and community life for the people of the Eastern Province.</p>
-    </div>
+<!-- Heritage & History (single unified dark section — no inter-section gaps) -->
+<section style="background:var(--primary-dark);padding:5rem 0;border-bottom:3px solid var(--accent);" aria-labelledby="heritage-heading">
 
-    <!-- Image + Vision & Mission -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center;margin-bottom:2.5rem;">
-      <img src="/images/library-about.jpg" alt="Batticaloa Public Library building" width="560" height="420" loading="lazy" style="width:100%;height:340px;object-fit:cover;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.35);" />
-      <div style="display:flex;flex-direction:column;gap:1.25rem;">
-        <div class="heritage-card" style="text-align:left;">
-          <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.6rem;">
-            <span style="font-size:1.4rem;" aria-hidden="true">🌟</span>
-            <h3 style="margin:0;color:#fff;">Vision</h3>
-          </div>
-          <p style="color:rgba(255,255,255,0.82);margin:0;">To be a lending center that provides information services to support a knowledgeable and creative society.</p>
-        </div>
-        <div class="heritage-card" style="text-align:left;">
-          <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.6rem;">
-            <span style="font-size:1.4rem;" aria-hidden="true">🎯</span>
-            <h3 style="margin:0;color:#fff;">Mission</h3>
-          </div>
-          <p style="color:rgba(255,255,255,0.82);margin:0;">To support lifelong learning through quality library services that benefit education, creativity and cultural life in Batticaloa.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="heritage-grid">
-      <div class="heritage-stat">
-        <div class="heritage-stat-num">1972</div>
-        <div class="heritage-stat-label">Year Founded</div>
-      </div>
-      <div class="heritage-stat">
-        <div class="heritage-stat-num">50+</div>
-        <div class="heritage-stat-label">Years of Service</div>
-      </div>
-      <div class="heritage-stat">
-        <div class="heritage-stat-num">80K+</div>
-        <div class="heritage-stat-label">Books &amp; Resources</div>
-      </div>
-      <div class="heritage-stat">
-        <div class="heritage-stat-num">3</div>
-        <div class="heritage-stat-label">Languages Served</div>
-      </div>
-    </div>
-
-    <div class="text-center" style="margin-top:2rem;">
-      <a href="/about" class="btn btn-outline-white" style="margin-right:1rem;">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        Our History
-      </a>
-      <a href="/collections" class="btn" style="background:var(--accent);color:var(--navy-dark,#0D1A30);border-color:var(--accent);">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-        Digital Archive
+  <!-- Intro: text + photo -->
+  <div class="container about-grid" style="padding-bottom:3rem;">
+    <div>
+      <span class="eyebrow" style="color:var(--accent);">Our Heritage</span>
+      <h2 id="heritage-heading" style="margin-top:0.5rem;color:#fff;">History of Batticaloa<br>Public Library</h2>
+      <p style="color:rgba(255,255,255,.65);margin-bottom:1rem;">One of the oldest libraries in Sri Lanka, established in 1855 as a modest reading centre and grown over 170 years into the premier public library of the Eastern Province.</p>
+      <p style="color:rgba(255,255,255,.65);">Through colonial administration, independence, cyclone, and reconstruction, the library has remained a steadfast centre of knowledge for readers, researchers and students across the region.</p>
+      <a href="/about" style="margin-top:1.5rem;display:inline-flex;align-items:center;gap:.5rem;background:transparent;border:2px solid rgba(255,255,255,.35);color:#fff;padding:.6rem 1.4rem;border-radius:8px;font-weight:600;font-size:.9rem;text-decoration:none;transition:background .18s,border-color .18s;" onmouseover="this.style.background='rgba(255,255,255,.1)';this.style.borderColor='rgba(255,255,255,.6)'" onmouseout="this.style.background='transparent';this.style.borderColor='rgba(255,255,255,.35)'">
+        Read More
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
       </a>
     </div>
-
+    <div><img src="/images/library-about.jpg" alt="Batticaloa Public Library building" width="560" height="420" loading="lazy" style="object-fit:cover;border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,.45);" /></div>
   </div>
-</section>
 
+  <!-- Era cards -->
+  <div class="container" style="padding-top:0;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.25rem;">
+
+      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:var(--radius);padding:1.6rem 1.5rem;">
+        <div style="width:28px;height:3px;background:var(--accent);border-radius:2px;margin-bottom:1.1rem;"></div>
+        <div style="font-family:Merriweather,Georgia,serif;font-size:1.15rem;font-weight:800;color:var(--accent);margin-bottom:.3rem;">1855 – 1884</div>
+        <h3 style="color:#fff;font-size:1rem;margin-bottom:.65rem;">The Reading Centre</h3>
+        <p style="color:rgba(255,255,255,.58);font-size:.88rem;line-height:1.75;margin:0;">Originally housed in a former salt store, the facility provided newspapers and reading materials to a small number of community readers during the early colonial era.</p>
+      </div>
+
+      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:var(--radius);padding:1.6rem 1.5rem;">
+        <div style="width:28px;height:3px;background:#4fc3d8;border-radius:2px;margin-bottom:1.1rem;"></div>
+        <div style="font-family:Merriweather,Georgia,serif;font-size:1.15rem;font-weight:800;color:#4fc3d8;margin-bottom:.3rem;">1884 – 1950</div>
+        <h3 style="color:#fff;font-size:1rem;margin-bottom:.65rem;">Formal Library &amp; Local Government</h3>
+        <p style="color:rgba(255,255,255,.58);font-size:.88rem;line-height:1.75;margin:0;">Formally developed into a library in 1884 and incorporated into the local government system in 1932. On 25 November 1950, with 825 books and 16 members, it officially opened as a public library under Mayor A.S. Selvanayagam.</p>
+      </div>
+
+      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:var(--radius);padding:1.6rem 1.5rem;">
+        <div style="width:28px;height:3px;background:#a8e6cf;border-radius:2px;margin-bottom:1.1rem;"></div>
+        <div style="font-family:Merriweather,Georgia,serif;font-size:1.15rem;font-weight:800;color:#a8e6cf;margin-bottom:.3rem;">1967 – 1978</div>
+        <h3 style="color:#fff;font-size:1rem;margin-bottom:.65rem;">Growth &amp; Adversity</h3>
+        <p style="color:rgba(255,255,255,.58);font-size:.88rem;line-height:1.75;margin:0;">Came under the Batticaloa Municipal Council in 1967 and moved to a new building. A Children's Section was added in 1972. The devastating 1978 cyclone damaged the building and destroyed many rare books — but staff rebuilt it with tireless dedication.</p>
+      </div>
+
+      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:var(--radius);padding:1.6rem 1.5rem;">
+        <div style="width:28px;height:3px;background:var(--accent);border-radius:2px;margin-bottom:1.1rem;"></div>
+        <div style="font-family:Merriweather,Georgia,serif;font-size:1.15rem;font-weight:800;color:var(--accent);margin-bottom:.3rem;">2010 – Present</div>
+        <h3 style="color:#fff;font-size:1rem;margin-bottom:.65rem;">A Modern New Home</h3>
+        <p style="color:rgba(255,255,255,.58);font-size:.88rem;line-height:1.75;margin:0;">The foundation stone for a new two-storey complex was laid on 23 December 2010. After administrative pauses, construction resumed in 2019. The new building — the leading library of the Eastern Province — is set to open on 20 May 2026.</p>
+      </div>
+
+    </div>
+  </div>
+
+</section>
 
 </main>
 <div id="site-footer"></div>
@@ -374,7 +363,7 @@
   "url": "https://batticloa-library-management-system.vercel.app/",
   "logo": "https://batticloa-library-management-system.vercel.app/images/logo.svg",
   "image": "https://batticloa-library-management-system.vercel.app/images/hero-library.svg",
-  "description": "Batticaloa Public Library, serving the Eastern Province since 1972. Search the catalog, borrow books, use digital archives and attend community programs.",
+  "description": "Batticaloa Public Library, serving the Eastern Province since 1855. Search the catalog, borrow books, use digital archives and attend community programs.",
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "Braiyan Drive",
