@@ -51,13 +51,13 @@ async function getToken() {
 }
 
 async function dlpGet(path, params = {}) {
-  const token = await getToken();
-  const url   = new URL(`${DLP_BASE}${path}`);
+  const url = new URL(`${DLP_BASE}${path}`);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    const ctrl = new AbortController();
-    const t    = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT);
+    const token = await getToken();  // re-fetch each attempt so a refreshed token is used after 401
+    const ctrl  = new AbortController();
+    const t     = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT);
     try {
       const res = await fetch(url.toString(), {
         headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
@@ -75,6 +75,15 @@ async function dlpGet(path, params = {}) {
         }
         const txt = await res.text().catch(() => '');
         throw new Error(`DLP API ${path} → HTTP 429: ${txt.slice(0, 200)}`);
+      }
+
+      // On 401/403, clear the cached token and retry once with a fresh one
+      if ((res.status === 401 || res.status === 403) && attempt < MAX_RETRIES) {
+        console.warn(`[DLP Sync] ${res.status} on ${path} — clearing token cache, retry ${attempt + 1}/${MAX_RETRIES}`);
+        _token = null;
+        _tokenExp = 0;
+        await sleep(500);
+        continue;
       }
 
       if (!res.ok) {
