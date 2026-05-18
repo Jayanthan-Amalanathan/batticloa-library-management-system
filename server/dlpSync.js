@@ -238,72 +238,49 @@ async function runSync({ triggeredBy = 'cron', onProgress = () => {} } = {}) {
         });
       }
 
-      // ── Phase 2: look up existing rows (reads only, no transaction) ─────────
-      const existingSet = new Set();
-      for (const r of resolved) {
-        const row = await prepare(
-          'SELECT id FROM dlp_books WHERE koha_biblio_id = ?'
-        ).get(r.biblioId);
-        if (row) existingSet.add(r.biblioId);
-      }
-
-      // ── Phase 3: build statement list and fire as one atomic batch ────────
-      // client.batch() is a single round-trip with no nested BEGIN — the only
-      // safe way to do bulk writes on @libsql/client file: connections.
+      // ── Phase 2: build statement list and fire as one atomic batch ──────────
+      // Use INSERT OR REPLACE so duplicates within the same batch (same bib,
+      // multiple items) and re-syncs of already-known bibs are handled atomically
+      // without a separate pre-read that can race.
       const stmts = [];
       for (const r of resolved) {
-        if (existingSet.has(r.biblioId)) {
-          stmts.push({
-            sql: `UPDATE dlp_books SET
-                isbn             = COALESCE(?, isbn),
-                title            = ?,
-                author           = COALESCE(?, author),
-                publisher        = COALESCE(?, publisher),
-                publication_year = COALESCE(?, publication_year),
-                category         = ?,
-                collection_type  = ?,
-                language         = COALESCE(?, language),
-                call_number      = COALESCE(?, call_number),
-                branch           = COALESCE(?, branch),
-                location         = COALESCE(?, location),
-                collection_code  = COALESCE(?, collection_code),
-                item_type        = COALESCE(?, item_type),
-                total_copies     = total_copies + 1,
-                available_copies = available_copies + ?,
-                not_for_loan     = ?,
-                last_checkout_date = COALESCE(?, last_checkout_date),
-                checkouts_count  = checkouts_count + ?,
-                last_synced_at   = datetime('now')
-              WHERE koha_biblio_id = ?`,
-            args: [
-              r.isbn, r.title, r.author, r.publisher, r.pubYear,
-              r.category, r.collectionType, r.lang, r.callNumber,
-              r.branch, r.location, r.collCode, r.itemType,
-              r.available, r.notForLoan,
-              str(r.item.last_checkout_date), r.item.checkouts_count || 0,
-              r.biblioId,
-            ],
-          });
-          updated++;
-        } else {
-          stmts.push({
-            sql: `INSERT INTO dlp_books (
+        stmts.push({
+          sql: `INSERT INTO dlp_books (
                 koha_biblio_id, koha_item_id, isbn, title, author,
                 publisher, publication_year, category, collection_type,
                 language, call_number, branch, location, collection_code,
                 item_type, total_copies, available_copies, not_for_loan,
                 last_checkout_date, checkouts_count
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
-            args: [
-              r.biblioId, r.item.item_id, r.isbn, r.title, r.author,
-              r.publisher, r.pubYear, r.category, r.collectionType,
-              r.lang, r.callNumber, r.branch, r.location, r.collCode,
-              r.itemType, r.available, r.notForLoan,
-              str(r.item.last_checkout_date), r.item.checkouts_count || 0,
-            ],
-          });
-          added++;
-        }
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)
+              ON CONFLICT(koha_biblio_id) DO UPDATE SET
+                isbn             = COALESCE(excluded.isbn, isbn),
+                title            = excluded.title,
+                author           = COALESCE(excluded.author, author),
+                publisher        = COALESCE(excluded.publisher, publisher),
+                publication_year = COALESCE(excluded.publication_year, publication_year),
+                category         = excluded.category,
+                collection_type  = excluded.collection_type,
+                language         = COALESCE(excluded.language, language),
+                call_number      = COALESCE(excluded.call_number, call_number),
+                branch           = COALESCE(excluded.branch, branch),
+                location         = COALESCE(excluded.location, location),
+                collection_code  = COALESCE(excluded.collection_code, collection_code),
+                item_type        = COALESCE(excluded.item_type, item_type),
+                total_copies     = total_copies + 1,
+                available_copies = available_copies + excluded.available_copies,
+                not_for_loan     = excluded.not_for_loan,
+                last_checkout_date = COALESCE(excluded.last_checkout_date, last_checkout_date),
+                checkouts_count  = checkouts_count + excluded.checkouts_count,
+                last_synced_at   = datetime('now')`,
+          args: [
+            r.biblioId, r.item.item_id, r.isbn, r.title, r.author,
+            r.publisher, r.pubYear, r.category, r.collectionType,
+            r.lang, r.callNumber, r.branch, r.location, r.collCode,
+            r.itemType, r.available, r.notForLoan,
+            str(r.item.last_checkout_date), r.item.checkouts_count || 0,
+          ],
+        });
+        added++;
 
         // Mirror into main books table — INSERT new row if not yet present,
         // then UPDATE to keep metadata current (SQLite has no UPSERT without UNIQUE).
