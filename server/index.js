@@ -199,8 +199,22 @@ const catalogLimiter = rateLimit({ windowMs: 60 * 1000, max: 60, standardHeaders
 app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-// Prevent direct access to admin.html — the guarded /admin route is the only entry point
-app.get(['/admin.html', '/admin/'], (req, res) => res.redirect(301, '/admin'));
+// Block direct file access to admin.html — only the guarded /admin route below serves it
+app.get('/admin.html', (req, res) => res.redirect(301, '/admin'));
+
+// Admin guard must be registered before express.static so /admin is never intercepted by the static handler
+function adminGuard(req, res, next) {
+  authenticate(req, res, () => {
+    if (!req.user || !['admin', 'librarian', 'event_coordinator'].includes(req.user.role)) {
+      return res.redirect('/login?next=/admin');
+    }
+    next();
+  });
+}
+app.get('/admin', adminGuard, (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
+});
+
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.get('/favicon.ico', (_req, res) => res.status(204).end());
 
@@ -1998,18 +2012,6 @@ app.get('/api/dlp-sync/books', authenticate, authorize('admin', 'librarian'), as
 });
 
 // ---------- HTML routing ----------
-// Guard helper: redirect to login instead of returning 401/403 JSON
-function adminGuard(req, res, next) {
-  authenticate(req, res, () => {
-    if (!req.user || !['admin', 'librarian', 'event_coordinator'].includes(req.user.role)) {
-      return res.redirect('/login?next=/admin');
-    }
-    next();
-  });
-}
-app.get('/admin', adminGuard, (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
-});
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'login.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'register.html')));
