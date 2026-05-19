@@ -29,6 +29,6 @@ jobs:
             npm install --production
 
             echo "Restarting app..."
-            pm2 restart library
+            pm2 restart library --update-env
 
             echo "Deployment complete."
