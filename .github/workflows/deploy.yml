@@ -12,27 +12,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to VPS via SSH
+      - name: Set up SSH key
         run: |
-          # Write SSH key from base64-encoded secret
-          echo "${{ secrets.VPS_SSH_KEY }}" | base64 -d > /tmp/deploy_key
-          chmod 600 /tmp/deploy_key
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" | base64 -d > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-          ssh -i /tmp/deploy_key \
-            -o StrictHostKeyChecking=no \
-            -o BatchMode=yes \
-            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
-            set -e
-            cd /home/deploy/apps/library
-
-            echo "Pulling latest code..."
-            git pull origin main
-
-            echo "Installing dependencies..."
-            npm install --production
-
-            echo "Restarting app..."
-            pm2 restart library --update-env
-
-            echo "Deployment complete."
-ENDSSH
+      - name: Deploy to VPS
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "set -e && \
+             cd /home/deploy/apps/library && \
+             git pull origin main && \
+             npm install --production && \
+             pm2 restart library --update-env && \
+             echo 'Deployment complete.'"
