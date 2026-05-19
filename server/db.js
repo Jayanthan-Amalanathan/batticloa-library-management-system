@@ -350,12 +350,16 @@ async function initSchema() {
     `CREATE INDEX IF NOT EXISTS idx_books_category   ON books(category)`,
     `CREATE INDEX IF NOT EXISTS idx_books_branch     ON books(branch)`,
     `CREATE INDEX IF NOT EXISTS idx_books_dlp_source ON books(dlp_source_key)`,
-    // Prevents two concurrent DLP syncs — INSERT fails if a 'running' row already exists
-    `CREATE UNIQUE INDEX IF NOT EXISTS uq_dlp_one_running ON dlp_sync_log(status) WHERE status = 'running'`,
   ];
   for (const stmt of postMigrationIndexes) {
     await exec(stmt);
   }
+
+  // Clean up any stale 'running' sync rows left by crashes, then enforce the unique constraint
+  try {
+    await exec(`UPDATE dlp_sync_log SET status = 'failed', error_message = 'interrupted' WHERE status = 'running'`);
+    await exec(`CREATE UNIQUE INDEX IF NOT EXISTS uq_dlp_one_running ON dlp_sync_log(status) WHERE status = 'running'`);
+  } catch { /* index already exists */ }
 
   // FTS5 — gracefully skipped if unavailable
   const ftsStatements = [
