@@ -34,6 +34,7 @@ function buildLocalQuery() {
     language:   document.getElementById('language-filter').value,
     branch:     document.getElementById('branch').value,
     available:  document.getElementById('available-only').checked ? 'true' : '',
+    sort:       document.getElementById('sort').value,
   };
 }
 
@@ -144,6 +145,7 @@ function attachButtons(container) {
 document.getElementById('search-btn').addEventListener('click', () => searchLocal(true));
 document.getElementById('load-more').addEventListener('click', () => searchLocal(false));
 document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') searchLocal(true); });
+document.getElementById('sort').addEventListener('change', () => searchLocal(true));
 
 const urlParams = new URLSearchParams(location.search);
 if (urlParams.get('q'))          document.getElementById('q').value = urlParams.get('q');

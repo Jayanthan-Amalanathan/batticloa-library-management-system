@@ -17,12 +17,17 @@
 <meta name="twitter:title" content="Collections — Batticaloa Public Library" />
 <meta name="twitter:description" content="Over 50,000 titles across lending, reference, periodicals, special collections, digital resources and children's collections at Batticaloa Public Library." />
 <meta name="twitter:image" content="https://batticloa-library-management-system.vercel.app/images/hero-library.svg" />
+<meta name="theme-color" content="#062f3a" />
+<link rel="apple-touch-icon" href="/images/logo.svg" />
+<link rel="preload" as="style" href="/css/style.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" fetchpriority="high" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" />
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" /></noscript>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" media="print" onload="this.media='all'" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" media="print" onload="this.media='all'" />
+<noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" />
+</noscript>
 <link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
 <link rel="stylesheet" href="/css/style.css" />
 </head>
@@ -90,7 +95,7 @@
         </div>
       </a>
 
-      <div class="card">
+      <a href="/catalog?collection=lending&language=Tamil" class="card">
         <div class="card-img" style="aspect-ratio:5/3;background:linear-gradient(135deg,#d4a017,#8a6310);display:flex;align-items:center;justify-content:center;color:#fff;" aria-hidden="true">
           <div style="text-align:center;"><div style="font-size:3rem;">🧒</div><strong>Children's Section</strong></div>
         </div>
@@ -102,7 +107,7 @@
             <span class="badge gold">Free for children</span>
           </div>
         </div>
-      </div>
+      </a>
     </div>
   </div>
 </section>

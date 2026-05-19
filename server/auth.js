@@ -2,10 +2,16 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { prepare } = require('./db');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
-if (JWT_SECRET === 'dev_secret') {
-  console.warn('WARNING: JWT_SECRET is not set — using insecure fallback. Set JWT_SECRET in your Vercel environment variables.');
+const JWT_SECRET = process.env.JWT_SECRET || '';
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('FATAL: JWT_SECRET is missing or shorter than 32 characters. Set it in your environment variables.');
+    process.exit(1);
+  } else {
+    console.warn('WARNING: JWT_SECRET is not set or too short — using insecure fallback for local dev only.');
+  }
 }
+const _JWT_SECRET = JWT_SECRET || 'dev_secret_do_not_use_in_production';
 
 async function revokeToken(token) {
   try {
@@ -50,7 +56,7 @@ function verifyPassword(plain, hash) {
 function signToken(user) {
   return jwt.sign(
     { id: user.id, role: user.role, email: user.email, name: user.full_name },
-    JWT_SECRET,
+    _JWT_SECRET,
     { expiresIn: '7d' }
   );
 }
@@ -59,7 +65,7 @@ function authenticate(req, res, next) {
   const token = req.cookies?.auth_token || (req.headers.authorization || '').replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'Authentication required' });
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, _JWT_SECRET);
     isTokenRevoked(token).then(revoked => {
       if (revoked) return res.status(401).json({ error: 'Session expired. Please log in again.' });
       req.user = decoded;
@@ -85,7 +91,7 @@ function optionalAuth(req, res, next) {
   const token = req.cookies?.auth_token;
   if (!token) return next();
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, _JWT_SECRET);
     isTokenRevoked(token).then(revoked => {
       if (!revoked) req.user = decoded;
       next();

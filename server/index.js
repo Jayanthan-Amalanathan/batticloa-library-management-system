@@ -1,3 +1,11 @@
+process.on('unhandledRejection', (reason) => {
+  console.error(JSON.stringify({ ts: new Date().toISOString(), level: 'error', msg: 'Unhandled promise rejection', reason: String(reason) }));
+});
+process.on('uncaughtException', (err) => {
+  console.error(JSON.stringify({ ts: new Date().toISOString(), level: 'error', msg: 'Uncaught exception', err: err?.message }));
+  process.exit(1);
+});
+
 // Structured JSON logger — writes to stdout, compatible with Vercel log drain
 const log = {
   _write(level, msg, meta = {}) {
@@ -182,6 +190,7 @@ const contactLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10, standardHe
 const eventRegLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many event registrations. Please try again later.' } });
 const reservationLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many reservation requests. Please try again later.' } });
 const kohaLimiter = rateLimit({ windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many catalog requests. Please try again later.' } });
+const catalogLimiter = rateLimit({ windowMs: 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many search requests. Please try again later.' } });
 
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -189,13 +198,24 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.get('/favicon.ico', (_req, res) => res.status(204).end());
 
+const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phoneRe = /^[\d\s+\-().]+$/;
+function isSafePhone(phone) {
+  if (!phone) return true;
+  const p = String(phone).trim();
+  return p.length <= 30 && phoneRe.test(p);
+}
+
+// Prevent proxies and browsers from caching any API response
+app.use('/api', (_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
+
 // ---------- AUTH ----------
 app.post('/api/auth/register', authLimiter, async (req, res) => {
   const { full_name, email, phone, password, member_category, address, date_of_birth, nic } = req.body;
   if (!full_name || !email || !password) return res.status(400).json({ error: 'Name, email, and password are required' });
   if (typeof password !== 'string' || password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
-  const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRe.test(email)) return res.status(400).json({ error: 'Invalid email address' });
+  if (!isSafePhone(req.body.phone)) return res.status(400).json({ error: 'Invalid phone number' });
   try {
     const existing = await prepare('SELECT id FROM users WHERE email = ?').get(email);
     if (existing) return res.status(409).json({ error: 'Email already registered' });
@@ -279,11 +299,10 @@ function safeInt(val, def, min, max) {
 
 function isSafeImageUrl(url) {
   if (!url) return true;
-  const lower = String(url).trim().toLowerCase();
-  return !lower.startsWith('javascript:') && !lower.startsWith('data:text') && !lower.startsWith('vbscript:');
+  return /^(https?:\/\/|\/)/i.test(String(url).trim());
 }
 
-app.get('/api/books', async (req, res) => {
+app.get('/api/books', catalogLimiter, async (req, res) => {
   try {
     const { q, category, collection, branch, available } = req.query;
     const limit  = safeInt(req.query.limit,  50, 1, 200);
@@ -309,7 +328,7 @@ app.get('/api/books', async (req, res) => {
   }
 });
 
-app.get('/api/books/new-arrivals', async (req, res) => {
+app.get('/api/books/new-arrivals', catalogLimiter, async (req, res) => {
   try {
     const books = await prepare(
       `SELECT * FROM books WHERE is_deleted = 0 ORDER BY added_at DESC LIMIT 8`
@@ -345,10 +364,11 @@ function buildFtsQuery(q) {
     .join(' ');
 }
 
-app.get('/api/catalog/search', async (req, res) => {
+app.get('/api/catalog/search', catalogLimiter, async (req, res) => {
   try {
     const q          = (req.query.q || '').trim();
-    const source     = req.query.source || 'all';   // 'all' | 'local' | 'dlp'
+    const source     = req.query.source || 'all';
+    if (!['all', 'local', 'dlp'].includes(source)) return res.status(400).json({ error: "source must be 'all', 'local', or 'dlp'" });
     const category   = (req.query.category || '').trim();
     const branch     = (req.query.branch   || '').trim();
     const language   = (req.query.language || '').trim();
@@ -474,7 +494,7 @@ app.get('/api/books/export', authenticate, authorize('admin', 'librarian'), asyn
   }
 });
 
-app.get('/api/books/:id', async (req, res) => {
+app.get('/api/books/:id', catalogLimiter, async (req, res) => {
   try {
     const book = await prepare('SELECT * FROM books WHERE id = ? AND (is_deleted IS NULL OR is_deleted = 0)').get(req.params.id);
     if (!book) return res.status(404).json({ error: 'Book not found' });
@@ -508,7 +528,7 @@ app.post('/api/books', authenticate, authorize('admin', 'librarian'), async (req
 
 app.put('/api/books/:id', authenticate, authorize('admin', 'librarian'), async (req, res) => {
   try {
-    const book = await prepare('SELECT * FROM books WHERE id = ?').get(req.params.id);
+    const book = await prepare('SELECT * FROM books WHERE id = ? AND (is_deleted IS NULL OR is_deleted = 0)').get(req.params.id);
     if (!book) return res.status(404).json({ error: 'Book not found' });
     if (req.body.cover_image !== undefined && !isSafeImageUrl(req.body.cover_image)) return res.status(400).json({ error: 'Invalid cover_image URL' });
     const fields = ['isbn','title','author','publisher','publication_year','category','collection_type','language','call_number','description','cover_image','total_copies','branch'];
@@ -535,7 +555,7 @@ app.put('/api/books/:id', authenticate, authorize('admin', 'librarian'), async (
 
 app.delete('/api/books/:id', authenticate, authorize('admin', 'librarian'), async (req, res) => {
   try {
-    const book = await prepare('SELECT * FROM books WHERE id = ?').get(req.params.id);
+    const book = await prepare('SELECT * FROM books WHERE id = ? AND (is_deleted IS NULL OR is_deleted = 0)').get(req.params.id);
     if (!book) return res.status(404).json({ error: 'Book not found' });
     const activeLoans = await prepare("SELECT COUNT(*) AS c FROM loans WHERE book_id = ? AND status = 'active'").get(req.params.id);
     if (activeLoans.c > 0) return res.status(400).json({ error: 'Cannot delete book with active loans' });
@@ -558,7 +578,7 @@ app.post('/api/loans', authenticate, authorize('admin', 'librarian'), async (req
     if (!member) return res.status(404).json({ error: 'Member not found' });
     if (member.membership_status !== 'active') return res.status(400).json({ error: 'Member does not have an active membership' });
     if (member.membership_expiry && new Date(member.membership_expiry) < new Date()) return res.status(400).json({ error: 'Member membership has expired. Please renew before borrowing.' });
-    const book = await prepare('SELECT * FROM books WHERE id = ?').get(book_id);
+    const book = await prepare('SELECT * FROM books WHERE id = ? AND (is_deleted IS NULL OR is_deleted = 0)').get(book_id);
     if (!book) return res.status(404).json({ error: 'Book not found' });
     if (book.collection_type === 'reference') return res.status(400).json({ error: 'Reference books cannot be loaned' });
     const existingLoan = await prepare("SELECT id FROM loans WHERE user_id = ? AND book_id = ? AND status = 'active'").get(user_id, book_id);
@@ -605,7 +625,7 @@ app.post('/api/loans/:id/return', authenticate, authorize('admin', 'librarian'),
     const fine = overdueDays * getFineRate(loanedBook || {});
     await transaction(async () => {
       await prepare('UPDATE loans SET returned_at = CURRENT_TIMESTAMP, status = ?, fine_amount = ? WHERE id = ?').run('returned', fine, req.params.id);
-      await prepare('UPDATE books SET available_copies = available_copies + 1 WHERE id = ?').run(loan.book_id);
+      await prepare('UPDATE books SET available_copies = MIN(available_copies + 1, total_copies) WHERE id = ?').run(loan.book_id);
     })();
     await logAudit(req.user.id, 'return', 'loan', req.params.id, `fine: ${fine}`, req.ip);
     res.json({ success: true, fine });
@@ -678,7 +698,7 @@ app.post('/api/reservations', reservationLimiter, authenticate, async (req, res)
   const { book_id } = req.body;
   if (!book_id) return res.status(400).json({ error: 'book_id is required' });
   try {
-    const book = await prepare('SELECT * FROM books WHERE id = ?').get(book_id);
+    const book = await prepare('SELECT * FROM books WHERE id = ? AND (is_deleted IS NULL OR is_deleted = 0)').get(book_id);
     if (!book) return res.status(404).json({ error: 'Book not found' });
     if (book.available_copies > 0) return res.status(400).json({ error: 'This book is currently available. Please borrow it directly instead of reserving.' });
     const reservingMember = await prepare('SELECT membership_status, membership_expiry FROM users WHERE id = ?').get(req.user.id);
@@ -698,12 +718,16 @@ app.post('/api/reservations', reservationLimiter, authenticate, async (req, res)
 
 app.get('/api/reservations', authenticate, async (req, res) => {
   try {
-    let sql = `SELECT r.*, b.title, b.author, u.full_name AS member_name
-               FROM reservations r JOIN books b ON r.book_id = b.id JOIN users u ON r.user_id = u.id`;
+    const resLimit  = safeInt(req.query.limit,  100, 1, 500);
+    const resOffset = safeInt(req.query.offset,   0, 0, 1e9);
+    let where = '';
     const params = [];
-    if (req.user.role === 'public') { sql += ' WHERE r.user_id = ?'; params.push(req.user.id); }
-    sql += ' ORDER BY r.reserved_at DESC';
-    res.json({ reservations: await prepare(sql).all(...params) });
+    if (req.user.role === 'public') { where = ' WHERE r.user_id = ?'; params.push(req.user.id); }
+    const countRow = await prepare(`SELECT COUNT(*) AS c FROM reservations r${where}`).get(...params);
+    const sql = `SELECT r.*, b.title, b.author, u.full_name AS member_name
+                 FROM reservations r JOIN books b ON r.book_id = b.id JOIN users u ON r.user_id = u.id
+                 ${where} ORDER BY r.reserved_at DESC LIMIT ? OFFSET ?`;
+    res.json({ reservations: await prepare(sql).all(...params, resLimit, resOffset), total: countRow.c, limit: resLimit, offset: resOffset });
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch reservations' });
   }
@@ -734,15 +758,18 @@ app.post('/api/reservations/:id/fulfill', authenticate, authorize('admin', 'libr
 });
 
 // ---------- EVENTS ----------
-app.get('/api/events', async (req, res) => {
+app.get('/api/events', catalogLimiter, async (req, res) => {
   try {
     const { upcoming, recent } = req.query;
-    let sql = 'SELECT * FROM events';
-    if (upcoming === 'true') sql += " WHERE event_date >= datetime('now')";
-    else if (recent === 'true') sql += " WHERE event_date < datetime('now')";
-    sql += ' ORDER BY event_date ' + (upcoming === 'true' ? 'ASC' : 'DESC');
-    const total = prepare('SELECT COUNT(*) AS c FROM events').get().c;
-    res.json({ events: await prepare(sql).all(), total });
+    const evLimit  = safeInt(req.query.limit,  50, 1, 200);
+    const evOffset = safeInt(req.query.offset,  0, 0, 1e9);
+    let where = '';
+    if (upcoming === 'true') where = " WHERE event_date >= datetime('now')";
+    else if (recent === 'true') where = " WHERE event_date < datetime('now')";
+    const order = ' ORDER BY event_date ' + (upcoming === 'true' ? 'ASC' : 'DESC');
+    const totalRow = await prepare(`SELECT COUNT(*) AS c FROM events${where}`).get();
+    const events = await prepare(`SELECT * FROM events${where}${order} LIMIT ? OFFSET ?`).all(evLimit, evOffset);
+    res.json({ events, total: totalRow.c, limit: evLimit, offset: evOffset });
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch events' });
   }
@@ -775,6 +802,8 @@ app.get('/api/events/:id', async (req, res) => {
 app.post('/api/events', authenticate, authorize('admin', 'librarian', 'event_coordinator'), async (req, res) => {
   const { title, description, event_date, location, category, capacity, image } = req.body;
   if (!title || !event_date) return res.status(400).json({ error: 'Title and date required' });
+  if (isNaN(Date.parse(event_date))) return res.status(400).json({ error: 'Invalid event_date format' });
+  if (!isSafeImageUrl(image)) return res.status(400).json({ error: 'Invalid image URL' });
   try {
     const result = await prepare(`
       INSERT INTO events (title, description, event_date, location, category, capacity, image)
@@ -789,6 +818,8 @@ app.post('/api/events', authenticate, authorize('admin', 'librarian', 'event_coo
 });
 
 app.put('/api/events/:id', authenticate, authorize('admin', 'librarian', 'event_coordinator'), async (req, res) => {
+  if (req.body.event_date !== undefined && isNaN(Date.parse(req.body.event_date))) return res.status(400).json({ error: 'Invalid event_date format' });
+  if (req.body.image !== undefined && !isSafeImageUrl(req.body.image)) return res.status(400).json({ error: 'Invalid image URL' });
   try {
     const event = await prepare('SELECT * FROM events WHERE id = ?').get(req.params.id);
     if (!event) return res.status(404).json({ error: 'Event not found' });
@@ -811,8 +842,10 @@ app.delete('/api/events/:id', authenticate, authorize('admin', 'librarian', 'eve
   try {
     const event = await prepare('SELECT * FROM events WHERE id = ?').get(req.params.id);
     if (!event) return res.status(404).json({ error: 'Event not found' });
-    await prepare('DELETE FROM event_registrations WHERE event_id = ?').run(req.params.id);
-    await prepare('DELETE FROM events WHERE id = ?').run(req.params.id);
+    await transaction(async () => {
+      await prepare('DELETE FROM event_registrations WHERE event_id = ?').run(req.params.id);
+      await prepare('DELETE FROM events WHERE id = ?').run(req.params.id);
+    })();
     await logAudit(req.user.id, 'delete', 'event', req.params.id, event.title, req.ip);
     res.json({ success: true });
   } catch (e) {
@@ -825,6 +858,8 @@ app.post('/api/events/:id/register', eventRegLimiter, optionalAuth, async (req, 
   const { name, email, phone } = req.body;
   const userId = req.user?.id || null;
   if (!userId && (!name || !email)) return res.status(400).json({ error: 'Name and email are required for registration' });
+  if (email && !emailRe.test(email)) return res.status(400).json({ error: 'Invalid email address' });
+  if (!isSafePhone(phone)) return res.status(400).json({ error: 'Invalid phone number' });
   try {
     const event = await prepare('SELECT * FROM events WHERE id = ?').get(req.params.id);
     if (!event) return res.status(404).json({ error: 'Event not found' });
@@ -847,7 +882,7 @@ app.post('/api/events/:id/register', eventRegLimiter, optionalAuth, async (req, 
 });
 
 // ---------- ANNOUNCEMENTS ----------
-app.get('/api/announcements', async (req, res) => {
+app.get('/api/announcements', catalogLimiter, async (req, res) => {
   try {
     const { latest } = req.query;
     // latest=true → return the 3 most recently created/updated, for the home page widget
@@ -885,6 +920,8 @@ app.post('/api/announcements', authenticate, authorize('admin', 'librarian'), as
 });
 
 app.put('/api/announcements/:id', authenticate, authorize('admin', 'librarian'), async (req, res) => {
+  if (req.body.title !== undefined && (typeof req.body.title !== 'string' || req.body.title.length > 200)) return res.status(400).json({ error: 'Title must be 200 characters or fewer' });
+  if (req.body.body !== undefined && (typeof req.body.body !== 'string' || req.body.body.length > 5000)) return res.status(400).json({ error: 'Body must be 5000 characters or fewer' });
   try {
     const ann = await prepare('SELECT id FROM announcements WHERE id = ?').get(req.params.id);
     if (!ann) return res.status(404).json({ error: 'Announcement not found' });
@@ -931,6 +968,8 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
   const { name, email, subject, message, department } = req.body;
   const phone = req.body.phone != null ? String(req.body.phone) : null;
   if (!name || !email || !message) return res.status(400).json({ error: 'Name, email, and message required' });
+  if (!emailRe.test(email)) return res.status(400).json({ error: 'Invalid email address' });
+  if (!isSafePhone(phone)) return res.status(400).json({ error: 'Invalid phone number' });
   if (typeof message === 'string' && message.length > 2000) return res.status(400).json({ error: 'Message must be 2000 characters or fewer' });
   try {
     await prepare(`INSERT INTO contact_messages (name, email, phone, subject, message, department) VALUES (?, ?, ?, ?, ?, ?)`)
@@ -945,11 +984,14 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
 app.get('/api/contact', authenticate, authorize('admin', 'librarian'), async (req, res) => {
   try {
     const { status } = req.query;
-    let sql = 'SELECT * FROM contact_messages';
+    const msgLimit  = safeInt(req.query.limit,  100, 1, 500);
+    const msgOffset = safeInt(req.query.offset,   0, 0, 1e9);
+    let where = '';
     const params = [];
-    if (status) { sql += ' WHERE status = ?'; params.push(status); }
-    sql += ' ORDER BY created_at DESC';
-    res.json({ messages: await prepare(sql).all(...params) });
+    if (status) { where = ' WHERE status = ?'; params.push(status); }
+    const countRow = await prepare(`SELECT COUNT(*) AS c FROM contact_messages${where}`).get(...params);
+    const messages = await prepare(`SELECT * FROM contact_messages${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`).all(...params, msgLimit, msgOffset);
+    res.json({ messages, total: countRow.c, limit: msgLimit, offset: msgOffset });
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch messages' });
   }
@@ -971,6 +1013,7 @@ app.put('/api/contact/:id', authenticate, authorize('admin', 'librarian'), async
 app.post('/api/ask-librarian', contactLimiter, optionalAuth, async (req, res) => {
   const { name, email, request_type, topic, details } = req.body;
   if (!name || !email || !details) return res.status(400).json({ error: 'Required fields missing' });
+  if (!emailRe.test(email)) return res.status(400).json({ error: 'Invalid email address' });
   if (typeof details === 'string' && details.length > 2000) return res.status(400).json({ error: 'Details must be 2000 characters or fewer' });
   try {
     await prepare(`INSERT INTO librarian_requests (user_id, name, email, request_type, topic, details) VALUES (?, ?, ?, ?, ?, ?)`)
@@ -985,11 +1028,14 @@ app.post('/api/ask-librarian', contactLimiter, optionalAuth, async (req, res) =>
 app.get('/api/ask-librarian', authenticate, authorize('admin', 'librarian'), async (req, res) => {
   try {
     const { status } = req.query;
-    let sql = 'SELECT * FROM librarian_requests';
+    const reqLimit  = safeInt(req.query.limit,  100, 1, 500);
+    const reqOffset = safeInt(req.query.offset,   0, 0, 1e9);
+    let where = '';
     const params = [];
-    if (status) { sql += ' WHERE status = ?'; params.push(status); }
-    sql += ' ORDER BY created_at DESC';
-    res.json({ requests: await prepare(sql).all(...params) });
+    if (status) { where = ' WHERE status = ?'; params.push(status); }
+    const countRow = await prepare(`SELECT COUNT(*) AS c FROM librarian_requests${where}`).get(...params);
+    const requests = await prepare(`SELECT * FROM librarian_requests${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`).all(...params, reqLimit, reqOffset);
+    res.json({ requests, total: countRow.c, limit: reqLimit, offset: reqOffset });
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch requests' });
   }
@@ -1012,7 +1058,7 @@ app.put('/api/ask-librarian/:id', authenticate, authorize('admin', 'librarian'),
 app.get('/api/users', authenticate, authorize('admin', 'librarian'), async (req, res) => {
   try {
     const { status, role, q } = req.query;
-    let sql = 'SELECT id, full_name, email, phone, role, member_category, membership_id, membership_status, membership_expiry, address, date_of_birth, nic, created_at FROM users WHERE 1=1';
+    let sql = 'SELECT id, full_name, email, phone, role, member_category, membership_id, membership_status, membership_expiry, address, date_of_birth, created_at FROM users WHERE 1=1';
     const params = [];
     if (status) { sql += ' AND membership_status = ?'; params.push(status); }
     if (role) { sql += ' AND role = ?'; params.push(role); }
@@ -1127,9 +1173,9 @@ app.get('/api/stats', authenticate, authorize('admin', 'librarian'), async (req,
       pending_reservations, upcoming_events, total_events, new_messages,
       open_librarian_requests, popular_books
     ] = await Promise.all([
-      prepare('SELECT COUNT(*) AS c FROM books').get(),
-      prepare('SELECT COALESCE(SUM(total_copies),0) AS c FROM books').get(),
-      prepare('SELECT COALESCE(SUM(available_copies),0) AS c FROM books').get(),
+      prepare('SELECT COUNT(*) AS c FROM books WHERE (is_deleted IS NULL OR is_deleted = 0)').get(),
+      prepare('SELECT COALESCE(SUM(total_copies),0) AS c FROM books WHERE (is_deleted IS NULL OR is_deleted = 0)').get(),
+      prepare('SELECT COALESCE(SUM(available_copies),0) AS c FROM books WHERE (is_deleted IS NULL OR is_deleted = 0)').get(),
       prepare("SELECT COUNT(*) AS c FROM users WHERE role = 'public'").get(),
       prepare("SELECT COUNT(*) AS c FROM users WHERE role = 'public' AND membership_status = 'active'").get(),
       prepare("SELECT COUNT(*) AS c FROM users WHERE role = 'public' AND membership_status = 'pending'").get(),
@@ -1144,6 +1190,7 @@ app.get('/api/stats', authenticate, authorize('admin', 'librarian'), async (req,
       prepare("SELECT COUNT(*) AS c FROM librarian_requests WHERE status = 'open'").get(),
       prepare(`SELECT b.title, b.author, COUNT(l.id) AS loan_count
                FROM books b LEFT JOIN loans l ON b.id = l.book_id
+               WHERE (b.is_deleted IS NULL OR b.is_deleted = 0)
                GROUP BY b.id ORDER BY loan_count DESC LIMIT 5`).all(),
     ]);
     res.json({
@@ -1301,7 +1348,7 @@ async function searchBooks(query, { category, language, availableOnly = false, l
   let dlpBooks = [];
   if (remaining > 0) {
     const dlpParams = [];
-    const dlpTermCond = buildTermConditions(['d.title', 'd.author', 'd.category', 'd.description'], dlpParams);
+    const dlpTermCond = buildTermConditions(['d.title', 'd.author', 'd.category'], dlpParams);
     let dlpWhere = `WHERE (${dlpTermCond})`;
     if (category) { dlpWhere += ' AND d.category LIKE ?'; dlpParams.push(`%${category}%`); }
     if (language) { dlpWhere += ' AND d.language LIKE ?'; dlpParams.push(`%${language}%`); }
@@ -1810,9 +1857,8 @@ app.get('/api/opac-search-url', (req, res) => {
 
 // ---------- DLP SYNC ----------
 // Keep an in-memory log of the current running sync so the admin panel can
-// stream progress messages via polling.
-let dlpSyncProgress = [];
-let dlpSyncBusy     = false;
+// DLP sync state is stored in dlp_sync_log (DB) so it survives across serverless instances.
+// dlpSyncBusy / dlpSyncProgress were in-memory variables that did not survive Vercel cold starts.
 
 app.get('/api/dlp-sync/stats', authenticate, authorize('admin', 'librarian'), async (req, res) => {
   try {
@@ -1832,37 +1878,49 @@ app.get('/api/dlp-sync/history', authenticate, authorize('admin', 'librarian'), 
   }
 });
 
-app.get('/api/dlp-sync/progress', authenticate, authorize('admin', 'librarian'), (req, res) => {
-  res.json({ running: dlpSyncBusy, messages: dlpSyncProgress });
+app.get('/api/dlp-sync/progress', authenticate, authorize('admin', 'librarian'), async (req, res) => {
+  try {
+    const row = await prepare(
+      `SELECT id, status, progress_messages FROM dlp_sync_log ORDER BY started_at DESC LIMIT 1`
+    ).get();
+    const running  = row?.status === 'running';
+    const messages = row ? JSON.parse(row.progress_messages || '[]') : [];
+    res.json({ running, messages });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/dlp-sync/trigger', authenticate, authorize('admin'), async (req, res) => {
-  if (dlpSyncBusy) {
+  // Check DB for a running sync — works across serverless instances
+  const existing = await prepare(
+    `SELECT id FROM dlp_sync_log WHERE status = 'running' ORDER BY started_at DESC LIMIT 1`
+  ).get();
+  if (existing) {
     return res.status(409).json({ error: 'A sync is already in progress.' });
   }
-  dlpSyncProgress = ['Manual sync triggered by admin…'];
-  dlpSyncBusy     = true;
 
   await logAudit(req.user.id, 'dlp_sync_trigger', 'dlp_sync', null, 'manual', req.ip);
 
   // Run async in background; client polls /api/dlp-sync/progress
   runSync({
     triggeredBy: 'manual',
-    onProgress: msg => {
-      dlpSyncProgress.push(msg);
-      if (dlpSyncProgress.length > 200) dlpSyncProgress.shift();
+    onProgress: async msg => {
+      // Append message to DB row so any serverless instance can read it
+      try {
+        const row = await prepare(
+          `SELECT id, progress_messages FROM dlp_sync_log WHERE status = 'running' ORDER BY started_at DESC LIMIT 1`
+        ).get();
+        if (!row) return;
+        const msgs = JSON.parse(row.progress_messages || '[]');
+        msgs.push(msg);
+        if (msgs.length > 200) msgs.shift();
+        await prepare(
+          `UPDATE dlp_sync_log SET progress_messages = ? WHERE id = ?`
+        ).run(JSON.stringify(msgs), row.id);
+      } catch { /* non-critical */ }
     },
-  }).then(result => {
-    dlpSyncBusy = false;
-    dlpSyncProgress.push(
-      result.error
-        ? `Sync failed: ${result.error}`
-        : `Sync complete — Added: ${result.added}, Updated: ${result.updated}, Skipped: ${result.skipped}, Total: ${result.total}`
-    );
-  }).catch(err => {
-    dlpSyncBusy = false;
-    dlpSyncProgress.push(`Sync error: ${err.message}`);
-  });
+  }).catch(() => {});
 
   res.json({ started: true, message: 'DLP sync started. Poll /api/dlp-sync/progress for updates.' });
 });
@@ -1898,17 +1956,16 @@ app.get('/api/dlp-sync/books', authenticate, authorize('admin', 'librarian'), as
 });
 
 // ---------- HTML routing ----------
-const jwt = require('jsonwebtoken');
-app.get('/admin', async (req, res) => {
-  const token = req.cookies?.auth_token;
-  if (!token) return res.redirect('/login?next=/admin');
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
-    if (!['admin', 'librarian', 'event_coordinator'].includes(decoded.role)) return res.redirect('/login?next=/admin');
-    if (await isTokenRevoked(token)) return res.redirect('/login?next=/admin');
-  } catch {
-    return res.redirect('/login?next=/admin');
-  }
+// Guard helper: redirect to login instead of returning 401/403 JSON
+function adminGuard(req, res, next) {
+  authenticate(req, res, () => {
+    if (!req.user || !['admin', 'librarian', 'event_coordinator'].includes(req.user.role)) {
+      return res.redirect('/login?next=/admin');
+    }
+    next();
+  });
+}
+app.get('/admin', adminGuard, (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
 });
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'index.html')));

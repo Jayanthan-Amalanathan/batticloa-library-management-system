@@ -88,9 +88,9 @@ async function batch(statements) {
   run();
 }
 
-// transaction() — wraps an async callback in BEGIN/COMMIT.
-// For local this is not needed (better-sqlite3 transactions are synchronous),
-// but kept for API compatibility with any existing callers.
+// transaction() — wraps an async callback in BEGIN/COMMIT/ROLLBACK.
+// Both drivers use explicit BEGIN/COMMIT so the async fn() is properly awaited
+// before committing, giving true atomicity for async DB operations.
 function transaction(fn) {
   return async function () {
     if (IS_REMOTE) {
@@ -105,10 +105,19 @@ function transaction(fn) {
         throw err;
       }
     } else {
-      // better-sqlite3: run synchronously inside a transaction
-      let result;
-      localDb().transaction(() => { result = fn(); })();
-      return result;
+      // better-sqlite3: use explicit BEGIN/COMMIT via prepared statements so
+      // the async fn() is fully awaited before committing — avoids the
+      // .transaction() wrapper which commits synchronously before promises settle.
+      const db = localDb();
+      db.prepare('BEGIN').run();
+      try {
+        const result = await fn();
+        db.prepare('COMMIT').run();
+        return result;
+      } catch (err) {
+        db.prepare('ROLLBACK').run();
+        throw err;
+      }
     }
   };
 }
@@ -328,6 +337,7 @@ async function initSchema() {
     `ALTER TABLE books ADD COLUMN dlp_source_key TEXT`,
     `ALTER TABLE books ADD COLUMN collection_type TEXT DEFAULT 'lending'`,
     `ALTER TABLE books ADD COLUMN call_number TEXT`,
+    `ALTER TABLE dlp_sync_log ADD COLUMN progress_messages TEXT DEFAULT '[]'`,
   ];
   for (const stmt of migrations) {
     try { await exec(stmt); } catch { /* column already exists */ }

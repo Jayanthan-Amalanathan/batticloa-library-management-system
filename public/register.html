@@ -17,12 +17,17 @@
 <meta name="twitter:title" content="Join the Library — Batticaloa Public Library" />
 <meta name="twitter:description" content="Register for a Batticaloa Public Library membership. Borrow books, use digital resources, attend events and access the Maker Space." />
 <meta name="twitter:image" content="https://batticloa-library-management-system.vercel.app/images/hero-library.svg" />
+<meta name="theme-color" content="#062f3a" />
+<link rel="apple-touch-icon" href="/images/logo.svg" />
+<link rel="preload" as="style" href="/css/style.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" fetchpriority="high" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" />
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" /></noscript>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" media="print" onload="this.media='all'" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" media="print" onload="this.media='all'" />
+<noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" />
+</noscript>
 <link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
 <link rel="stylesheet" href="/css/style.css" />
 </head>
@@ -65,7 +70,7 @@
     <div style="display:flex;flex-wrap:wrap;gap:0.8rem;justify-content:center;align-items:center;margin-bottom:1rem;">
       <a class="btn btn-accent btn-lg" href="https://batticaloa.dlp.gov.lk/cgi-bin/koha/opac-memberentry.pl" target="_blank" rel="noopener noreferrer" style="font-weight:700;letter-spacing:0.02em;box-shadow:0 4px 6px rgba(0,0,0,0.08),0 10px 30px rgba(212,160,23,0.28);transform:translateY(0);transition:transform 0.2s,box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 8px rgba(0,0,0,0.1),0 14px 36px rgba(212,160,23,0.38)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 6px rgba(0,0,0,0.08),0 10px 30px rgba(212,160,23,0.28)';">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-        Register via Koha
+        Register
       </a>
       <a href="/login" style="font-size:0.88rem;font-weight:600;color:var(--primary);display:inline-flex;align-items:center;gap:0.35rem;border:1px solid rgba(14,77,92,0.2);border-radius:999px;padding:0.6rem 1.3rem;letter-spacing:0.01em;transition:border-color 0.2s,color 0.2s,background 0.2s;background:rgba(14,77,92,0.04);" onmouseover="this.style.borderColor='rgba(14,77,92,0.4)';this.style.background='rgba(14,77,92,0.08)';" onmouseout="this.style.borderColor='rgba(14,77,92,0.2)';this.style.background='rgba(14,77,92,0.04)';">
         Already a member? Sign in
@@ -342,7 +347,7 @@
     <div class="cta-btns">
       <a class="btn btn-accent btn-lg" href="https://batticaloa.dlp.gov.lk/cgi-bin/koha/opac-memberentry.pl" target="_blank" rel="noopener noreferrer" style="font-weight:700;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-        Register via Koha
+        Register
       </a>
       <a class="btn btn-outline-white btn-lg" href="/login">Already a member? Sign in →</a>
     </div>

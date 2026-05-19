@@ -207,6 +207,11 @@ async function runSync({ triggeredBy = 'cron', onProgress = () => {} } = {}) {
     onProgress('Authenticating with DLP Koha API…');
     await getToken();
 
+    // Zero copy counts before accumulating from the live feed.
+    // If the sync fails mid-run, counts will be partial until the next successful run —
+    // which is preferable to counts inflating indefinitely across re-syncs.
+    await prepare('UPDATE dlp_books SET total_copies = 0, available_copies = 0').run();
+
     // Cache biblios to avoid redundant fetches for multi-copy titles
     const biblioCache = new Map();
 

@@ -17,12 +17,17 @@
 <meta name="twitter:title" content="About — Batticaloa Public Library" />
 <meta name="twitter:description" content="Learn about the Batticaloa Public Library: its history since 1855, mission, branches, leadership and community programs." />
 <meta name="twitter:image" content="https://batticloa-library-management-system.vercel.app/images/about-library.svg" />
+<meta name="theme-color" content="#062f3a" />
+<link rel="apple-touch-icon" href="/images/logo.svg" />
+<link rel="preload" as="style" href="/css/style.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" fetchpriority="high" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" />
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" /></noscript>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" media="print" onload="this.media='all'" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" media="print" onload="this.media='all'" />
+<noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" />
+</noscript>
 <link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
 <link rel="stylesheet" href="/css/style.css" />
 </head>
@@ -35,7 +40,7 @@
   <div class="container">
     <p class="breadcrumbs"><a href="/" data-i18n="common.home">Home</a> / <span data-i18n="nav.about">About</span></p>
     <h1 data-i18n="about.hero.title">About the Library</h1>
-    <p data-i18n="about.hero.desc">Serving the  community in Batticaloa since 1855, cultivating life long learning  and empowering generations through equitable access to knowledge and information.</p>
+    <p data-i18n="about.hero.desc">Serving the community in Batticaloa since 1855, cultivating lifelong learning and empowering generations through equitable access to knowledge and information.</p>
   </div>
 </section>
 
@@ -444,18 +449,23 @@
       <span class="eyebrow" data-i18n="about.leadership.eyebrow">Governance</span>
       <h2 data-i18n="about.leadership.title">Library Staff</h2>
     </div>
+    <!-- Librarian — senior role, displayed alone at the top -->
+    <div style="display:flex;justify-content:center;margin-bottom:1.75rem;">
+      <div class="ls-card ls-cat--librarian" style="width:195px;"><span class="ls-card-num">01</span><div class="ls-avatar"><img width="80" height="80" src="images/staff/01-t-sivarani.jpg" alt="T. Sivarani" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">TS</span></div><div class="ls-card-name">T. Sivarani</div><span class="ls-card-role">Librarian</span></div>
+    </div>
+
+    <!-- Remaining staff -->
     <div class="ls-grid">
-      <div class="ls-card ls-cat--librarian"><span class="ls-card-num">01</span><div class="ls-avatar"><img src="images/staff/01-t-sivarani.jpg" alt="T. Sivarani" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">TS</span></div><div class="ls-card-name">T. Sivarani</div><span class="ls-card-role">Librarian</span></div>
-      <div class="ls-card ls-cat--servaha"><span class="ls-card-num">02</span><div class="ls-avatar"><img src="images/staff/02-r-rama.jpg" alt="R. Rama" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">RR</span></div><div class="ls-card-name">R. Rama</div><span class="ls-card-role">Library Servaha</span></div>
-      <div class="ls-card ls-cat--servaha"><span class="ls-card-num">03</span><div class="ls-avatar"><img src="images/staff/03-m-luxman.jpg" alt="M. Luxman" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">ML</span></div><div class="ls-card-name">M. Luxman</div><span class="ls-card-role">Library Servaha</span></div>
-      <div class="ls-card ls-cat--office"><span class="ls-card-num">09</span><div class="ls-avatar"><img src="images/staff/09-v-vijarani.jpg" alt="V. Vijarani" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">VV</span></div><div class="ls-card-name">V. Vijarani</div><span class="ls-card-role">Office Assistant</span></div>
-      <div class="ls-card ls-cat--other"><span class="ls-card-num">10</span><div class="ls-avatar"><img src="images/staff/10-bs-niranjan.jpg" alt="B.S. Niranjan" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">BN</span></div><div class="ls-card-name">B.S. Niranjan</div><span class="ls-card-role">Other Staff</span></div>
-      <div class="ls-card ls-cat--other"><span class="ls-card-num">11</span><div class="ls-avatar"><img src="images/staff/11-s-monika.jpg" alt="S. Monika" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">SM</span></div><div class="ls-card-name">S. Monika</div><span class="ls-card-role">Other Staff</span></div>
-      <div class="ls-card ls-cat--other"><span class="ls-card-num">12</span><div class="ls-avatar"><img src="images/staff/12-r-manthahini.jpg" alt="R. Manthahini" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">RM</span></div><div class="ls-card-name">R. Manthahini</div><span class="ls-card-role">Other Staff</span></div>
-      <div class="ls-card ls-cat--other"><span class="ls-card-num">13</span><div class="ls-avatar"><img src="images/staff/13-r-sarogini.jpg" alt="R. Sarogini" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">RS</span></div><div class="ls-card-name">R. Sarogini</div><span class="ls-card-role">Other Staff</span></div>
-      <div class="ls-card ls-cat--trainees"><span class="ls-card-num">17</span><div class="ls-avatar"><img src="images/staff/17-s-saravanathas.jpg" alt="S. Saravanathas" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">SS</span></div><div class="ls-card-name">S. Saravanathas</div><span class="ls-card-role">Trainee</span></div>
-      <div class="ls-card ls-cat--trainees"><span class="ls-card-num">18</span><div class="ls-avatar"><img src="images/staff/18-m-janakeerthana.jpg" alt="M. Janakeerthana" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">MJ</span></div><div class="ls-card-name">M. Janakeerthana</div><span class="ls-card-role">Trainee</span></div>
-      <div class="ls-card ls-cat--trainees"><span class="ls-card-num">19</span><div class="ls-avatar"><img src="images/staff/19-l-mayuri.jpg" alt="L. Mayuri" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">LM</span></div><div class="ls-card-name">L. Mayuri</div><span class="ls-card-role">Trainee</span></div>
+      <div class="ls-card ls-cat--servaha"><span class="ls-card-num">02</span><div class="ls-avatar"><img width="80" height="80" src="images/staff/02-r-rama.jpg" alt="R. Rama" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">RR</span></div><div class="ls-card-name">R. Rama</div><span class="ls-card-role">Library Servaha</span></div>
+      <div class="ls-card ls-cat--servaha"><span class="ls-card-num">03</span><div class="ls-avatar"><img width="80" height="80" src="images/staff/03-m-luxman.jpg" alt="M. Luxman" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">ML</span></div><div class="ls-card-name">M. Luxman</div><span class="ls-card-role">Library Servaha</span></div>
+      <div class="ls-card ls-cat--office"><span class="ls-card-num">09</span><div class="ls-avatar"><img width="80" height="80" src="images/staff/09-v-vijarani.jpg" alt="V. Vijarani" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">VV</span></div><div class="ls-card-name">V. Vijarani</div><span class="ls-card-role">Office Assistant</span></div>
+      <div class="ls-card ls-cat--other"><span class="ls-card-num">10</span><div class="ls-avatar"><img width="80" height="80" src="images/staff/10-bs-niranjan.jpg" alt="B.S. Niranjan" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">BN</span></div><div class="ls-card-name">B.S. Niranjan</div><span class="ls-card-role">Other Staff</span></div>
+      <div class="ls-card ls-cat--other"><span class="ls-card-num">11</span><div class="ls-avatar"><img width="80" height="80" src="images/staff/11-s-monika.jpg" alt="S. Monika" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">SM</span></div><div class="ls-card-name">S. Monika</div><span class="ls-card-role">Other Staff</span></div>
+      <div class="ls-card ls-cat--other"><span class="ls-card-num">12</span><div class="ls-avatar"><img width="80" height="80" src="images/staff/12-r-manthahini.jpg" alt="R. Manthahini" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">RM</span></div><div class="ls-card-name">R. Manthahini</div><span class="ls-card-role">Other Staff</span></div>
+      <div class="ls-card ls-cat--other"><span class="ls-card-num">13</span><div class="ls-avatar"><img width="80" height="80" src="images/staff/13-r-sarogini.jpg" alt="R. Sarogini" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">RS</span></div><div class="ls-card-name">R. Sarogini</div><span class="ls-card-role">Other Staff</span></div>
+      <div class="ls-card ls-cat--trainees"><span class="ls-card-num">17</span><div class="ls-avatar"><img width="80" height="80" src="images/staff/17-s-saravanathas.jpg" alt="S. Saravanathas" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">SS</span></div><div class="ls-card-name">S. Saravanathas</div><span class="ls-card-role">Trainee</span></div>
+      <div class="ls-card ls-cat--trainees"><span class="ls-card-num">18</span><div class="ls-avatar"><img width="80" height="80" src="images/staff/18-m-janakeerthana.jpg" alt="M. Janakeerthana" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">MJ</span></div><div class="ls-card-name">M. Janakeerthana</div><span class="ls-card-role">Trainee</span></div>
+      <div class="ls-card ls-cat--trainees"><span class="ls-card-num">19</span><div class="ls-avatar"><img width="80" height="80" src="images/staff/19-l-mayuri.jpg" alt="L. Mayuri" onerror="this.classList.add('ls-photo-hidden')"><span class="ls-initials">LM</span></div><div class="ls-card-name">L. Mayuri</div><span class="ls-card-role">Trainee</span></div>
     </div>
   </div>
 </section>
