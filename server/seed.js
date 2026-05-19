@@ -2,6 +2,11 @@ require('dotenv').config();
 const { prepare, initSchema } = require('./db');
 const { hashPassword } = require('./auth');
 
+if (process.env.NODE_ENV === 'production') {
+  console.error('ERROR: seed.js must not be run in production. Exiting.');
+  process.exit(1);
+}
+
 async function seed() {
   await initSchema();
   console.log('Seeding database...');

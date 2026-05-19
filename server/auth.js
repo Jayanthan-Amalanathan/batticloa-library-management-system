@@ -15,13 +15,13 @@ const _JWT_SECRET = JWT_SECRET || 'dev_secret_do_not_use_in_production';
 
 async function revokeToken(token) {
   try {
-    const decoded = jwt.decode(token);
+    const decoded = jwt.verify(token, _JWT_SECRET, { ignoreExpiration: true });
     if (decoded?.exp) {
       await prepare(
         'INSERT OR IGNORE INTO revoked_tokens (token, expires_at) VALUES (?, ?)'
       ).run(token, new Date(decoded.exp * 1000).toISOString());
     }
-  } catch { /* ignore malformed tokens */ }
+  } catch { /* ignore invalid or malformed tokens */ }
 }
 
 async function isTokenRevoked(token) {
@@ -66,13 +66,20 @@ function authenticate(req, res, next) {
   if (!token) return res.status(401).json({ error: 'Authentication required' });
   try {
     const decoded = jwt.verify(token, _JWT_SECRET);
-    isTokenRevoked(token).then(revoked => {
+    isTokenRevoked(token).then(async revoked => {
       if (revoked) return res.status(401).json({ error: 'Session expired. Please log in again.' });
+      // Reject tokens issued before a password change
+      try {
+        const user = await prepare('SELECT password_changed_at FROM users WHERE id = ?').get(decoded.id);
+        if (user?.password_changed_at && decoded.iat * 1000 < new Date(user.password_changed_at).getTime()) {
+          return res.status(401).json({ error: 'Session expired. Please log in again.' });
+        }
+      } catch { /* non-critical — fall through */ }
       req.user = decoded;
       next();
     }).catch(() => {
-      req.user = decoded;
-      next();
+      // Fail closed: DB errors must not grant access
+      res.status(503).json({ error: 'Session check unavailable. Please retry.' });
     });
   } catch (e) {
     res.status(401).json({ error: 'Invalid or expired token' });
@@ -88,17 +95,21 @@ function authorize(...roles) {
 }
 
 function optionalAuth(req, res, next) {
-  const token = req.cookies?.auth_token;
+  const token = req.cookies?.auth_token || (req.headers.authorization || '').replace('Bearer ', '');
   if (!token) return next();
   try {
     const decoded = jwt.verify(token, _JWT_SECRET);
-    isTokenRevoked(token).then(revoked => {
-      if (!revoked) req.user = decoded;
+    isTokenRevoked(token).then(async revoked => {
+      if (!revoked) {
+        try {
+          const user = await prepare('SELECT password_changed_at FROM users WHERE id = ?').get(decoded.id);
+          if (!user?.password_changed_at || decoded.iat * 1000 >= new Date(user.password_changed_at).getTime()) {
+            req.user = decoded;
+          }
+        } catch { /* non-critical — treat as unauthenticated */ }
+      }
       next();
-    }).catch(() => {
-      req.user = decoded;
-      next();
-    });
+    }).catch(() => next()); // optional auth: fail-open is acceptable here (no auth granted)
   } catch { next(); }
 }
 

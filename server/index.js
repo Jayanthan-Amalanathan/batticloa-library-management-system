@@ -158,7 +158,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", 'data:', 'https:'],
@@ -192,9 +192,11 @@ const reservationLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, standa
 const kohaLimiter = rateLimit({ windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many catalog requests. Please try again later.' } });
 const catalogLimiter = rateLimit({ windowMs: 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many search requests. Please try again later.' } });
 
-app.use(express.json({ limit: '5mb' }));
+app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+// Prevent direct access to admin.html — the guarded /admin route is the only entry point
+app.get(['/admin.html', '/admin/'], (req, res) => res.redirect(301, '/admin'));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.get('/favicon.ico', (_req, res) => res.status(204).end());
 
@@ -204,6 +206,9 @@ function isSafePhone(phone) {
   if (!phone) return true;
   const p = String(phone).trim();
   return p.length <= 30 && phoneRe.test(p);
+}
+function escapeLike(s) {
+  return s.replace(/[%_\\]/g, c => '\\' + c);
 }
 
 // Prevent proxies and browsers from caching any API response
@@ -256,7 +261,7 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/auth/logout', async (req, res) => {
+app.post('/api/auth/logout', authenticate, async (req, res) => {
   const token = req.cookies?.auth_token || (req.headers.authorization || '').replace('Bearer ', '');
   if (token) await revokeToken(token);
   res.clearCookie('auth_token');
@@ -281,8 +286,15 @@ app.put('/api/auth/password', authenticate, authLimiter, async (req, res) => {
   try {
     const user = await prepare('SELECT id, password_hash FROM users WHERE id = ?').get(req.user.id);
     if (!user || !verifyPassword(current_password, user.password_hash)) return res.status(401).json({ error: 'Current password is incorrect' });
-    await prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(new_password), req.user.id);
+    const now = new Date().toISOString();
+    await prepare('UPDATE users SET password_hash = ?, password_changed_at = ? WHERE id = ?').run(hashPassword(new_password), now, req.user.id);
     await logAudit(req.user.id, 'change_password', 'user', req.user.id, null, req.ip);
+    // Revoke the current token and issue a fresh one so the caller stays logged in
+    const oldToken = req.cookies?.auth_token || (req.headers.authorization || '').replace('Bearer ', '');
+    if (oldToken) await revokeToken(oldToken);
+    const updatedUser = await prepare('SELECT id, role, email, full_name FROM users WHERE id = ?').get(req.user.id);
+    const newToken = signToken(updatedUser);
+    res.cookie('auth_token', newToken, { httpOnly: true, sameSite: 'strict', secure: IS_PROD, maxAge: 7 * 24 * 3600 * 1000 });
     res.json({ success: true, message: 'Password updated successfully' });
   } catch (e) {
     console.error(e);
@@ -304,14 +316,15 @@ function isSafeImageUrl(url) {
 
 app.get('/api/books', catalogLimiter, async (req, res) => {
   try {
-    const { q, category, collection, branch, available } = req.query;
+    const { category, collection, branch, available } = req.query;
+    const q = (req.query.q || '').toString().slice(0, 100).trim();
     const limit  = safeInt(req.query.limit,  50, 1, 200);
     const offset = safeInt(req.query.offset,  0, 0, 1e9);
     let where = ' WHERE (is_deleted IS NULL OR is_deleted = 0)';
     const params = [];
     if (q) {
-      where += ' AND (title LIKE ? OR author LIKE ? OR isbn LIKE ? OR description LIKE ?)';
-      const like = `%${q}%`;
+      where += ' AND (title LIKE ? ESCAPE \'\\\' OR author LIKE ? ESCAPE \'\\\' OR isbn LIKE ? ESCAPE \'\\\' OR description LIKE ? ESCAPE \'\\\')';
+      const like = `%${escapeLike(q)}%`;
       params.push(like, like, like, like);
     }
     if (category) { where += ' AND category = ?'; params.push(category); }
@@ -320,7 +333,7 @@ app.get('/api/books', catalogLimiter, async (req, res) => {
     if (available === 'true') where += ' AND available_copies > 0';
     const countRow = await prepare(`SELECT COUNT(*) AS c FROM books${where}`).get(...params);
     const total = countRow.c;
-    const books = await prepare(`SELECT * FROM books${where} ORDER BY added_at DESC LIMIT ? OFFSET ?`).all(...params, limit, offset);
+    const books = await prepare(`SELECT id, isbn, title, author, publisher, publication_year, category, collection_type, language, call_number, total_copies, available_copies, branch, added_at, cover_image, description FROM books${where} ORDER BY added_at DESC LIMIT ? OFFSET ?`).all(...params, limit, offset);
     res.json({ books, total });
   } catch (e) {
     console.error(e);
@@ -331,7 +344,7 @@ app.get('/api/books', catalogLimiter, async (req, res) => {
 app.get('/api/books/new-arrivals', catalogLimiter, async (req, res) => {
   try {
     const books = await prepare(
-      `SELECT * FROM books WHERE is_deleted = 0 ORDER BY added_at DESC LIMIT 8`
+      `SELECT id, isbn, title, author, publisher, publication_year, category, collection_type, language, call_number, total_copies, available_copies, branch, added_at, cover_image, description FROM books WHERE is_deleted = 0 ORDER BY added_at DESC LIMIT 8`
     ).all();
     res.json({ books });
   } catch (e) {
@@ -366,7 +379,7 @@ function buildFtsQuery(q) {
 
 app.get('/api/catalog/search', catalogLimiter, async (req, res) => {
   try {
-    const q          = (req.query.q || '').trim();
+    const q          = (req.query.q || '').toString().slice(0, 100).trim();
     const source     = req.query.source || 'all';
     if (!['all', 'local', 'dlp'].includes(source)) return res.status(400).json({ error: "source must be 'all', 'local', or 'dlp'" });
     const category   = (req.query.category || '').trim();
@@ -398,19 +411,19 @@ app.get('/api/catalog/search', catalogLimiter, async (req, res) => {
       if (q) {
         if (useFts) {
           const ftsQ = buildFtsQuery(q);
-          sql = `SELECT b.*, 'local' AS source_type, bfts.rank AS _rank
+          sql = `SELECT b.id, b.isbn, b.title, b.author, b.publisher, b.publication_year, b.category, b.collection_type, b.language, b.call_number, b.total_copies, b.available_copies, b.branch, b.added_at, b.cover_image, b.description, 'local' AS source_type, bfts.rank AS _rank
                  FROM books_fts bfts
                  JOIN books b ON b.id = bfts.rowid
                  WHERE books_fts MATCH ?`;
           params.push(ftsQ);
         } else {
-          sql = `SELECT *, 'local' AS source_type, 0 AS _rank FROM books WHERE 1=1
-                 AND (title LIKE ? OR author LIKE ? OR isbn LIKE ? OR description LIKE ?)`;
-          const like = `%${q}%`;
+          sql = `SELECT id, isbn, title, author, publisher, publication_year, category, collection_type, language, call_number, total_copies, available_copies, branch, added_at, cover_image, description, 'local' AS source_type, 0 AS _rank FROM books WHERE 1=1
+                 AND (title LIKE ? ESCAPE '\\' OR author LIKE ? ESCAPE '\\' OR isbn LIKE ? ESCAPE '\\' OR description LIKE ? ESCAPE '\\')`;
+          const like = `%${escapeLike(q)}%`;
           params.push(like, like, like, like);
         }
       } else {
-        sql = `SELECT *, 'local' AS source_type, 0 AS _rank FROM books WHERE 1=1`;
+        sql = `SELECT id, isbn, title, author, publisher, publication_year, category, collection_type, language, call_number, total_copies, available_copies, branch, added_at, cover_image, description, 'local' AS source_type, 0 AS _rank FROM books WHERE 1=1`;
       }
       sql += buildFilters('b.', params, 'books');
       // For non-FTS branch the table alias differs, patch it
@@ -423,7 +436,8 @@ app.get('/api/catalog/search', catalogLimiter, async (req, res) => {
         const rows = await prepare(sql + ` ORDER BY ${useFts && q ? '_rank' : 'added_at DESC'} LIMIT ? OFFSET ?`).all(...params, limit, offset);
         results.push({ source: 'local', total: localTotal, books: rows });
       } catch (e) {
-        results.push({ source: 'local', total: 0, books: [], error: e.message });
+        log.error('Local catalog search failed', { err: e.message });
+        results.push({ source: 'local', total: 0, books: [] });
       }
     }
 
@@ -434,21 +448,21 @@ app.get('/api/catalog/search', catalogLimiter, async (req, res) => {
       if (q) {
         if (useFts) {
           const ftsQ = buildFtsQuery(q);
-          sql = `SELECT d.*, 'dlp' AS source_type, dfts.rank AS _rank
+          sql = `SELECT d.id, d.isbn, d.title, d.author, d.publisher, d.publication_year, d.category, d.collection_type, d.language, d.call_number, d.total_copies, d.available_copies, d.branch, d.added_at, d.cover_image, d.description, 'dlp' AS source_type, dfts.rank AS _rank
                  FROM dlp_books_fts dfts
                  JOIN dlp_books d ON d.id = dfts.rowid
                  WHERE dlp_books_fts MATCH ?`;
           params.push(ftsQ);
           sql += buildFilters('d.', params, 'dlp_books');
         } else {
-          sql = `SELECT *, 'dlp' AS source_type, 0 AS _rank FROM dlp_books WHERE 1=1
-                 AND (title LIKE ? OR author LIKE ? OR isbn LIKE ?)`;
-          const like = `%${q}%`;
+          sql = `SELECT id, isbn, title, author, publisher, publication_year, category, collection_type, language, call_number, total_copies, available_copies, branch, added_at, cover_image, description, 'dlp' AS source_type, 0 AS _rank FROM dlp_books WHERE 1=1
+                 AND (title LIKE ? ESCAPE '\\' OR author LIKE ? ESCAPE '\\' OR isbn LIKE ? ESCAPE '\\')`;
+          const like = `%${escapeLike(q)}%`;
           params.push(like, like, like);
           sql += buildFilters('', params, 'dlp_books');
         }
       } else {
-        sql = `SELECT *, 'dlp' AS source_type, 0 AS _rank FROM dlp_books WHERE 1=1`;
+        sql = `SELECT id, isbn, title, author, publisher, publication_year, category, collection_type, language, call_number, total_copies, available_copies, branch, added_at, cover_image, description, 'dlp' AS source_type, 0 AS _rank FROM dlp_books WHERE 1=1`;
         sql += buildFilters('', params, 'dlp_books');
       }
 
@@ -460,7 +474,8 @@ app.get('/api/catalog/search', catalogLimiter, async (req, res) => {
         const rows = await prepare(sql + ` ORDER BY ${orderBy} LIMIT ? OFFSET ?`).all(...params, limit, offset);
         results.push({ source: 'dlp', total: dlpTotal, books: rows });
       } catch (e) {
-        results.push({ source: 'dlp', total: 0, books: [], error: e.message });
+        log.error('DLP catalog search failed', { err: e.message });
+        results.push({ source: 'dlp', total: 0, books: [] });
       }
     }
 
@@ -475,7 +490,9 @@ function toCsv(rows) {
   if (!rows.length) return '';
   const keys = Object.keys(rows[0]);
   const esc = v => {
-    const s = v === null || v === undefined ? '' : String(v);
+    let s = v === null || v === undefined ? '' : String(v);
+    // Prefix formula-injection triggers so spreadsheets treat them as literals
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
     return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
   };
   return [keys.join(','), ...rows.map(r => keys.map(k => esc(r[k])).join(','))].join('\r\n');
@@ -496,7 +513,7 @@ app.get('/api/books/export', authenticate, authorize('admin', 'librarian'), asyn
 
 app.get('/api/books/:id', catalogLimiter, async (req, res) => {
   try {
-    const book = await prepare('SELECT * FROM books WHERE id = ? AND (is_deleted IS NULL OR is_deleted = 0)').get(req.params.id);
+    const book = await prepare('SELECT id, isbn, title, author, publisher, publication_year, category, collection_type, language, call_number, total_copies, available_copies, branch, added_at, cover_image, description FROM books WHERE id = ? AND (is_deleted IS NULL OR is_deleted = 0)').get(req.params.id);
     if (!book) return res.status(404).json({ error: 'Book not found' });
     res.json({ book });
   } catch (e) {
@@ -768,7 +785,7 @@ app.get('/api/events', catalogLimiter, async (req, res) => {
     else if (recent === 'true') where = " WHERE event_date < datetime('now')";
     const order = ' ORDER BY event_date ' + (upcoming === 'true' ? 'ASC' : 'DESC');
     const totalRow = await prepare(`SELECT COUNT(*) AS c FROM events${where}`).get();
-    const events = await prepare(`SELECT * FROM events${where}${order} LIMIT ? OFFSET ?`).all(evLimit, evOffset);
+    const events = await prepare(`SELECT id, title, description, event_date, location, category, capacity, registration_open, image, created_at FROM events${where}${order} LIMIT ? OFFSET ?`).all(evLimit, evOffset);
     res.json({ events, total: totalRow.c, limit: evLimit, offset: evOffset });
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch events' });
@@ -788,9 +805,9 @@ app.get('/api/events/export', authenticate, authorize('admin', 'librarian'), asy
   }
 });
 
-app.get('/api/events/:id', async (req, res) => {
+app.get('/api/events/:id', catalogLimiter, async (req, res) => {
   try {
-    const event = await prepare('SELECT * FROM events WHERE id = ?').get(req.params.id);
+    const event = await prepare('SELECT id, title, description, event_date, location, category, capacity, registration_open, image, created_at FROM events WHERE id = ?').get(req.params.id);
     if (!event) return res.status(404).json({ error: 'Event not found' });
     const row = await prepare('SELECT COUNT(*) AS c FROM event_registrations WHERE event_id = ?').get(req.params.id);
     res.json({ event, registered: row.c });
@@ -855,13 +872,14 @@ app.delete('/api/events/:id', authenticate, authorize('admin', 'librarian', 'eve
 });
 
 app.post('/api/events/:id/register', eventRegLimiter, optionalAuth, async (req, res) => {
-  const { name, email, phone } = req.body;
+  const { email, phone } = req.body;
+  const name = typeof req.body.name === 'string' ? req.body.name.trim().slice(0, 100) : '';
   const userId = req.user?.id || null;
   if (!userId && (!name || !email)) return res.status(400).json({ error: 'Name and email are required for registration' });
   if (email && !emailRe.test(email)) return res.status(400).json({ error: 'Invalid email address' });
   if (!isSafePhone(phone)) return res.status(400).json({ error: 'Invalid phone number' });
   try {
-    const event = await prepare('SELECT * FROM events WHERE id = ?').get(req.params.id);
+    const event = await prepare('SELECT id, capacity, registration_open FROM events WHERE id = ?').get(req.params.id);
     if (!event) return res.status(404).json({ error: 'Event not found' });
     if (!event.registration_open) return res.status(400).json({ error: 'Registration closed' });
     const countRow = await prepare('SELECT COUNT(*) AS c FROM event_registrations WHERE event_id = ?').get(req.params.id);
@@ -871,7 +889,7 @@ app.post('/api/events/:id/register', eventRegLimiter, optionalAuth, async (req, 
       if (dup) return res.status(409).json({ error: 'You are already registered for this event' });
     } else if (email) {
       const dup = await prepare('SELECT id FROM event_registrations WHERE event_id = ? AND email = ?').get(req.params.id, email);
-      if (dup) return res.status(409).json({ error: 'This email is already registered for this event' });
+      if (dup) return res.status(409).json({ error: 'You are already registered for this event' });
     }
     await prepare('INSERT INTO event_registrations (event_id, user_id, name, email, phone) VALUES (?, ?, ?, ?, ?)').run(req.params.id, userId, name || req.user?.name || null, email || req.user?.email || null, phone || null);
     res.json({ success: true });
@@ -887,11 +905,11 @@ app.get('/api/announcements', catalogLimiter, async (req, res) => {
     const { latest } = req.query;
     // latest=true → return the 3 most recently created/updated, for the home page widget
     const sql = latest === 'true'
-      ? `SELECT * FROM announcements
+      ? `SELECT id, title, body, category, featured, emergency, publish_at, expires_at, created_at FROM announcements
          WHERE publish_at <= datetime('now')
          AND (expires_at IS NULL OR expires_at >= datetime('now'))
          ORDER BY created_at DESC LIMIT 3`
-      : `SELECT * FROM announcements
+      : `SELECT id, title, body, category, featured, emergency, publish_at, expires_at, created_at FROM announcements
          WHERE publish_at <= datetime('now')
          AND (expires_at IS NULL OR expires_at >= datetime('now'))
          ORDER BY featured DESC, emergency DESC, publish_at DESC`;
@@ -964,9 +982,13 @@ app.get('/api/announcements/export', authenticate, authorize('admin', 'librarian
 });
 
 // ---------- CONTACT / ASK LIBRARIAN ----------
+const CONTACT_DEPARTMENTS = new Set(['general', 'reference', 'circulation', 'digital', 'events', 'other']);
 app.post('/api/contact', contactLimiter, async (req, res) => {
-  const { name, email, subject, message, department } = req.body;
-  const phone = req.body.phone != null ? String(req.body.phone) : null;
+  const { email, message } = req.body;
+  const name       = typeof req.body.name       === 'string' ? req.body.name.trim().slice(0, 100)       : '';
+  const subject    = typeof req.body.subject    === 'string' ? req.body.subject.trim().slice(0, 200)    : '';
+  const department = CONTACT_DEPARTMENTS.has(req.body.department) ? req.body.department : 'general';
+  const phone      = req.body.phone != null ? String(req.body.phone) : null;
   if (!name || !email || !message) return res.status(400).json({ error: 'Name, email, and message required' });
   if (!emailRe.test(email)) return res.status(400).json({ error: 'Invalid email address' });
   if (!isSafePhone(phone)) return res.status(400).json({ error: 'Invalid phone number' });
@@ -1010,14 +1032,18 @@ app.put('/api/contact/:id', authenticate, authorize('admin', 'librarian'), async
   }
 });
 
+const LIBRARIAN_REQUEST_TYPES = new Set(['reference', 'interlibrary_loan', 'research', 'recommendation', 'complaint', 'other']);
 app.post('/api/ask-librarian', contactLimiter, optionalAuth, async (req, res) => {
-  const { name, email, request_type, topic, details } = req.body;
+  const { email, details } = req.body;
+  const name         = typeof req.body.name  === 'string' ? req.body.name.trim().slice(0, 100)  : '';
+  const topic        = typeof req.body.topic === 'string' ? req.body.topic.trim().slice(0, 200) : '';
+  const request_type = LIBRARIAN_REQUEST_TYPES.has(req.body.request_type) ? req.body.request_type : 'other';
   if (!name || !email || !details) return res.status(400).json({ error: 'Required fields missing' });
   if (!emailRe.test(email)) return res.status(400).json({ error: 'Invalid email address' });
   if (typeof details === 'string' && details.length > 2000) return res.status(400).json({ error: 'Details must be 2000 characters or fewer' });
   try {
     await prepare(`INSERT INTO librarian_requests (user_id, name, email, request_type, topic, details) VALUES (?, ?, ?, ?, ?, ?)`)
-      .run(req.user?.id || null, name, email, request_type || null, topic || null, details);
+      .run(req.user?.id || null, name, email, request_type, topic || null, details);
     res.json({ success: true });
   } catch (e) {
     console.error(e);
@@ -1212,13 +1238,16 @@ app.get('/api/stats', authenticate, authorize('admin', 'librarian'), async (req,
 
 // ---------- KOHA OPAC PROXY ----------
 app.get('/api/koha/search', kohaLimiter, async (req, res) => {
-  const { q = '', idx = 'kw', page = 1, count = 20 } = req.query;
-  if (!q.trim()) return res.json({ books: [], total: 0, source: 'koha' });
+  const q   = (req.query.q || '').toString().slice(0, 200).trim();
+  const idx = /^[a-z]{1,10}$/.test(req.query.idx || '') ? req.query.idx : 'kw';
+  const page  = Math.max(1, Math.min(parseInt(req.query.page,  10) || 1,  500));
+  const count = Math.max(1, Math.min(parseInt(req.query.count, 10) || 20, 50));
+  if (!q) return res.json({ books: [], total: 0, source: 'koha' });
   const searchKey = `${q}|${idx}|${page}|${count}`;
   const cached = cacheGet(searchCache, searchKey);
   if (cached) return res.json({ ...cached, cached: true });
   try {
-    const feedUrl = `${KOHA_SEARCH}?q=${encodeURIComponent(q)}&idx=${encodeURIComponent(idx)}&format=atom&count=${count}&pw=${page}`;
+    const feedUrl = `${KOHA_SEARCH}?q=${encodeURIComponent(q)}&idx=${encodeURIComponent(idx)}&format=atom&count=${encodeURIComponent(count)}&pw=${encodeURIComponent(page)}`;
     const feedXml = await kohaFetchCached(feedUrl, searchCache, `feed|${searchKey}`, SEARCH_TTL);
     const feed = xmlParser.parse(feedXml);
     const feedRoot = feed?.feed;
@@ -1781,22 +1810,27 @@ async function smartChatReply(message, sessionId, userId) {
 
 const CHAT_RATE_LIMIT = rateLimit({ windowMs: 5 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many messages. Please slow down.' } });
 
+const CHAT_SID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 app.post('/api/chat', CHAT_RATE_LIMIT, optionalAuth, async (req, res) => {
   const { message, session_id } = req.body;
   if (!message || typeof message !== 'string' || !message.trim()) return res.status(400).json({ error: 'Message is required' });
   const msg = message.trim().slice(0, 1000);
-  const sid = (session_id || 'anon').slice(0, 64);
   const userId = req.user?.id || null;
   const ip = req.ip;
   try {
-    const existing = await prepare('SELECT id FROM chat_sessions WHERE session_id = ?').get(sid);
-    if (!existing) await prepare('INSERT INTO chat_sessions (session_id, user_id, visitor_ip) VALUES (?, ?, ?)').run(sid, userId, ip);
+    // Validate the client-supplied session_id; if missing or invalid, issue a new one.
+    let sid = typeof session_id === 'string' && CHAT_SID_RE.test(session_id) ? session_id : null;
+    const existing = sid ? await prepare('SELECT id FROM chat_sessions WHERE session_id = ?').get(sid) : null;
+    if (!existing) {
+      sid = crypto.randomUUID();
+      await prepare('INSERT INTO chat_sessions (session_id, user_id, visitor_ip) VALUES (?, ?, ?)').run(sid, userId, ip);
+    }
     await prepare('INSERT INTO chat_messages (session_id, role, content) VALUES (?, ?, ?)').run(sid, 'user', msg);
     const { reply, books } = await smartChatReply(msg, sid, userId);
     await prepare('INSERT INTO chat_messages (session_id, role, content) VALUES (?, ?, ?)').run(sid, 'assistant', reply);
     res.json({ reply, session_id: sid, books: books || null });
   } catch (e) {
-    console.error('Chat error:', e);
+    log.error('Chat error', { err: e.message });
     res.status(500).json({ error: 'Chat service unavailable' });
   }
 });
@@ -1849,9 +1883,12 @@ app.get('/api/env', authenticate, (req, res) => {
   res.json({ production: IS_PROD });
 });
 
-app.get('/api/opac-search-url', (req, res) => {
-  const { q, idx = 'kw' } = req.query;
-  const url = `${KOHA_SEARCH}?q=${encodeURIComponent(q || '')}&idx=${encodeURIComponent(idx)}`;
+const OPAC_IDX_WHITELIST = new Set(['kw', 'ti', 'au', 'su', 'isbn', 'pb', 'se']);
+app.get('/api/opac-search-url', catalogLimiter, (req, res) => {
+  const q = (req.query.q || '').toString().slice(0, 200).trim();
+  if (!q) return res.status(400).json({ error: 'q is required' });
+  const idx = OPAC_IDX_WHITELIST.has(req.query.idx) ? req.query.idx : 'kw';
+  const url = `${KOHA_SEARCH}?q=${encodeURIComponent(q)}&idx=${encodeURIComponent(idx)}`;
   res.json({ url });
 });
 
@@ -1892,32 +1929,33 @@ app.get('/api/dlp-sync/progress', authenticate, authorize('admin', 'librarian'),
 });
 
 app.post('/api/dlp-sync/trigger', authenticate, authorize('admin'), async (req, res) => {
-  // Check DB for a running sync — works across serverless instances
-  const existing = await prepare(
-    `SELECT id FROM dlp_sync_log WHERE status = 'running' ORDER BY started_at DESC LIMIT 1`
-  ).get();
-  if (existing) {
+  // Atomically insert the running row; a UNIQUE partial index prevents two concurrent syncs.
+  // If the INSERT succeeds we own the lock; if it fails another sync is already running.
+  let lockId;
+  try {
+    const row = await prepare(
+      `INSERT INTO dlp_sync_log (status, triggered_by, progress_messages) VALUES ('running', 'manual', '[]')`
+    ).run();
+    lockId = row.lastInsertRowid;
+  } catch {
     return res.status(409).json({ error: 'A sync is already in progress.' });
   }
 
-  await logAudit(req.user.id, 'dlp_sync_trigger', 'dlp_sync', null, 'manual', req.ip);
+  await logAudit(req.user.id, 'dlp_sync_trigger', 'dlp_sync', lockId, 'manual', req.ip);
 
   // Run async in background; client polls /api/dlp-sync/progress
   runSync({
     triggeredBy: 'manual',
+    syncLogId: lockId,
     onProgress: async msg => {
-      // Append message to DB row so any serverless instance can read it
+      // Append message to the known log row by id — no SELECT needed
       try {
-        const row = await prepare(
-          `SELECT id, progress_messages FROM dlp_sync_log WHERE status = 'running' ORDER BY started_at DESC LIMIT 1`
-        ).get();
+        const row = await prepare('SELECT progress_messages FROM dlp_sync_log WHERE id = ?').get(lockId);
         if (!row) return;
         const msgs = JSON.parse(row.progress_messages || '[]');
         msgs.push(msg);
         if (msgs.length > 200) msgs.shift();
-        await prepare(
-          `UPDATE dlp_sync_log SET progress_messages = ? WHERE id = ?`
-        ).run(JSON.stringify(msgs), row.id);
+        await prepare('UPDATE dlp_sync_log SET progress_messages = ? WHERE id = ?').run(JSON.stringify(msgs), lockId);
       } catch { /* non-critical */ }
     },
   }).catch(() => {});
@@ -1935,8 +1973,9 @@ app.get('/api/dlp-sync/books', authenticate, authorize('admin', 'librarian'), as
     let sql  = 'SELECT * FROM dlp_books WHERE 1=1';
     const args = [];
     if (q) {
-      sql += ' AND (title LIKE ? OR author LIKE ? OR isbn LIKE ?)';
-      args.push(`%${q}%`, `%${q}%`, `%${q}%`);
+      const like = `%${escapeLike(q)}%`;
+      sql += " AND (title LIKE ? ESCAPE '\\' OR author LIKE ? ESCAPE '\\' OR isbn LIKE ? ESCAPE '\\')";
+      args.push(like, like, like);
     }
     if (branch) {
       sql += ' AND branch = ?';

@@ -338,6 +338,7 @@ async function initSchema() {
     `ALTER TABLE books ADD COLUMN collection_type TEXT DEFAULT 'lending'`,
     `ALTER TABLE books ADD COLUMN call_number TEXT`,
     `ALTER TABLE dlp_sync_log ADD COLUMN progress_messages TEXT DEFAULT '[]'`,
+    `ALTER TABLE users ADD COLUMN password_changed_at DATETIME`,
   ];
   for (const stmt of migrations) {
     try { await exec(stmt); } catch { /* column already exists */ }
@@ -349,6 +350,8 @@ async function initSchema() {
     `CREATE INDEX IF NOT EXISTS idx_books_category   ON books(category)`,
     `CREATE INDEX IF NOT EXISTS idx_books_branch     ON books(branch)`,
     `CREATE INDEX IF NOT EXISTS idx_books_dlp_source ON books(dlp_source_key)`,
+    // Prevents two concurrent DLP syncs — INSERT fails if a 'running' row already exists
+    `CREATE UNIQUE INDEX IF NOT EXISTS uq_dlp_one_running ON dlp_sync_log(status) WHERE status = 'running'`,
   ];
   for (const stmt of postMigrationIndexes) {
     await exec(stmt);

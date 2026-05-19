@@ -29,14 +29,14 @@
   function getSessionId() {
     let sid = sessionStorage.getItem(SESSION_KEY);
     if (!sid) {
-      sid = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+      sid = crypto.randomUUID();
       sessionStorage.setItem(SESSION_KEY, sid);
     }
     return sid;
   }
 
   function resetSession() {
-    const newSid = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const newSid = crypto.randomUUID();
     sessionStorage.setItem(SESSION_KEY, newSid);
     sessionStorage.removeItem(HISTORY_KEY);
     return newSid;

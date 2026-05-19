@@ -172,16 +172,21 @@ async function fetchBiblio(biblioId) {
 
 let _running = false;
 
-async function runSync({ triggeredBy = 'cron', onProgress = () => {} } = {}) {
+async function runSync({ triggeredBy = 'cron', onProgress = () => {}, syncLogId = null } = {}) {
   if (_running) {
     throw new Error('A sync is already in progress. Please wait for it to finish.');
   }
   _running = true;
 
-  const logRow = await prepare(
-    `INSERT INTO dlp_sync_log (status, triggered_by) VALUES ('running', ?)`
-  ).run(triggeredBy);
-  const syncId = Number(logRow.lastInsertRowid);
+  let syncId;
+  if (syncLogId) {
+    syncId = Number(syncLogId);
+  } else {
+    const logRow = await prepare(
+      `INSERT INTO dlp_sync_log (status, triggered_by) VALUES ('running', ?)`
+    ).run(triggeredBy);
+    syncId = Number(logRow.lastInsertRowid);
+  }
 
   let added   = 0;
   let updated = 0;
