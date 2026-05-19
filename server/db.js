@@ -355,11 +355,10 @@ async function initSchema() {
     await exec(stmt);
   }
 
-  // Clean up any stale 'running' sync rows left by crashes, then enforce the unique constraint
-  try {
-    await exec(`UPDATE dlp_sync_log SET status = 'failed', error_message = 'interrupted' WHERE status = 'running'`);
-    await exec(`CREATE UNIQUE INDEX IF NOT EXISTS uq_dlp_one_running ON dlp_sync_log(status) WHERE status = 'running'`);
-  } catch { /* index already exists */ }
+  // Clean up stale 'running' rows left by crashes, then enforce the unique constraint
+  try { await exec(`UPDATE dlp_sync_log SET status = 'failed', error_message = 'interrupted' WHERE status = 'running'`); } catch { /* table may not exist yet */ }
+  try { await exec(`DROP INDEX IF EXISTS uq_dlp_one_running`); } catch { /* ignore */ }
+  try { await exec(`CREATE UNIQUE INDEX IF NOT EXISTS uq_dlp_one_running ON dlp_sync_log(status) WHERE status = 'running'`); } catch { /* ignore */ }
 
   // FTS5 — gracefully skipped if unavailable
   const ftsStatements = [
