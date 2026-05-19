@@ -28,8 +28,8 @@
 <!-- Async font loading (non-render-blocking) -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" media="print" onload="this.media='all'" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" media="print" onload="this.media='all'" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" media="print" data-async-font="1" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" media="print" data-async-font="1" />
 <noscript>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" />
@@ -268,7 +268,7 @@
       <h2 id="heritage-heading" style="margin-top:0.5rem;color:#fff;">History of Batticaloa<br>Public Library</h2>
       <p style="color:rgba(255,255,255,.65);margin-bottom:1rem;">One of the oldest libraries in Sri Lanka, established in 1855 as a modest reading centre and grown over 170 years into the premier public library of the Eastern Province.</p>
       <p style="color:rgba(255,255,255,.65);">Through colonial administration, independence, cyclone, and reconstruction, the library has remained a steadfast centre of knowledge for readers, researchers and students across the region.</p>
-      <a href="/about" style="margin-top:1.5rem;display:inline-flex;align-items:center;gap:.5rem;background:transparent;border:2px solid rgba(255,255,255,.35);color:#fff;padding:.6rem 1.4rem;border-radius:8px;font-weight:600;font-size:.9rem;text-decoration:none;transition:background .18s,border-color .18s;" onmouseover="this.style.background='rgba(255,255,255,.1)';this.style.borderColor='rgba(255,255,255,.6)'" onmouseout="this.style.background='transparent';this.style.borderColor='rgba(255,255,255,.35)'">
+      <a href="/about" class="hover-outline-white" style="margin-top:1.5rem;display:inline-flex;align-items:center;gap:.5rem;background:transparent;border:2px solid rgba(255,255,255,.35);color:#fff;padding:.6rem 1.4rem;border-radius:8px;font-weight:600;font-size:.9rem;text-decoration:none;">
         Read More
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
       </a>
@@ -481,92 +481,7 @@
 <script src="/js/app.js" defer></script>
 <script src="/js/home.js" defer></script>
 <script src="/js/chat.js" defer></script>
-<script>
-/* Launch overlay — runs after all deferred scripts */
-document.addEventListener('DOMContentLoaded', function() {
-
-  /* Particle canvas */
-  var c = document.getElementById('launch-particles');
-  var x = c.getContext('2d');
-  var P = [];
-  function sz(){ c.width = innerWidth; c.height = innerHeight; }
-  sz();
-  window.addEventListener('resize', sz);
-  for (var i = 0; i < 60; i++) {
-    P.push({
-      x: Math.random() * innerWidth, y: Math.random() * innerHeight,
-      r: Math.random() * 1.6 + 0.3,
-      vx: (Math.random() - 0.5) * 0.28, vy: (Math.random() - 0.5) * 0.28,
-      a: Math.random() * 0.8 + 0.1, gold: Math.random() > 0.55
-    });
-  }
-  (function draw(){
-    x.clearRect(0, 0, c.width, c.height);
-    P.forEach(function(p){
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0) p.x = c.width;  if (p.x > c.width)  p.x = 0;
-      if (p.y < 0) p.y = c.height; if (p.y > c.height) p.y = 0;
-      x.beginPath(); x.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      x.fillStyle = p.gold ? 'rgba(212,160,23,' + p.a + ')' : 'rgba(255,255,255,' + (p.a * 0.45) + ')';
-      x.fill();
-    });
-    requestAnimationFrame(draw);
-  })();
-
-  /* Wire button click */
-  var btn = document.getElementById('lo-btn');
-  if (btn) {
-    btn.addEventListener('click', function() {
-      btn.removeEventListener('click', arguments.callee);
-      btn.disabled = true;
-
-      var btnWrap = document.getElementById('lo-btn-wrap');
-      var load    = document.getElementById('lo-loading');
-      var status  = document.getElementById('lo-status');
-      var sub     = document.getElementById('lo-sub');
-      var bar     = document.getElementById('lo-bar');
-
-      /* Fade out button */
-      btnWrap.style.transition = 'opacity 0.25s';
-      btnWrap.style.opacity = '0';
-      setTimeout(function(){
-        btnWrap.style.display = 'none';
-        load.style.display = 'flex';
-      }, 260);
-
-      /* Steps — absolute offsets so timing is exact regardless of JS jank */
-      var steps = [
-        { at: 300,  w: '20%',  s: 'Initialising systems…', d: 'Setting up library services'        },
-        { at: 1150, w: '45%',  s: 'Loading catalog…',      d: 'Connecting to the collection'       },
-        { at: 2000, w: '72%',  s: 'Preparing interface…',  d: 'Building the experience'            },
-        { at: 2850, w: '95%',  s: 'Almost there…',         d: 'Final checks in progress'           },
-        { at: 3700, w: '100%', s: 'Website Launched!',     d: 'Inaugurated by Hon. President of Sri Lanka' },
-      ];
-
-      steps.forEach(function(st){
-        setTimeout(function(){
-          bar.style.width = st.w;
-          status.style.opacity = '0';
-          setTimeout(function(){
-            status.textContent = st.s;
-            sub.textContent    = st.d;
-            status.style.opacity = '1';
-          }, 100);
-        }, st.at);
-      });
-
-      /* Dismiss at 4.15s → overlay fully gone by ~5s */
-      setTimeout(function(){
-        var o = document.getElementById('launch-overlay');
-        if (!o) return;
-        o.style.transition = 'opacity 0.85s ease';
-        o.style.opacity = '0';
-        setTimeout(function(){ o.style.display = 'none'; o.remove(); }, 870);
-      }, 4150);
-    });
-  }
-});
-</script>
+<script src="/js/launch.js" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",

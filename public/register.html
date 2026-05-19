@@ -22,8 +22,8 @@
 <link rel="preload" as="style" href="/css/style.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" media="print" onload="this.media='all'" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" media="print" onload="this.media='all'" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" media="print" data-async-font="1" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" media="print" data-async-font="1" />
 <noscript>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" />
@@ -68,11 +68,11 @@
 
     <!-- CTAs -->
     <div style="display:flex;flex-wrap:wrap;gap:0.8rem;justify-content:center;align-items:center;margin-bottom:1rem;">
-      <a class="btn btn-accent btn-lg" href="https://batticaloa.dlp.gov.lk/cgi-bin/koha/opac-memberentry.pl" target="_blank" rel="noopener noreferrer" style="font-weight:700;letter-spacing:0.02em;box-shadow:0 4px 6px rgba(0,0,0,0.08),0 10px 30px rgba(212,160,23,0.28);transform:translateY(0);transition:transform 0.2s,box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 8px rgba(0,0,0,0.1),0 14px 36px rgba(212,160,23,0.38)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 6px rgba(0,0,0,0.08),0 10px 30px rgba(212,160,23,0.28)';">
+      <a class="btn btn-accent btn-lg hover-lift-sm" href="https://batticaloa.dlp.gov.lk/cgi-bin/koha/opac-memberentry.pl" target="_blank" rel="noopener noreferrer" style="font-weight:700;letter-spacing:0.02em;box-shadow:0 4px 6px rgba(0,0,0,0.08),0 10px 30px rgba(212,160,23,0.28);">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
         Register
       </a>
-      <a href="/login" style="font-size:0.88rem;font-weight:600;color:var(--primary);display:inline-flex;align-items:center;gap:0.35rem;border:1px solid rgba(14,77,92,0.2);border-radius:999px;padding:0.6rem 1.3rem;letter-spacing:0.01em;transition:border-color 0.2s,color 0.2s,background 0.2s;background:rgba(14,77,92,0.04);" onmouseover="this.style.borderColor='rgba(14,77,92,0.4)';this.style.background='rgba(14,77,92,0.08)';" onmouseout="this.style.borderColor='rgba(14,77,92,0.2)';this.style.background='rgba(14,77,92,0.04)';">
+      <a href="/login" class="hover-border-primary" style="font-size:0.88rem;font-weight:600;color:var(--primary);display:inline-flex;align-items:center;gap:0.35rem;border:1px solid rgba(14,77,92,0.2);border-radius:999px;padding:0.6rem 1.3rem;letter-spacing:0.01em;background:rgba(14,77,92,0.04);">
         Already a member? Sign in
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
       </a>
@@ -81,28 +81,28 @@
 
     <!-- Stats strip -->
     <div style="display:grid;grid-template-columns:repeat(4,1fr);border-radius:16px 16px 0 0;overflow:hidden;outline:1px solid var(--border);box-shadow:var(--shadow-sm);">
-      <div style="padding:1.9rem 1rem 1.6rem;text-align:center;background:#fff;border-right:1px solid var(--border);transition:background 0.2s;" onmouseover="this.style.background='#eef5f7';" onmouseout="this.style.background='#fff';">
+      <div class="hover-bg" style="padding:1.9rem 1rem 1.6rem;text-align:center;background:#fff;border-right:1px solid var(--border);">
         <div style="width:44px;height:44px;background:linear-gradient(135deg,rgba(14,77,92,0.1),rgba(14,77,92,0.04));border:1px solid rgba(14,77,92,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 2px 8px rgba(14,77,92,0.07);">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         </div>
         <p style="font-family:Merriweather,serif;font-size:1.45rem;font-weight:800;color:var(--primary-dark);margin:0 0 0.35rem;line-height:1;letter-spacing:-0.01em;">50,000+</p>
         <p style="font-size:0.67rem;color:var(--text-muted);margin:0;letter-spacing:0.08em;text-transform:uppercase;">Books</p>
       </div>
-      <div style="padding:1.9rem 1rem 1.6rem;text-align:center;background:#fff;border-right:1px solid var(--border);transition:background 0.2s;" onmouseover="this.style.background='#eef5f7';" onmouseout="this.style.background='#fff';">
+      <div class="hover-bg" style="padding:1.9rem 1rem 1.6rem;text-align:center;background:#fff;border-right:1px solid var(--border);">
         <div style="width:44px;height:44px;background:linear-gradient(135deg,rgba(14,77,92,0.1),rgba(14,77,92,0.04));border:1px solid rgba(14,77,92,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 2px 8px rgba(14,77,92,0.07);">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         </div>
         <p style="font-family:Merriweather,serif;font-size:1.45rem;font-weight:800;color:var(--primary-dark);margin:0 0 0.35rem;line-height:1;letter-spacing:-0.01em;">Free</p>
         <p style="font-size:0.67rem;color:var(--text-muted);margin:0;letter-spacing:0.08em;text-transform:uppercase;">Digital Access</p>
       </div>
-      <div style="padding:1.9rem 1rem 1.6rem;text-align:center;background:#fff;border-right:1px solid var(--border);transition:background 0.2s;" onmouseover="this.style.background='#eef5f7';" onmouseout="this.style.background='#fff';">
+      <div class="hover-bg" style="padding:1.9rem 1rem 1.6rem;text-align:center;background:#fff;border-right:1px solid var(--border);">
         <div style="width:44px;height:44px;background:linear-gradient(135deg,rgba(14,77,92,0.1),rgba(14,77,92,0.04));border:1px solid rgba(14,77,92,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 2px 8px rgba(14,77,92,0.07);">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         </div>
         <p style="font-family:Merriweather,serif;font-size:1.45rem;font-weight:800;color:var(--primary-dark);margin:0 0 0.35rem;line-height:1;letter-spacing:-0.01em;">Monthly</p>
         <p style="font-size:0.67rem;color:var(--text-muted);margin:0;letter-spacing:0.08em;text-transform:uppercase;">Events</p>
       </div>
-      <div style="padding:1.9rem 1rem 1.6rem;text-align:center;background:#fff;transition:background 0.2s;" onmouseover="this.style.background='#eef5f7';" onmouseout="this.style.background='#fff';">
+      <div class="hover-bg" style="padding:1.9rem 1rem 1.6rem;text-align:center;background:#fff;">
         <div style="width:44px;height:44px;background:linear-gradient(135deg,rgba(14,77,92,0.1),rgba(14,77,92,0.04));border:1px solid rgba(14,77,92,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 2px 8px rgba(14,77,92,0.07);">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
         </div>
@@ -244,7 +244,7 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;max-width:800px;margin:0 auto;">
 
       <!-- Adults card -->
-      <div style="background:#fff;border:2px solid #e8eef2;border-radius:20px;overflow:hidden;box-shadow:0 2px 16px rgba(14,77,92,0.07);transition:box-shadow 0.2s,transform 0.2s;" onmouseover="this.style.boxShadow='0 8px 32px rgba(14,77,92,0.13)';this.style.transform='translateY(-4px)';" onmouseout="this.style.boxShadow='0 2px 16px rgba(14,77,92,0.07)';this.style.transform='translateY(0)';">
+      <div class="hover-lift" style="background:#fff;border:2px solid #e8eef2;border-radius:20px;overflow:hidden;box-shadow:0 2px 16px rgba(14,77,92,0.07);">
         <!-- Card header -->
         <div style="background:linear-gradient(135deg,#f0f7f8 0%,#e2f0f2 100%);padding:2rem 2rem 1.5rem;border-bottom:1.5px solid #daeaed;text-align:center;">
           <div style="width:56px;height:56px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 2px 12px rgba(14,77,92,0.12);">
@@ -286,7 +286,7 @@
       </div>
 
       <!-- Children card -->
-      <div style="background:#fff;border:2px solid #fde9a2;border-radius:20px;overflow:hidden;box-shadow:0 2px 16px rgba(212,160,23,0.1);transition:box-shadow 0.2s,transform 0.2s;" onmouseover="this.style.boxShadow='0 8px 32px rgba(212,160,23,0.18)';this.style.transform='translateY(-4px)';" onmouseout="this.style.boxShadow='0 2px 16px rgba(212,160,23,0.1)';this.style.transform='translateY(0)';">
+      <div class="hover-lift" style="background:#fff;border:2px solid #fde9a2;border-radius:20px;overflow:hidden;box-shadow:0 2px 16px rgba(212,160,23,0.1);">
         <!-- Card header -->
         <div style="background:linear-gradient(135deg,#fffbea 0%,#fef3c7 100%);padding:2rem 2rem 1.5rem;border-bottom:1.5px solid #fde9a2;text-align:center;">
           <div style="width:56px;height:56px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 2px 12px rgba(212,160,23,0.18);">

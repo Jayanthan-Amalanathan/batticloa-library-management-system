@@ -41,3 +41,18 @@
 @font-face{font-family:'Merriweather';font-style:normal;font-weight:700 800;font-display:swap;src:local('Merriweather')}
 @font-face{font-family:'Noto Sans Tamil';font-style:normal;font-weight:400 700;font-display:swap;src:local('Noto Sans Tamil')}
 @font-face{font-family:'Noto Sans Sinhala';font-style:normal;font-weight:400 700;font-display:swap;src:local('Noto Sans Sinhala')}
+/* Hover utility classes — replace inline onmouseover/onmouseout handlers */
+.hover-lift{transition:transform .2s,box-shadow .2s,border-color .2s}
+.hover-lift:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(14,77,92,.13);border-color:var(--primary)}
+.hover-lift-sm{transition:transform .2s,box-shadow .2s}
+.hover-lift-sm:hover{transform:translateY(-2px);box-shadow:0 6px 8px rgba(0,0,0,.1),0 14px 36px rgba(212,160,23,.38)}
+.hover-bg{transition:background .2s}
+.hover-bg:hover{background:#eef5f7!important}
+.hover-bg-subtle{transition:background .2s}
+.hover-bg-subtle:hover{background:#f3f4f6!important}
+.hover-border-primary{transition:border-color .2s,background .2s}
+.hover-border-primary:hover{border-color:rgba(14,77,92,.4)!important;background:rgba(14,77,92,.08)!important}
+.hover-outline-white{transition:background .18s,border-color .18s}
+.hover-outline-white:hover{background:rgba(255,255,255,.1)!important;border-color:rgba(255,255,255,.6)!important}
+.hover-outline-primary{transition:background .18s,color .18s}
+.hover-outline-primary:hover{background:var(--primary)!important;color:#fff!important}

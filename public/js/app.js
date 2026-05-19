@@ -39,4 +39,10 @@ function initPreloader(){
   setTimeout(function(){onLoaded();setTimeout(dismiss,80);},3000);
 }
 initPreloader();
-document.addEventListener("DOMContentLoaded",()=>{renderHeader(document.body.dataset.page||""),renderFooter(),initScrollTop(),i18n.apply()});
+document.addEventListener("DOMContentLoaded",()=>{
+  renderHeader(document.body.dataset.page||"");
+  renderFooter();
+  initScrollTop();
+  i18n.apply();
+  document.querySelectorAll('link[data-async-font]').forEach(function(l){l.media='all';});
+});

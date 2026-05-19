@@ -22,8 +22,8 @@
 <link rel="preload" as="style" href="/css/style.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" media="print" onload="this.media='all'" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" media="print" onload="this.media='all'" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" media="print" data-async-font="1" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" media="print" data-async-font="1" />
 <noscript>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@700;800&display=swap" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" />
@@ -52,7 +52,7 @@
       <h2 style="margin-top:0.5rem;" data-i18n="about.story.title">A Heritage of Learning</h2>
       <p style="color:var(--text-soft);margin-bottom:1rem;" data-i18n="about.story.p1">Established in 1855, the Batticaloa Public Library has grown from a modest reading room into the main public library of the Eastern Province. Through decades of social change and rebuilding, the library has remained a place of learning for readers, researchers and students across the region.</p>
       <p style="color:var(--text-soft);" data-i18n="about.story.p2" data-i18n-html="true">Today, in partnership with the Municipal Council, we are completing a digital transformation that brings together multiple library systems under one platform, making the collection accessible to all members online.</p>
-      <button id="story-read-more-btn" type="button" style="margin-top:1.5rem;display:inline-flex;align-items:center;gap:.5rem;background:transparent;border:2px solid var(--primary);color:var(--primary);padding:.6rem 1.4rem;border-radius:8px;font-weight:600;font-size:.9rem;cursor:pointer;transition:background .18s,color .18s;" onmouseover="this.style.background='var(--primary)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='var(--primary)'">
+      <button id="story-read-more-btn" type="button" class="hover-outline-primary" style="margin-top:1.5rem;display:inline-flex;align-items:center;gap:.5rem;background:transparent;border:2px solid var(--primary);color:var(--primary);padding:.6rem 1.4rem;border-radius:8px;font-weight:600;font-size:.9rem;cursor:pointer;">
         Read More
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
       </button>
@@ -564,26 +564,6 @@
   </div>
 </section>
 
-<script>
-(function () {
-  var tabs = [
-    { btn: document.getElementById('tab-front'), panel: document.getElementById('panel-front') },
-    { btn: document.getElementById('tab-rear'),  panel: document.getElementById('panel-rear')  }
-  ];
-  tabs.forEach(function (t) {
-    t.btn.addEventListener('click', function () {
-      tabs.forEach(function (x) {
-        x.btn.classList.remove('active');
-        x.btn.setAttribute('aria-selected', 'false');
-        x.panel.classList.remove('active');
-      });
-      t.btn.classList.add('active');
-      t.btn.setAttribute('aria-selected', 'true');
-      t.panel.classList.add('active');
-    });
-  });
-}());
-</script>
 
 
 <!-- Technical Partners -->
@@ -605,9 +585,8 @@
 
       <!-- Partner 1 – SPM -->
       <a href="https://tech.spm.industries/" target="_blank" rel="noopener noreferrer"
-        style="border:1.5px solid var(--border);border-radius:18px;padding:2rem 1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;background:var(--bg-card);box-shadow:0 2px 10px rgba(14,77,92,.06);transition:transform .2s,box-shadow .2s,border-color .2s;text-decoration:none;"
-        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 32px rgba(14,77,92,.13)';this.style.borderColor='var(--primary)'"
-        onmouseout="this.style.transform='';this.style.boxShadow='0 2px 10px rgba(14,77,92,.06)';this.style.borderColor='var(--border)'">
+        class="hover-lift"
+        style="border:1.5px solid var(--border);border-radius:18px;padding:2rem 1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;background:var(--bg-card);box-shadow:0 2px 10px rgba(14,77,92,.06);text-decoration:none;">
         <div style="width:140px;height:100px;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;">
           <img src="/images/partners/spm-logo.png" alt="SPM logo" loading="lazy"
             style="max-width:100%;max-height:100%;object-fit:contain;" />
@@ -618,9 +597,8 @@
 
       <!-- Partner 2 – BBDSP -->
       <a href="https://bbdsppvt.com" target="_blank" rel="noopener noreferrer"
-        style="border:1.5px solid var(--border);border-radius:18px;padding:2rem 1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;background:var(--bg-card);box-shadow:0 2px 10px rgba(14,77,92,.06);transition:transform .2s,box-shadow .2s,border-color .2s;text-decoration:none;"
-        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 32px rgba(14,77,92,.13)';this.style.borderColor='var(--primary)'"
-        onmouseout="this.style.transform='';this.style.boxShadow='0 2px 10px rgba(14,77,92,.06)';this.style.borderColor='var(--border)'">
+        class="hover-lift"
+        style="border:1.5px solid var(--border);border-radius:18px;padding:2rem 1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;background:var(--bg-card);box-shadow:0 2px 10px rgba(14,77,92,.06);text-decoration:none;">
         <div style="width:140px;height:100px;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;">
           <img src="/images/partners/bbdsp-logo.webp" alt="BBDSP logo" loading="lazy"
             style="max-width:100%;max-height:100%;object-fit:contain;" />
@@ -631,9 +609,8 @@
 
       <!-- Partner 3 – DreamSpace Academy -->
       <a href="https://dreamspace.academy/pages/1-0-index.php" target="_blank" rel="noopener noreferrer"
-        style="border:1.5px solid var(--border);border-radius:18px;padding:2rem 1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;background:var(--bg-card);box-shadow:0 2px 10px rgba(14,77,92,.06);transition:transform .2s,box-shadow .2s,border-color .2s;text-decoration:none;"
-        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 32px rgba(14,77,92,.13)';this.style.borderColor='var(--primary)'"
-        onmouseout="this.style.transform='';this.style.boxShadow='0 2px 10px rgba(14,77,92,.06)';this.style.borderColor='var(--border)'">
+        class="hover-lift"
+        style="border:1.5px solid var(--border);border-radius:18px;padding:2rem 1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;background:var(--bg-card);box-shadow:0 2px 10px rgba(14,77,92,.06);text-decoration:none;">
         <div style="width:140px;height:100px;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;">
           <img src="/images/partners/dreamspace-logo.png" alt="DreamSpace Academy logo" loading="lazy"
             style="max-width:100%;max-height:100%;object-fit:contain;" />
@@ -644,9 +621,8 @@
 
       <!-- Partner 4 – SLIATE Batticaloa Campus -->
       <a href="https://www.atibatti.edu.lk" target="_blank" rel="noopener noreferrer"
-        style="border:1.5px solid var(--border);border-radius:18px;padding:2rem 1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;background:var(--bg-card);box-shadow:0 2px 10px rgba(14,77,92,.06);transition:transform .2s,box-shadow .2s,border-color .2s;text-decoration:none;"
-        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 32px rgba(14,77,92,.13)';this.style.borderColor='var(--primary)'"
-        onmouseout="this.style.transform='';this.style.boxShadow='0 2px 10px rgba(14,77,92,.06)';this.style.borderColor='var(--border)'">
+        class="hover-lift"
+        style="border:1.5px solid var(--border);border-radius:18px;padding:2rem 1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;background:var(--bg-card);box-shadow:0 2px 10px rgba(14,77,92,.06);text-decoration:none;">
         <div style="width:140px;height:100px;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;">
           <img src="/images/partners/sliate-logo.jpg" alt="ATI Batticaloa logo" loading="lazy"
             style="max-width:100%;max-height:100%;object-fit:contain;" />
@@ -682,8 +658,8 @@
         <h2 id="story-modal-title" style="margin:0;font-size:1.35rem;color:var(--text);">History of Batticaloa Public Library</h2>
       </div>
       <button id="story-modal-close" type="button" aria-label="Close"
-        style="flex-shrink:0;background:transparent;border:none;cursor:pointer;color:var(--text-soft);padding:.3rem;border-radius:6px;line-height:1;"
-        onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+        class="hover-bg-subtle"
+        style="flex-shrink:0;background:transparent;border:none;cursor:pointer;color:var(--text-soft);padding:.3rem;border-radius:6px;line-height:1;">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -698,27 +674,6 @@
     </div>
   </div>
 </div>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  var modal = document.getElementById('story-modal');
-  var openBtn = document.getElementById('story-read-more-btn');
-  var closeBtn = document.getElementById('story-modal-close');
-
-  function openModal() { modal.style.display = 'flex'; }
-  function closeModal() { modal.style.display = 'none'; }
-
-  if (openBtn) openBtn.addEventListener('click', openModal);
-  if (closeBtn) closeBtn.addEventListener('click', closeModal);
-  if (modal) {
-    modal.addEventListener('click', function (e) {
-      if (e.target === modal) closeModal();
-    });
-  }
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && modal && modal.style.display === 'flex') closeModal();
-  });
-});
-</script>
 
 </main>
 <div id="site-footer"></div>
@@ -763,39 +718,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <script src="/js/app.js" defer></script>
 <script src="/js/chat.js" defer></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  var list = document.getElementById('branch-list');
-  var panel = document.getElementById('branch-map-panel');
-  var label = document.getElementById('branch-map-label');
-  var dirLink = document.getElementById('branch-map-dir');
-  if (!list || !panel) return;
-
-  function loadMap(lat, lng) {
-    var old = document.getElementById('branch-map-iframe');
-    var iframe = document.createElement('iframe');
-    iframe.id = 'branch-map-iframe';
-    iframe.width = '100%';
-    iframe.height = '100%';
-    iframe.style.cssText = 'border:0;display:block;';
-    iframe.allowFullscreen = true;
-    iframe.loading = 'lazy';
-    iframe.referrerPolicy = 'no-referrer-when-downgrade';
-    iframe.title = 'Branch library location map';
-    iframe.src = 'https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d2000!2d' + parseFloat(lng) + '!3d' + parseFloat(lat) + '!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2slk!4v1';
-    panel.replaceChild(iframe, old);
-  }
-
-  list.addEventListener('click', function (e) {
-    var item = e.target.closest('.branch-list-item');
-    if (!item) return;
-    list.querySelectorAll('.branch-list-item').forEach(function (i) { i.classList.remove('active'); });
-    item.classList.add('active');
-    loadMap(item.dataset.lat, item.dataset.lng);
-    label.textContent = '📍 ' + item.dataset.area;
-    dirLink.href = item.dataset.dir;
-  });
-});
-</script>
+<script src="/js/about.js" defer></script>
 </body>
 </html>
