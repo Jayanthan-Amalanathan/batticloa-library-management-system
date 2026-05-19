@@ -6,7 +6,7 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-// Structured JSON logger — writes to stdout, compatible with Vercel log drain
+// Structured JSON logger — writes to stdout, compatible with PM2 log drain
 const log = {
   _write(level, msg, meta = {}) {
     const entry = { ts: new Date().toISOString(), level, msg, ...meta };
@@ -151,6 +151,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const IS_PROD = process.env.NODE_ENV === 'production';
 
+// Trust the first proxy (nginx) so Express sees the real HTTPS request,
+// which allows secure cookies to work correctly behind the reverse proxy.
+if (IS_PROD) app.set('trust proxy', 1);
+
 const kohaOrigin = (() => {
   try { const u = new URL(process.env.KOHA_OPAC_URL || 'https://www.opac.lib.esn.ac.lk'); return `${u.protocol}//${u.host}`; } catch { return 'https://www.opac.lib.esn.ac.lk'; }
 })();
@@ -175,7 +179,7 @@ app.use(helmet({
 
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || `http://localhost:${PORT}`).split(',').map(s => s.trim());
 if (IS_PROD && ALLOWED_ORIGINS.every(o => o.startsWith('http://localhost'))) {
-  console.warn('WARNING: ALLOWED_ORIGINS is not configured for production. Set it to your Vercel domain or all API calls will be blocked by CORS.');
+  console.warn('WARNING: ALLOWED_ORIGINS is not configured for production. Set it to your domain (e.g. https://battilibrary.lk) or all API calls will be blocked by CORS.');
 }
 app.use(cors({
   origin: (origin, cb) => {
@@ -1894,8 +1898,7 @@ app.get('/api/opac-search-url', catalogLimiter, (req, res) => {
 
 // ---------- DLP SYNC ----------
 // Keep an in-memory log of the current running sync so the admin panel can
-// DLP sync state is stored in dlp_sync_log (DB) so it survives across serverless instances.
-// dlpSyncBusy / dlpSyncProgress were in-memory variables that did not survive Vercel cold starts.
+// DLP sync state is stored in dlp_sync_log (DB) so it survives across process restarts.
 
 app.get('/api/dlp-sync/stats', authenticate, authorize('admin', 'librarian'), async (req, res) => {
   try {
@@ -2033,7 +2036,7 @@ function bootstrap() {
   if (_bootstrapPromise) return _bootstrapPromise;
   _bootstrapError = null;
   _bootstrapPromise = (async () => {
-    // Log which env vars are present so Vercel logs show the root cause clearly
+    // Log which env vars are present so PM2 logs show the root cause clearly
     log.info('Bootstrap starting', {
       TURSO_DATABASE_URL: process.env.TURSO_DATABASE_URL ? 'set' : 'MISSING',
       TURSO_AUTH_TOKEN:   process.env.TURSO_AUTH_TOKEN   ? 'set' : 'MISSING',
@@ -2041,10 +2044,7 @@ function bootstrap() {
       NODE_ENV:           process.env.NODE_ENV || 'unset',
     });
     await initSchema();
-    // scheduleMonthlySyncCron uses setInterval — not compatible with serverless.
-    if (!IS_PROD) {
-      scheduleMonthlySyncCron();
-    }
+    scheduleMonthlySyncCron();
     log.info('Bootstrap complete');
   })().catch(err => {
     _bootstrapError   = err;
@@ -2062,7 +2062,7 @@ const handler = async (req, res) => {
   await bootstrap();
   if (_bootstrapError) {
     return res.status(503).json({
-      error: 'Database initialisation failed. Check Vercel environment variables.',
+      error: 'Database initialisation failed. Check environment variables on the server.',
       detail: _bootstrapError.message,
     });
   }
