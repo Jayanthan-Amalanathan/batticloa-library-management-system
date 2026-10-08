@@ -178,6 +178,11 @@ app.use(helmet({
 }));
 
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || `http://localhost:${PORT}`).split(',').map(s => s.trim());
+// On Vercel, also allow the deployment's own URLs (set automatically by the platform)
+// so same-origin POSTs work on *.vercel.app and preview deployments.
+for (const host of [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL]) {
+  if (host) ALLOWED_ORIGINS.push(`https://${host}`);
+}
 if (IS_PROD && ALLOWED_ORIGINS.every(o => o.startsWith('http://localhost'))) {
   console.warn('WARNING: ALLOWED_ORIGINS is not configured for production. Set it to your domain (e.g. https://battilibrary.lk) or all API calls will be blocked by CORS.');
 }
@@ -1910,6 +1915,14 @@ app.get('/api/opac-search-url', catalogLimiter, (req, res) => {
   res.json({ url });
 });
 
+// On Vercel the function is frozen once the response is sent, so background work must be
+// registered with the platform's waitUntil. Elsewhere the promise simply runs on.
+function keepAlive(promise) {
+  const ctx = globalThis[Symbol.for('@vercel/request-context')]?.get?.();
+  if (ctx?.waitUntil) ctx.waitUntil(promise);
+  return promise;
+}
+
 // ---------- DLP SYNC ----------
 // Keep an in-memory log of the current running sync so the admin panel can
 // DLP sync state is stored in dlp_sync_log (DB) so it survives across process restarts.
@@ -1961,7 +1974,7 @@ app.post('/api/dlp-sync/trigger', authenticate, authorize('admin'), async (req, 
   await logAudit(req.user.id, 'dlp_sync_trigger', 'dlp_sync', lockId, 'manual', req.ip);
 
   // Run async in background; client polls /api/dlp-sync/progress
-  runSync({
+  keepAlive(runSync({
     triggeredBy: 'manual',
     syncLogId: lockId,
     onProgress: async msg => {
@@ -1975,9 +1988,24 @@ app.post('/api/dlp-sync/trigger', authenticate, authorize('admin'), async (req, 
         await prepare('UPDATE dlp_sync_log SET progress_messages = ? WHERE id = ?').run(JSON.stringify(msgs), lockId);
       } catch { /* non-critical */ }
     },
-  }).catch(() => {});
+  }).catch(() => {}));
 
   res.json({ started: true, message: 'DLP sync started. Poll /api/dlp-sync/progress for updates.' });
+});
+
+// Vercel Cron target (see "crons" in vercel.json) — replaces the setInterval scheduler,
+// which cannot run on serverless. Vercel sends "Authorization: Bearer $CRON_SECRET".
+app.get('/api/cron/dlp-sync', async (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || req.headers.authorization !== `Bearer ${secret}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  try {
+    const result = await runSync({ triggeredBy: 'cron', onProgress: msg => console.log('[DLP Sync]', msg) });
+    res.status(result.error ? 500 : 200).json(result);
+  } catch (e) {
+    res.status(409).json({ error: e.message });
+  }
 });
 
 app.get('/api/dlp-sync/books', authenticate, authorize('admin', 'librarian'), async (req, res) => {
@@ -2046,7 +2074,8 @@ function bootstrap() {
       NODE_ENV:           process.env.NODE_ENV || 'unset',
     });
     await initSchema();
-    scheduleMonthlySyncCron();
+    // setInterval does not survive on serverless — Vercel Cron calls /api/cron/dlp-sync instead.
+    if (!process.env.VERCEL) scheduleMonthlySyncCron();
     log.info('Bootstrap complete');
   })().catch(err => {
     _bootstrapError   = err;

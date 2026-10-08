@@ -356,7 +356,10 @@ async function initSchema() {
   }
 
   // Clean up stale 'running' rows left by crashes, then enforce the unique constraint
-  try { await exec(`UPDATE dlp_sync_log SET status = 'failed', error_message = 'interrupted' WHERE status = 'running'`); } catch { /* table may not exist yet */ }
+  // On Vercel a cold start does not mean other instances died, so only rows older than the
+  // longest possible function run are treated as stale.
+  const staleFilter = process.env.VERCEL ? ` AND started_at <= datetime('now', '-15 minutes')` : '';
+  try { await exec(`UPDATE dlp_sync_log SET status = 'failed', error_message = 'interrupted' WHERE status = 'running'${staleFilter}`); } catch { /* table may not exist yet */ }
   try { await exec(`DROP INDEX IF EXISTS uq_dlp_one_running`); } catch { /* ignore */ }
   try { await exec(`CREATE UNIQUE INDEX IF NOT EXISTS uq_dlp_one_running ON dlp_sync_log(status) WHERE status = 'running'`); } catch { /* ignore */ }
 
